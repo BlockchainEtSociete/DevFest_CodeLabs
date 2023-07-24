@@ -1,0 +1,17 @@
+{
+    "name": "walletsapi",
+    "version": "1.0.0",
+    "license": "GNU V2",
+    "main": "src/index.js",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/BlockchainEtSociete/DevFest_CodeLabs.git"
+    },
+    "bugs": {
+        "url": "https://github.com/BlockchainEtSociete/DevFest_CodeLabs/issues"
+    },
+    "homepage": "https://github.com/BlockchainEtSociete/DevFest_CodeLabs#readme",
+    "dependencies": {
+        "express": "^4.18.2"
+    }
+}

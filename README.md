@@ -9,6 +9,7 @@
     - [Outils](#outils)
     - [Front](#front)
     - [Hardhat](#hardhat)
+    - [Wallets API](#wallets-api)
 
 <a name="presentation"></a>
 ## Présentation
@@ -143,3 +144,24 @@ $ npm run deploy:ganache
 ```bash
 $ npm run test
 ```
+
+<a name="wallets-api"></a>
+### Wallets API
+
+API de récupération des wallets pour la fin du Codelab
+
+#### Installation / lancement
+```bash
+$ cd wallets-api
+$ nvm use
+$ npm install
+$ node src/index.js
+```
+
+#### Fonctionnement
+- API Rest qui se lance sur `http://<ip>:3000` (ip peut être `localhost`)
+  - avec un seul endpoint : `/wallets/:code`
+  - par défaut il n'y a pas de wallets push sur Git, il faut donc :
+    - créer un fichier `wallets.json` à la racine de ce dossier
+    - la structure js des wallet est dans `wallets_example.json`
+
