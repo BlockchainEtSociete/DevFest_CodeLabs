@@ -1,28 +1,26 @@
-import {useEffect, useState} from "react";
+import {useState, useSyncExternalStore} from "react";
 import PeopleGenerator from "../components/peoples/PeopleGenerator.tsx";
 import MovieGenerator from "../components/movies/MovieGenerator.tsx";
 import CompetitionGenerator from "../components/competition/CompetitionGenerator.tsx";
 import "../styles/account.css";
+import { connectedUserStore } from "../provider/ConnectedUserStore.ts";
 
 const Administrator = () => {
-    const [connectedUserAddress, setConnectedUserAddress] = useState('');
+    const connectedUser = useSyncExternalStore(connectedUserStore.subscribe, connectedUserStore.getSnapshot)
+    const { canAddPeople, canAddMovie, canAddCompetition } = connectedUser.accessRights
+
     const [addPeople, setAddPeople] = useState(false);
     const [addMovie, setAddMovie] = useState(false);
     const [addCompetition, setAddCompetition] = useState(false);
 
-    useEffect( ()  => {
-        const account = window.ethereum.request({method: 'eth_requestAccounts'});
-        if(account) setConnectedUserAddress(account.address);
-    }, []);
-
-    if (connectedUserAddress !== '')
+    if (connectedUser && connectedUserStore.isAdmin())
         return (
             <article>
                 <h2>Administration</h2>
                 <div>
-                    <a className="choice_add" onClick={() => {setAddPeople(!addPeople); setAddMovie(false); setAddCompetition(false); }} >Ajout d'un acteurs ou réalisateurs</a>
-                    <a className="choice_add" onClick={() => {setAddMovie(!addMovie); setAddPeople(false); setAddCompetition(false);} }>Ajout d'un nouveau film</a>
-                    <a className="choice_add" onClick={() => {setAddCompetition(!addCompetition); setAddPeople(false); setAddMovie(false); } }>Nouvelle competition</a>
+                    {canAddPeople && <a className="choice_add" onClick={() => {setAddPeople(!addPeople); setAddMovie(false); setAddCompetition(false); }} >Ajout d'un acteurs ou réalisateurs</a>}
+                    {canAddMovie && <a className="choice_add" onClick={() => {setAddMovie(!addMovie); setAddPeople(false); setAddCompetition(false);} }>Ajout d'un nouveau film</a>}
+                    {canAddCompetition && <a className="choice_add" onClick={() => {setAddCompetition(!addCompetition); setAddPeople(false); setAddMovie(false); } }>Nouvelle competition</a>}
                 </div>
                 {
                     addPeople
