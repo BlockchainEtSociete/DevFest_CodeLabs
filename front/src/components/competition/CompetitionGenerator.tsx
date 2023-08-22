@@ -295,7 +295,7 @@ const CompetitionGenerator = () => {
     }
 
     /**
-     * permet de verifier les addresses des jurys et de les ajouter ou supprimer a la liste
+     * permet d'ajouter les ids des jurys et ou les supprimer de la liste
      * @param idJury
      */
     function addJuryId(idJury: number){
@@ -356,7 +356,7 @@ const CompetitionGenerator = () => {
                 return res.arrayBuffer();
             }))
             .then(function (buf) {
-                return new File([buf], 'people.jpg', {type: 'image/*'});
+                return new File([buf], 'competition.jpg', {type: 'image/*'});
             })
     };
 

@@ -33,6 +33,8 @@ contract Competitions is Jurys {
         uint id;
         string tokenURI;
         TypeCompetitions typeCompetitions;
+        Option[] options;
+        uint[] jurys;
         uint startTime;
         uint endTime;
     }
@@ -46,10 +48,8 @@ contract Competitions is Jurys {
 
     constructor (string memory name, string memory symbol) Jurys(name, symbol) {}
 
-    CompetitionVotingSession[] votingCompetitions;
+    CompetitionVotingSession[] public votingCompetitions;
     mapping (uint => mapping(address => Voter)) votingCompetitionsVoters;
-    mapping (uint => uint[]) jurysByCompetition; // pour chaque competition une liste d'id de jury est enregistré
-    mapping (uint => Option[]) optionsByCompetition;
 
     /// Event
     event CompetitionSessionRegistered(uint competitionId);
@@ -71,20 +71,24 @@ contract Competitions is Jurys {
         require(keccak256(abi.encode(_typeCompetitions)) != keccak256(abi.encode("")), "Your competition must contain type of competition");
 
         // verifier la liste d'idsJurys
-
-        uint tokenId = votingCompetitions.length +1;
-
-        CompetitionVotingSession memory newCompetitionVotingSession = CompetitionVotingSession(tokenId, _tokenURI, _typeCompetitions, _startDate, _endDate);
-
-        votingCompetitions.push(newCompetitionVotingSession);
-
         for(uint i = 0; i < _idsJury.length; i++){
-            jurysByCompetition[tokenId].push(_idsJury[i]);
         }
 
+        uint tokenId = votingCompetitions.length + 1;
+
+        CompetitionVotingSession storage newCompetitionVotingSession = votingCompetitions.push();
+
+        newCompetitionVotingSession.id = tokenId;
+        newCompetitionVotingSession.tokenURI = _tokenURI;
+        newCompetitionVotingSession.typeCompetitions = _typeCompetitions;
+        newCompetitionVotingSession.jurys = _idsJury;
+        newCompetitionVotingSession.startTime = _startDate;
+        newCompetitionVotingSession.endTime = _endDate;
+
+        uint counter = 0;
         for(uint i = 0; i < _idsOption.length; i++){
-            Option memory newOption = Option(_idsOption[i], 0);
-            optionsByCompetition[tokenId].push(newOption);
+            newCompetitionVotingSession.options.push(Option(_idsOption[counter], 0));
+            counter ++;
         }
 
         emit CompetitionSessionRegistered(tokenId);
@@ -123,8 +127,10 @@ contract Competitions is Jurys {
         bool contain = false;
         uint juryId = getJuryId(msg.sender);
 
-        for(uint i = 0; i < jurysByCompetition[_competitionId].length; i++){
-            if(jurysByCompetition[_competitionId][i] == juryId){
+        CompetitionVotingSession memory competition = getCompetition(_competitionId);
+
+        for(uint i = 0; i < competition.jurys.length; i++){
+            if(competition.jurys[i] == juryId){
                 contain = true;
             }
         }
@@ -141,11 +147,12 @@ contract Competitions is Jurys {
         require(votingCompetitions[_competitionId].startTime < block.timestamp, "Voting competition isn't open yet");
         require(votingCompetitionsVoters[_competitionId][msg.sender].hasVoted == false, "You have already voted");
         uint nbVote;
+        CompetitionVotingSession memory competition = getCompetition(_competitionId);
 
-        for(uint i = 0; i < optionsByCompetition[_competitionId].length; i++ ){
-            if(optionsByCompetition[_competitionId][i].tokenId == _tokenIdOption){
-                optionsByCompetition[_competitionId][i].voteCount++;
-                nbVote = optionsByCompetition[_competitionId][i].voteCount;
+        for(uint i = 0; i < competition.options.length; i++ ){
+            if(competition.options[i].tokenId == _tokenIdOption){
+                competition.options[i].voteCount++;
+                nbVote = competition.options[i].voteCount;
             }
         }
 
@@ -154,7 +161,10 @@ contract Competitions is Jurys {
         emit Voted(_competitionId, true, nbVote);
     }
 
-    function getCompetition(uint _competitionId) external view returns(CompetitionVotingSession memory){
-        return votingCompetitions[_competitionId];
+    /// @notice get One competition
+    /// @param _competitionId the id competition
+    function getCompetition(uint _competitionId) public view returns(CompetitionVotingSession memory){
+        require(_competitionId -1 < votingCompetitions.length, "Competition inexistante !");
+        return votingCompetitions[_competitionId - 1];
     }
 }

@@ -520,7 +520,7 @@ export default {
       ]
     },
     "Competitions": {
-      "address": "0x62568F0c59A6d8d4D8020738F0C4A440A7bc2682",
+      "address": "0xb42F766014f27E044cffFbA27956403F5c9e1c34",
       "abi": [
         {
           "inputs": [
@@ -599,6 +599,68 @@ export default {
             }
           ],
           "name": "CompetitionSessionRegistered",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "id",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "string",
+                  "name": "tokenURI",
+                  "type": "string"
+                },
+                {
+                  "internalType": "enum Competitions.TypeCompetitions",
+                  "name": "typeCompetitions",
+                  "type": "uint8"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "uint256",
+                      "name": "tokenId",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "voteCount",
+                      "type": "uint256"
+                    }
+                  ],
+                  "internalType": "struct Competitions.Option[]",
+                  "name": "options",
+                  "type": "tuple[]"
+                },
+                {
+                  "internalType": "uint256[]",
+                  "name": "jurys",
+                  "type": "uint256[]"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "startTime",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "endTime",
+                  "type": "uint256"
+                }
+              ],
+              "indexed": false,
+              "internalType": "struct Competitions.CompetitionVotingSession[]",
+              "name": "",
+              "type": "tuple[]"
+            }
+          ],
+          "name": "GetAllCompetition",
           "type": "event"
         },
         {
@@ -709,6 +771,13 @@ export default {
           "type": "function"
         },
         {
+          "inputs": [],
+          "name": "allCompetitions",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
           "inputs": [
             {
               "internalType": "address",
@@ -790,6 +859,28 @@ export default {
                   "internalType": "enum Competitions.TypeCompetitions",
                   "name": "typeCompetitions",
                   "type": "uint8"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "uint256",
+                      "name": "tokenId",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "voteCount",
+                      "type": "uint256"
+                    }
+                  ],
+                  "internalType": "struct Competitions.Option[]",
+                  "name": "options",
+                  "type": "tuple[]"
+                },
+                {
+                  "internalType": "uint256[]",
+                  "name": "jurys",
+                  "type": "uint256[]"
                 },
                 {
                   "internalType": "uint256",
@@ -1171,6 +1262,45 @@ export default {
           "name": "voteOnCompetition",
           "outputs": [],
           "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "name": "votingCompetitions",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "tokenURI",
+              "type": "string"
+            },
+            {
+              "internalType": "enum Competitions.TypeCompetitions",
+              "name": "typeCompetitions",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint256",
+              "name": "startTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "endTime",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
           "type": "function"
         }
       ]
