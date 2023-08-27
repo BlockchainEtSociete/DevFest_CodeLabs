@@ -233,26 +233,26 @@ const CompetitionGenerator = () => {
      */
     function getTypeCompetition(type: any){
         setTypeCompetition(type)
-        setTitle("");
+        //setTitle("");
         idsOption = [];
         setActors([]);
         setDirectors([]);
         setMovies([]);
 
         if(type == 1){
-            setTitle("Les Acteurs en compétition pour le chevrons d'argent");
+            //setTitle("Les Acteurs en compétition pour le chevrons d'argent");
             fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, setLoading)
                 .then((peoples) => {
                     setActors(peoples);
                 });
         } else if(type == 2){
-            setTitle("Les Réalisateurs en compétition pour la parenthèse de cristal");
+            //setTitle("Les Réalisateurs en compétition pour la parenthèse de cristal");
             fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, setLoading)
                 .then((peoples) => {
                     setDirectors(peoples);
                 });
         } else {
-            setTitle("Les Films en compétition pour l'accolade d'or");
+            //setTitle("Les Films en compétition pour l'accolade d'or");
             fetchMovie("MovieMinted", contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, setLoading)
                 .then((films) => {
                     setMovies(films);
@@ -360,12 +360,15 @@ const CompetitionGenerator = () => {
             })
     };
 
-
     return (
         <div>
             <h2>Création d'une nouvelle compétition</h2>
             <div className="form-ligne">
-                <p>Titre de la compétition : <b>{title}</b></p>
+                <label> Titre de la compétition :
+                    <input name="title" type="text" onChange={e => setTitle(getTimestamp(e.target.value))} />
+                </label>
+            </div>
+            <div className="form-ligne">
                 <label> Type de compétition :
                     <select name="type" onChange={e => getTypeCompetition(parseInt(e.target.value))}>
                         <option>Selectionnez le type de compétition</option>
@@ -397,7 +400,7 @@ const CompetitionGenerator = () => {
 
             <section style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center'}}>
                 {actors && actors.length > 0 && actors.map((actor: any, index: number) => (
-                        <div  key={`${actor.id}-${index}`}
+                        <div key={`${actor.id}-${index}`}
                               onClick={() => addTokenIdOption(actor.id)}>
                             <CardCompetitionSelect
                                 Info={actor.Firstname + " " + actor.Lastname}
@@ -407,7 +410,7 @@ const CompetitionGenerator = () => {
                     ))
                 }
                 {directors && directors.length > 0 && directors.map((director: any, index: number) => (
-                    <div  key={`${director.id}-${index}`}
+                    <div key={`${director.id}-${index}`}
                           onClick={() => addTokenIdOption(director.id)}>
                         <CardCompetitionSelect
                             Info={director.Firstname + " " + director.Lastname}
@@ -417,7 +420,7 @@ const CompetitionGenerator = () => {
                 ))
                 }
                 {movies && movies.length > 0 && movies.map((movie: any, index: number) => (
-                    <div  key={`${movie.id}-${index}`}
+                    <div key={`${movie.id}-${index}`}
                           onClick={() => addTokenIdOption(movie.id)}>
                         <CardCompetitionSelect
                             Info={movie.Title}

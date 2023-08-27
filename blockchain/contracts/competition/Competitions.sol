@@ -50,6 +50,7 @@ contract Competitions is Jurys {
 
     CompetitionVotingSession[] public votingCompetitions;
     mapping (uint => mapping(address => Voter)) votingCompetitionsVoters;
+    mapping(uint => uint[]) listJuryByCompetition;
 
     /// Event
     event CompetitionSessionRegistered(uint competitionId);
@@ -81,7 +82,6 @@ contract Competitions is Jurys {
         newCompetitionVotingSession.id = tokenId;
         newCompetitionVotingSession.tokenURI = _tokenURI;
         newCompetitionVotingSession.typeCompetitions = _typeCompetitions;
-        newCompetitionVotingSession.jurys = _idsJury;
         newCompetitionVotingSession.startTime = _startDate;
         newCompetitionVotingSession.endTime = _endDate;
 
@@ -90,6 +90,8 @@ contract Competitions is Jurys {
             newCompetitionVotingSession.options.push(Option(_idsOption[counter], 0));
             counter ++;
         }
+
+        listJuryByCompetition[tokenId] = _idsJury;
 
         emit CompetitionSessionRegistered(tokenId);
     }
@@ -163,8 +165,16 @@ contract Competitions is Jurys {
 
     /// @notice get One competition
     /// @param _competitionId the id competition
+    /// @return the competition
     function getCompetition(uint _competitionId) public view returns(CompetitionVotingSession memory){
         require(_competitionId -1 < votingCompetitions.length, "Competition inexistante !");
         return votingCompetitions[_competitionId - 1];
+    }
+
+    /// @notice get list by competition
+    /// @param _competitionId the id competition
+    /// @return the list jury by competition
+    function getJuryByCompetition(uint _competitionId) public view returns(uint[] memory){
+        return listJuryByCompetition[_competitionId];
     }
 }

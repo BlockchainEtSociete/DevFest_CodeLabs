@@ -3,7 +3,7 @@ import {ethers, EventLog} from "ethers";
 import contractsInterface from "../contracts/contracts";
 import {ipfsGetContent} from "../components/common/ipfs";
 import {toString as uint8ArrayToString} from "uint8arrays/to-string";
-import {fetchOnePeople, fetchPeople} from "./PeopleService.service";
+import {fetchOnePeople} from "./PeopleService.service";
 import {fetchOneMovie} from "./MovieService.service";
 
 /**
@@ -60,7 +60,7 @@ export async function fetchOneCompetition(contractAddress: string, contractAbi: 
             tokenUri = competition.tokenURI;
 
             // parse des listes
-            const jurys = [...competition.jurys]
+            //const jurys = [...competition.jurys]
             const options = [...competition.options]
             let listOptions: {
                 option: boolean | { id: number; Firstname: any; Lastname: any; Picture: any; Address: any; } | {
@@ -68,7 +68,7 @@ export async function fetchOneCompetition(contractAddress: string, contractAbi: 
                     Director: { Firstname: any; Lastname: any; };
                 } | undefined; voteCount: number;
             }[] = [];
-            let listIdJurys = [];
+            let listIdJurys: any[] = [];
 
             if(ethers.toNumber(competition.typeCompetitions) == 1){
                 //actor
@@ -106,9 +106,9 @@ export async function fetchOneCompetition(contractAddress: string, contractAbi: 
             }
 
             // jury a finir de récuperer
-            for(const j of jurys){
+            /*for(const j of jurys){
                 listIdJurys.push(ethers.toNumber(j));
-            }
+            }*/
 
             if( tokenUri) {
                 // parse des données récupérées en object

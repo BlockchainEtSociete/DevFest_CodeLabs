@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {fetchCompetitions} from "../services/CompetitionService.service.ts";
+import {fetchCompetitions} from "../services/CompetitionService.service";
 import contractsInterface from "../contracts/contracts";
 import CardListCompetition from "../components/competition/CardListCompetition";
 
@@ -24,7 +24,6 @@ const Competition = () => {
                             startDate={competition.startDate}
                             endDate={competition.endDate}
                             options={competition.options}
-                            jurys={competition.jurys}
                             typeCompetition={competition.typeCompetition}
                         />
                     ))
