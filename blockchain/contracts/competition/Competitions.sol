@@ -7,7 +7,7 @@ import "../identity/Jurys.sol";
 /// @title Management of Competition
 /// @author Colas Vincent
 /// @notice Smart contract to management digital Competition for the festival.
-contract Competitions is Jurys {
+contract Competitions {
 
     /// @notice Enum of type competition.
     enum  TypeCompetitions {
@@ -34,7 +34,6 @@ contract Competitions is Jurys {
         string tokenURI;
         TypeCompetitions typeCompetitions;
         Option[] options;
-        uint[] jurys;
         uint startTime;
         uint endTime;
     }
@@ -46,15 +45,19 @@ contract Competitions is Jurys {
         Ended
     }
 
-    constructor (string memory name, string memory symbol) Jurys(name, symbol) {}
-
     CompetitionVotingSession[] public votingCompetitions;
     mapping (uint => mapping(address => Voter)) votingCompetitionsVoters;
     mapping(uint => uint[]) listJuryByCompetition;
 
+    Jurys immutable juryContract;
+
     /// Event
     event CompetitionSessionRegistered(uint competitionId);
     event Voted(uint competitionId, bool vote, uint voices);
+
+    constructor(address payable sbtJury){
+        juryContract = Jurys(sbtJury);
+    }
 
     /// @notice Adds a voting session for a competition.
     /// @dev Administrator defines voting period, competition, voting panel and options. event CompetitionSessionRegistered when competition has been registered
@@ -64,7 +67,7 @@ contract Competitions is Jurys {
     /// @param _typeCompetitions Defines the type of options.
     /// @param _startDate Voting session start date.
     /// @param _endDate End date of voting session.
-    function addCompetition(uint[] memory _idsJury, string memory _tokenURI, uint[] memory _idsOption, TypeCompetitions _typeCompetitions, uint _startDate, uint _endDate) external onlyOwner {
+    function addCompetition(uint[] memory _idsJury, string memory _tokenURI, uint[] memory _idsOption, TypeCompetitions _typeCompetitions, uint _startDate, uint _endDate) external {
         require(_startDate > block.timestamp, "Your competition can't be in the past");
         require(_startDate < _endDate, "Your competition end date can't be before the start date");
         require(_idsJury.length >= 2, "Your competition must contain jurys");
@@ -127,15 +130,15 @@ contract Competitions is Jurys {
     /// @return True if the msg.sender has access to this competition.
     function controleJuryByCompetition(uint _competitionId)internal view returns(bool){
         bool contain = false;
-        uint juryId = getJuryId(msg.sender);
+        uint juryId = juryContract.getJuryId(msg.sender);
 
         CompetitionVotingSession memory competition = getCompetition(_competitionId);
 
-        for(uint i = 0; i < competition.jurys.length; i++){
+        /*for(uint i = 0; i < competition.jurys.length; i++){
             if(competition.jurys[i] == juryId){
                 contain = true;
             }
-        }
+        }*/
         return contain;
     }
 
