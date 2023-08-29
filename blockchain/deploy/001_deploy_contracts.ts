@@ -31,7 +31,7 @@ const contractDeploy: DeployFunction = async (hre: HardhatRuntimeEnvironment) =>
   });
 
   // Jurys contract deplopy
-  await deploy('Jurys', {
+  const juryContract = await deploy('Jurys', {
     contract: 'Jurys',
     from: deployer,
     args: ["DevFest sbt jury","SBT"],
@@ -42,7 +42,7 @@ const contractDeploy: DeployFunction = async (hre: HardhatRuntimeEnvironment) =>
   await deploy('Competitions', {
     contract: 'Competitions',
     from: deployer,
-    args: ["DevFest Competition","DFC"],
+    args: [juryContract.address],
     log: true
   });
 };
