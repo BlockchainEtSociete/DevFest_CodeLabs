@@ -11,6 +11,8 @@ contract Jurys is ERC5484 {
     /// @notice Mapping for token URIs
     mapping(uint256 => string) private _tokenURIs;
 
+    mapping(address => uint) ListJury;
+
     event JuryMinted(address jury, uint tokenId);
 
     constructor (string memory name, string memory symbol) ERC5484(name, symbol) {}
@@ -45,6 +47,8 @@ contract Jurys is ERC5484 {
 
         require(_exists(tokenId), "Jury: token generation failed");
         _setTokenURI(tokenId, _tokenURI);
+
+        ListJury[_recipient] = tokenId;
 
         emit JuryMinted(_recipient, tokenId);
 
