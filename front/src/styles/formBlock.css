@@ -16,8 +16,9 @@ background-color: transparent;
 button{
     background-color: #f2c684;
     color: #fff;
-    width: 8rem;
-    font-size: 1rem;
+    width: 25rem;
+    height: 4rem;
+    font-size: 1.5rem;
     border-radius: 25px;
     margin: 1rem;
 }
@@ -29,4 +30,10 @@ button{
 }
 textarea{
     margin: auto;
+}
+.openBlockCompetition{
+    display: none;
+}
+.blockCompetition{
+    display: flex;
 }

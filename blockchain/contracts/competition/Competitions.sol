@@ -53,50 +53,66 @@ contract Competitions {
 
     /// Event
     event CompetitionSessionRegistered(uint competitionId);
+    event JurysCompetitionsRegistered(uint competitionId, string message);
+    event OptionsCompetitionsRegistered(uint competitionId, string message);
     event Voted(uint competitionId, bool vote, uint voices);
 
     constructor(address payable sbtJury){
         juryContract = Jurys(sbtJury);
     }
 
-    /// @notice Adds a voting session for a competition.
+    /// @notice Adds a competition.
     /// @dev Administrator defines voting period, competition, voting panel and options. event CompetitionSessionRegistered when competition has been registered
-    /// @param _idsJury List id token of voting juries.
     /// @param _tokenURI Competition uri photo - title.
-    /// @param _idsOption List of ids in competition (film, actor, director).
     /// @param _typeCompetitions Defines the type of options.
     /// @param _startDate Voting session start date.
     /// @param _endDate End date of voting session.
-    function addCompetition(uint[] memory _idsJury, string memory _tokenURI, uint[] memory _idsOption, TypeCompetitions _typeCompetitions, uint _startDate, uint _endDate) external {
+    function addCompetition(string memory _tokenURI, TypeCompetitions _typeCompetitions, uint _startDate, uint _endDate) external {
         require(_startDate > block.timestamp, "Your competition can't be in the past");
         require(_startDate < _endDate, "Your competition end date can't be before the start date");
-        require(_idsJury.length >= 2, "Your competition must contain jurys");
-        require(_idsOption.length >= 4, "Your competition must contain at least 4 options");
         require(keccak256(abi.encode(_typeCompetitions)) != keccak256(abi.encode("")), "Your competition must contain type of competition");
-
-        // verifier la liste d'idsJurys
-        for(uint i = 0; i < _idsJury.length; i++){
-        }
 
         uint tokenId = votingCompetitions.length + 1;
 
         CompetitionVotingSession storage newCompetitionVotingSession = votingCompetitions.push();
-
         newCompetitionVotingSession.id = tokenId;
         newCompetitionVotingSession.tokenURI = _tokenURI;
         newCompetitionVotingSession.typeCompetitions = _typeCompetitions;
         newCompetitionVotingSession.startTime = _startDate;
         newCompetitionVotingSession.endTime = _endDate;
 
+        emit CompetitionSessionRegistered(tokenId);
+    }
+
+    /// @notice Adds options for a competition.
+    /// @param _tokenCompetition id of competition
+    /// @param _idsOption List of ids in competition (film, actor, director).
+    function addOptionsCompetition(uint _tokenCompetition, uint[] memory _idsOption) external {
+        require(_idsOption.length >= 4, "Your competition must contain at least 4 options");
+
         uint counter = 0;
         for(uint i = 0; i < _idsOption.length; i++){
-            newCompetitionVotingSession.options.push(Option(_idsOption[counter], 0));
+            votingCompetitions[_tokenCompetition - 1].options.push(Option(_idsOption[counter], 0));
             counter ++;
         }
 
-        listJuryByCompetition[tokenId] = _idsJury;
+        emit OptionsCompetitionsRegistered(_tokenCompetition, 'Options ajouter avec succes !');
+    }
 
-        emit CompetitionSessionRegistered(tokenId);
+    /// @notice Adds jurys for a competition.
+    /// @param _tokenCompetition id of competition
+    /// @param _idsJury List id token of voting juries.
+    function addJurysCompetition(uint _tokenCompetition, uint[] memory _idsJury) external {
+       require(_idsJury.length >= 2, "Your competition must contain jurys");
+
+        // verifie la liste d'idsJurys
+        for(uint i = 0; i < _idsJury.length; i++){
+            require(juryContract.isTokenValid(_idsJury[i]), "Your jury is invalid");
+        }
+
+        listJuryByCompetition[_tokenCompetition] = _idsJury;
+
+        emit JurysCompetitionsRegistered(_tokenCompetition, 'Jurys ajouter avec succes !');
     }
 
     /// @notice Gets the voting competition status according to the current timestamp.
@@ -132,13 +148,13 @@ contract Competitions {
         bool contain = false;
         uint juryId = juryContract.getJuryId(msg.sender);
 
-        CompetitionVotingSession memory competition = getCompetition(_competitionId);
+        uint[] memory idsJury = listJuryByCompetition[_competitionId];
 
-        /*for(uint i = 0; i < competition.jurys.length; i++){
-            if(competition.jurys[i] == juryId){
+        for(uint i = 0; i < idsJury.length; i++){
+            if(idsJury[i] == juryId){
                 contain = true;
             }
-        }*/
+        }
         return contain;
     }
 

@@ -1,5 +1,3 @@
-
-
 import { CID, create } from 'ipfs-http-client'
 import { concat as uint8ArrayConcat } from 'uint8arrays/concat'
 import all from 'it-all'
@@ -25,5 +23,4 @@ export const ipfsGetContent = async (tokenUri: string) => {
 
     return resp
 }
-
 export default ipfs;
