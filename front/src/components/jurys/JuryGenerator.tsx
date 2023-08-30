@@ -6,9 +6,8 @@ import {JuryMetadata} from "../../types/Metadata.ts";
 import {provider} from "../../provider/providers.ts";
 import contractsInterface from "../../contracts/contracts.ts";
 import ipfs from "../common/ipfs.ts";
-import {GenerateJuryGenerator, GenerateJuryImage, JuryInfos} from "./JuryImageGenerator.tsx";
+import {GenerateJuryGenerator, GenerateJuryImage} from "./JuryImageGenerator.tsx";
 import JuryDisplay from "./JuryDisplay.tsx";
-import {dataUrlToFile, selectedPhotoToken} from "../../services/IpfsService.service.ts";
 
 const JuryGenerator = () => {
     const [mitting, setMitting] = useState(false);
@@ -30,7 +29,7 @@ const JuryGenerator = () => {
         Picture: '',
         Address: '',
     });
-    const [tokenURI, setTokenURI]: any = useState(0);
+    const [tokenId, setTokenId]: any = useState(0);
 
     /**
      * Verification du formulaire avant procédure du mint NFT
@@ -75,18 +74,8 @@ const JuryGenerator = () => {
         }
         setJuryInfo(newJury);
 
-        if(juryInfo){
-            await createURIPicture(newJury);
-        }
-    }
-
-    /**
-     * Création de l'image ipfs du jury
-     * @param newJury
-     */
-    const createURIPicture = async (newJury: JuryInfos) => {
         // Upload de l'image sur ipfs
-        const PictureFile = await dataUrlToFile(`data:image/*;${newJury.Picture}`, "jury.jpg");
+        const PictureFile = await dataUrlToFile(`data:image/*;${newJury.Picture}`)
         const ipfsPictureUploadResult = await ipfs.add(PictureFile, {pin: true}).catch((err: Error) => {
             setMessage(`IPFS: ${err.message}`)
             setSeverity('error')
@@ -104,7 +93,7 @@ const JuryGenerator = () => {
             if (cardBase64 && cardBase64 !== 'data:image/*;' && cardBase64 !== 'data:,') {
                 setCardDataUrl(cardBase64)
 
-                const cardFile = await dataUrlToFile(cardBase64, 'cardJury.jpg')
+                const cardFile = await dataUrlToFile(cardBase64)
 
                 const ipfsImageUploadResult = await ipfs.add(cardFile, {pin:true}).catch((err: Error) => {
                     console.log(err.message)
@@ -157,7 +146,7 @@ const JuryGenerator = () => {
 
         const metadataString = JSON.stringify(NFTMetaData);
 
-        // enregistrement des meta donnés sur ipfs
+        // enregistrement des meta donné sur ipfs
         const ipfsResponse = await ipfs.add(metadataString, {pin: true}).catch((err: Error) => {
             setMessage(`IPFS: ${err.message}`)
             setSeverity('error')
@@ -185,9 +174,9 @@ const JuryGenerator = () => {
 
         // récuperation de l'id du token minté
         await contract.on('*', (event) => {
-            if(event.eventName === 'JuryMinted'){
-                const uri = ethers.toNumber(event.args[2]);
-                setTokenURI(uri);
+            if(event.eventName === 'ActorMinted' || event.eventName === 'JuryMinted'){
+                const id = ethers.toNumber(event.args[0]);
+                setTokenId(id);
             }
         });
 
@@ -219,19 +208,56 @@ const JuryGenerator = () => {
             }
         })
 
+        console.log(tokenId);
+
         setMessage('Minting finished ! :)')
         setSeverity('success')
         setOpen(true)
         return true;
     }
 
+
     /**
      * Choix de la photo
      * @param event
      */
     const selectedPhoto = (event: ChangeEvent<HTMLInputElement>) => {
-        selectedPhotoToken(event, setFile, setPicture);
+        const filesUploaded = event.currentTarget.files;
+        if (filesUploaded && filesUploaded.length > 0) {
+            setPictureBase64(filesUploaded[0]);
+        }
     };
+
+    /**
+     * Set l'url de la photo
+     * @param file
+     */
+    const setPictureBase64 = (file: any) => {
+        setFile(file);
+        let reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function () {
+            setPicture(reader.result as string);
+        };
+        reader.onerror = function (error) {
+            console.log('Error: ', error);
+        };
+    };
+
+    /**
+     * création d'un fichier a partir d'une url base 64
+     * @param src
+     */
+    const dataUrlToFile = async (src: string) => {
+        return (fetch(src)
+            .then(function (res) {
+                return res.arrayBuffer();
+            }))
+            .then(function (buf) {
+                return new File([buf], 'people.jpg', {type: 'image/*'});
+            })
+    };
+
 
     return (
         <section>
@@ -273,7 +299,7 @@ const JuryGenerator = () => {
 
             <div>
                 <SnackbarAlert open={open} setOpen={setOpen} message={message} severity={severity} />
-                <JuryDisplay tokenURI={tokenURI}/>
+                <JuryDisplay tokenId={tokenId}/>
             </div>
         </section>
     )
