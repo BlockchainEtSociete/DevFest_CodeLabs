@@ -23,7 +23,7 @@ const useRouteMatch = (patterns: string[]) => {
 }
 
 const NavTab = () => {
-    const routeMatch = useRouteMatch(['/', '/admin', '/jury', '/acteur', '/film', '/realisateur', '/competition', '/account']);
+    const routeMatch = useRouteMatch(['/', '/jury', '/acteur', '/film', '/realisateur', '/competition', '/account']);
     const currentTab = routeMatch?.pattern?.path || '/';
 
     return (
