@@ -7,7 +7,6 @@ import {provider} from "../../provider/providers.ts";
 import contractsInterface from "../../contracts/contracts.ts";
 import ipfs from "../common/ipfs.ts";
 import {GenerateJuryGenerator, GenerateJuryImage, JuryInfos} from "./JuryImageGenerator.tsx";
-import JuryDisplay from "./JuryDisplay.tsx";
 import {dataUrlToFile, selectedPhotoToken} from "../../services/IpfsService.service.ts";
 
 const JuryGenerator = () => {
@@ -269,11 +268,13 @@ const JuryGenerator = () => {
 
             <button onClick={verifyFormJury} disabled={mitting}>Ajouter</button>
 
-            <GenerateJuryGenerator cardInfos={juryInfo} cardDataUrl={cardDataUrl} />
+            <GenerateJuryGenerator cardInfos={juryInfo} />
+            <div>
+                <img id="generatedCard" src={cardDataUrl}></img>
+            </div>
 
             <div>
                 <SnackbarAlert open={open} setOpen={setOpen} message={message} severity={severity} />
-                <JuryDisplay tokenURI={tokenURI}/>
             </div>
         </section>
     )

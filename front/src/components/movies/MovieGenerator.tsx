@@ -5,7 +5,7 @@ import ipfs from "../common/ipfs.ts";
 import {MovieMetadata} from "../../types/Metadata.ts";
 import {provider} from "../../provider/providers.ts";
 import MovieDisplay from "./MovieDisplay.tsx";
-import {fetchPeople} from "../../services/PeopleService.service.ts";
+import {fetchPeople, listenToNewPeople} from "../../services/PeopleService.service.ts";
 import SnackbarAlert from "../common/SnackbarAlert.tsx";
 import {AlertColor} from "@mui/material";
 
@@ -30,11 +30,13 @@ const MovieGenerator = () => {
      * Récupération de la liste des réalisateurs pour ajouter l'id au film
      */
     useEffect(() => {
-        fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, setLoading)
-            .then((peoples) => {
-                setDirectors(peoples);
-            });
-    }, []);
+        const addToDirectors = async (people: any) => {
+            directors.push(people);
+        }
+
+        fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, setLoading, addToDirectors);
+        listenToNewPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors);
+    }, [directors]);
 
     /**
      * Fonction qui appel le smart contract afin de minter le token uri dans la blockchain

@@ -239,7 +239,7 @@ const CompetitionGenerator = () => {
         setDirectors([]);
         setMovies([]);
 
-        if(type == 1){
+       /* if(type == 1){
             setTitle("Les Acteurs en compétition pour le chevrons d'argent");
             fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, setLoading)
                 .then((peoples) => {
@@ -257,7 +257,7 @@ const CompetitionGenerator = () => {
                 .then((films) => {
                     setMovies(films);
                 });
-        }
+        }*/
     }
 
     /**

@@ -1,6 +1,7 @@
 import { Landscape } from "@mui/icons-material";
 // @ts-ignore
 import html2pdf from "html2pdf.js";
+import {useState} from "react";
 
 export interface JuryInfos {
     Firstname: string;
@@ -10,8 +11,7 @@ export interface JuryInfos {
 }
 
 export interface GenerateJuryImageProps {
-    cardInfos: JuryInfos,
-    cardDataUrl: string
+    cardInfos: JuryInfos
 }
 
 export const GenerateJuryImage = async (cardInfos: JuryInfos) => {
@@ -19,15 +19,6 @@ export const GenerateJuryImage = async (cardInfos: JuryInfos) => {
         const element = document.getElementById('cardPdf');
         if (element) {
             element.style.display = 'block';
-
-         /*   const opt = {
-                margin:1,
-                unit: 'px',
-                orientation: Landscape,
-                jsPDF: {format: [125, 125]}
-            }
-
-            return await html2pdf().set(opt).from(element).toImg().outputImg('dataurl');*/
 
             const html2pdfWorker = new html2pdf.Worker();
             const cardDataUrl = await html2pdfWorker
@@ -41,6 +32,8 @@ export const GenerateJuryImage = async (cardInfos: JuryInfos) => {
                 .toImg()
                 .outputImg('dataurl');
 
+            element.style.display = 'none';
+
             console.log(cardDataUrl);
 
             return cardDataUrl;
@@ -49,13 +42,9 @@ export const GenerateJuryImage = async (cardInfos: JuryInfos) => {
     return '';
 }
 
-export const GenerateJuryGenerator = ({cardInfos, cardDataUrl}: GenerateJuryImageProps) => {
+export const GenerateJuryGenerator = ({cardInfos}: GenerateJuryImageProps) => {
     return (
         <>
-            <div>
-                <img id="generatedCard" src={cardDataUrl}></img>
-            </div>
-
             <div id="cardPdf" style={{display: 'none'}}>
                 <div className="logos">
                     <div className="companyLogo">
