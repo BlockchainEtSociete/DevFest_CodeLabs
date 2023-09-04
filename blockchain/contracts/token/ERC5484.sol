@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IERC5484.sol";
 
@@ -9,7 +10,7 @@ import "./IERC5484.sol";
 /// @author Bertrand Presles.
 /// @notice An implementation of Consensual Soulbound Token.
 /// @dev Implements EIP-5484: Consensual Soulbound Tokens - https://eips.ethereum.org/EIPS/eip-5484
-abstract contract ERC5484 is IERC5484, ERC721Enumerable, Ownable {
+abstract contract ERC5484 is IERC5484, ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
     /// @notice Mapping to store burn authorizations for each token issued.
     mapping (uint256 => BurnAuth) burnAuths;
@@ -66,7 +67,7 @@ abstract contract ERC5484 is IERC5484, ERC721Enumerable, Ownable {
     /// - `tokenId` must exists
     ///
     /// @param tokenId The token id to burn.
-    function _burn(uint256 tokenId) internal virtual override {
+    function _burn(uint256 tokenId) internal virtual override(ERC721, ERC721URIStorage) {
         // Implements check on burn auths for burn allowance.
         if (burnAuths[tokenId] == BurnAuth.Neither) {
             revert("ERC 5484: Burn is not allowed");
@@ -92,5 +93,22 @@ abstract contract ERC5484 is IERC5484, ERC721Enumerable, Ownable {
     ) external view returns (BurnAuth) {
         require(_exists(tokenId), "EmployeeCard: token does not exist");
         return burnAuths[tokenId];
+    }
+
+    // The following functions are overrides required by Solidity.
+
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override(ERC721, ERC721Enumerable)
+    {
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    }
+
+    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory)
+    {
+        return super.tokenURI(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721Enumerable, ERC721URIStorage) returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
     }
 }
