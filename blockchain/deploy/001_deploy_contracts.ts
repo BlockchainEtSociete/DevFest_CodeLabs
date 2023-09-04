@@ -30,12 +30,21 @@ const contractDeploy: DeployFunction = async (hre: HardhatRuntimeEnvironment) =>
     log: true
   });
 
+  // Jurys contract deplopy
+  const juryContract = await deploy('Jurys', {
+    contract: 'Jurys',
+    from: deployer,
+    args: ["DevFest sbt jury","SBT"],
+    log: true
+  });
+
+  // Competition contract deployment
   await deploy('Competitions', {
     contract: 'Competitions',
     from: deployer,
-    args: ["DevFest Competition","DFC"],
+    args: [juryContract.address],
     log: true
   });
 };
 export default contractDeploy;
-contractDeploy.tags = ['Actors', 'Directors', 'Movies', 'Competitions']
+contractDeploy.tags = ['Actors', 'Directors', 'Movies', 'Jurys', 'Competitions']
