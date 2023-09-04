@@ -5,15 +5,13 @@ import "../token/ERC5484.sol";
 
 /// @title An SBT for Jury identification
 /// @author Colas Vincent
-/// @notice this contract generate digital ids for your jury that can also be used as proof of their work
+/// @notice this contract generate digital ids for jury's members of a competition.
 contract Jurys is ERC5484 {
 
     /// @notice Mapping for token URIs
     mapping(uint256 => string) private _tokenURIs;
 
-    mapping(address => uint) ListJury;
-
-    event JuryMinted(address jury, uint tokenId);
+    event JuryMinted(address jury, uint tokenId, string tokerURI);
 
     constructor (string memory name, string memory symbol) ERC5484(name, symbol) {}
 
@@ -40,7 +38,7 @@ contract Jurys is ERC5484 {
     /// @param _tokenURI The token URI.
     /// emit JuryMinted event when jury is minted.
     function mint(address _recipient, string calldata _tokenURI) external onlyOwner {
-        require(balanceOf(_recipient) == 0, "An jury can only have 1 token");
+        require(balanceOf(_recipient) == 0, "A jury can only have 1 token");
 
         uint tokenId = this.totalSupply() + 1;
         _safeMint(_recipient, tokenId, BurnAuth.Both);
@@ -48,9 +46,7 @@ contract Jurys is ERC5484 {
         require(_exists(tokenId), "Jury: token generation failed");
         _setTokenURI(tokenId, _tokenURI);
 
-        ListJury[_recipient] = tokenId;
-
-        emit JuryMinted(_recipient, tokenId);
+        emit JuryMinted(_recipient, tokenId, _tokenURI);
 
         _approve(owner(), tokenId);
     }
@@ -68,7 +64,7 @@ contract Jurys is ERC5484 {
     }
 
     /// @notice Returns if the SBT is still valid.
-    /// @dev A valid token is a token without end time set
+    /// @dev A valid token is a token minted
     /// @return True is it's still valid, false otherwise.
     function isTokenValid(uint256 tokenId) public view returns (bool) {
         _requireMinted(tokenId);
