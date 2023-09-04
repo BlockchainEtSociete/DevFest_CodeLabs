@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../token/ERC5484.sol";
 
 /// @title An SBT for Jury identification
-/// @author Colas Vincent
+/// @author Colas Vincent, Reviewers : Bertrand Presles
 /// @notice this contract generate digital ids for jury's members of a competition.
 contract Jurys is ERC5484 {
 
