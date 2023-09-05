@@ -1,4 +1,4 @@
-import {ChangeEvent, useState} from "react";
+import {useEffect, useState} from "react";
 import {AlertColor} from "@mui/material";
 import {fetchMovie} from "../../services/MovieService.service";
 import contractsInterface from "../../contracts/contracts";
@@ -11,6 +11,7 @@ import {CompetitionMetadata} from "../../types/Metadata";
 import {provider} from "../../provider/providers";
 import CompetitionDisplay from "./CompetitionDisplay";
 import {dataUrlToFile, selectedPhotoToken} from "../../services/IpfsService.service";
+import {fetchJury, listenToNewJury} from "../services/JuryService.service.ts";
 
 const CompetitionGenerator = () => {
     const [, setLoading] = useState(false);
@@ -29,6 +30,7 @@ const CompetitionGenerator = () => {
     const [directors, setDirectors]: any = useState([]);
     const [actors, setActors]: any = useState([]);
     const [movies, setMovies]: any = useState([]);
+    const [jurys, ]: any = useState([]);
 
     // variables de la competitions
     const [title, setTitle]: any = useState('');
@@ -42,8 +44,14 @@ const CompetitionGenerator = () => {
     const [, setFile] = useState(null);
     const [tokenId, setTokenId]: any = useState(0);
 
-    // à récuperer sur la blockchain
-    const jurysBlock: any = [
+    const addToActors = async (people: any) => {
+        actors.push(people);
+    }
+    const addToDirectors = async (people: any) => {
+        directors.push(people);
+    }
+
+   /* const jurysBlock: any = [
         {
             id: 1,
             Firstname: "Jean",
@@ -67,7 +75,17 @@ const CompetitionGenerator = () => {
         'Les Acteurs en compétition pour le chevrons d\'argent',
         'Les Réalisateurs en compétition pour la parenthèse de cristal',
         'Les Films en compétition pour l\'accolade d\'or'
-    ]
+    ]*/
+
+    useEffect(() => {
+        const addToJurys = async (jury: any) => {
+            jurys.push(jury);
+        }
+
+        fetchJury("JuryMinted", contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, setLoading, addToJurys).then();
+        listenToNewJury("JuryMinted", contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, addToJurys).then();
+
+    }, [jurys])
 
     /**
      * Verification des données de la compétition avant sauvegarde dans la blockchain
@@ -398,15 +416,9 @@ const CompetitionGenerator = () => {
         setMovies([]);
 
         if(type == 1){
-            fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, setLoading)
-                .then((peoples) => {
-                    setActors(peoples);
-                });
+            fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, setLoading, addToActors).then();
         } else if(type == 2){
-            fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, setLoading)
-                .then((peoples) => {
-                    setDirectors(peoples);
-                });
+            fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, setLoading, addToDirectors).then();
         } else {
             fetchMovie("MovieMinted", contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, setLoading)
                 .then((films) => {
@@ -568,12 +580,12 @@ const CompetitionGenerator = () => {
                     <h5>Les Jurys : </h5>
                     <div>
                         {
-                            jurysBlock && jurysBlock.length > 0 && jurysBlock.map((juryB: any, index: number) => {
-                                const fullName = juryB.Lastname + " " + juryB.Firstname;
+                            jurys && jurys.length > 0 && jurys.map((jury: any, index: number) => {
+                                const fullName = jury.Lastname + " " + jury.Firstname;
                                 return (
                                     <label key={`id-${index}`}> {fullName} :
                                         <input name="jury" type="checkbox" onChange={e => addJuryId(Number(e.target.value))}
-                                               value={juryB.id}/>
+                                               value={jury.id}/>
                                     </label>
                                 )
                             })
