@@ -140,6 +140,11 @@ $ npm run build
 $ npm run deploy:ganache
 ```
 
+#### clean hardhat
+```bash
+$ npx hardhat clean
+```
+
 ### Run tests
 ```bash
 $ npm run test

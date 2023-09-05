@@ -3,7 +3,7 @@ import {useEffect, useState} from "react";
 import contractsInterface from "../contracts/contracts.ts";
 import {fetchMovie} from "../services/MovieService.service.ts";
 
-const Film = () => {
+const Movie = () => {
     const [movies, setMovies]: any = useState([]);
     const [isLoading, setLoading] = useState(false);
 
@@ -211,5 +211,5 @@ const Film = () => {
     )
 }
 
-export default Film;
+export default Movie;
 

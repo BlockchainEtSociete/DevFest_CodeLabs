@@ -1,7 +1,6 @@
 import { Landscape } from "@mui/icons-material";
 // @ts-ignore
 import html2pdf from "html2pdf.js";
-import {useState} from "react";
 
 export interface JuryInfos {
     Firstname: string;
@@ -30,11 +29,9 @@ export const GenerateJuryImage = async (cardInfos: JuryInfos) => {
                 })
                 .from(element)
                 .toImg()
-                .outputImg('dataurl');
+                .outputImg('dataurlstring');
 
             element.style.display = 'none';
-
-            console.log(cardDataUrl);
 
             return cardDataUrl;
         }

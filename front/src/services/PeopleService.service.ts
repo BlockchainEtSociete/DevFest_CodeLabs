@@ -3,6 +3,11 @@ import {ethers, EventLog} from "ethers";
 import {ipfsGetContent} from "../components/common/ipfs.ts";
 import {toString as uint8ArrayToString} from "uint8arrays/to-string";
 
+/**
+ * Récuperation des data et creation de l'objet people
+ * @param tokenId
+ * @param tokenUri
+ */
 export const getPeopleData = async (tokenId: number, tokenUri: string) => {
     // parse des données récupérées en object
     const metadataString = await ipfsGetContent(tokenUri);
@@ -18,8 +23,13 @@ export const getPeopleData = async (tokenId: number, tokenUri: string) => {
 }
 
 /**
- * Fonction de récupération des données des acteurs et réalisateurs
- * */
+ * Fonction de récupération des données des acteurs et réalisateurs par event
+ * @param eventType
+ * @param contractAddress
+ * @param contractAbi
+ * @param setLoading
+ * @param addToPeopleList
+ */
 export const fetchPeople = async (eventType: string, contractAddress: string, contractAbi: any, setLoading: Function, addToPeopleList: Function) => {
     setLoading(true);
     if (provider) {
@@ -38,7 +48,7 @@ export const fetchPeople = async (eventType: string, contractAddress: string, co
                 tokenUri = await contract.tokenURI(id);
 
                 if(tokenUri) {
-                    addToPeopleList(await getPeopleData(tokenUri));
+                    await addToPeopleList(await getPeopleData(id, tokenUri));
                 }
             }
         } catch (err) {
@@ -50,21 +60,29 @@ export const fetchPeople = async (eventType: string, contractAddress: string, co
     }
 }
 
+/**
+ * Fonction qui ecoute les nouveaux evenements
+ * @param eventType
+ * @param contractAddress
+ * @param contractAbi
+ * @param addToPeopleList
+ */
 export const listenToNewPeople = async (eventType: string, contractAddress: string, contractAbi: any, addToPeopleList: Function) => {
     if (provider) {
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
 
-        contract.on(eventType, async (tokenId: any) => {
+        await contract.on(eventType, async (tokenId: any) => {
             let tokenUri: string = '';
             const id = ethers.toNumber(tokenId);
             // récupération du tokenURI, url des metadonnée du token
             tokenUri = await contract.tokenURI(id);
 
             if (tokenUri) {
-                addToPeopleList(await getPeopleData(tokenUri));
+               await addToPeopleList(await getPeopleData(id, tokenUri));
             }
         });
+
     }
 }
 

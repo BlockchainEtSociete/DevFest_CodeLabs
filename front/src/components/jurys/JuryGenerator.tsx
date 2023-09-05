@@ -29,7 +29,6 @@ const JuryGenerator = () => {
         Picture: '',
         Address: '',
     });
-    const [tokenURI, setTokenURI]: any = useState(0);
 
     /**
      * Verification du formulaire avant procédure du mint NFT
@@ -181,14 +180,6 @@ const JuryGenerator = () => {
         // création de l'appel du mint
         const contract = new ethers.Contract(contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, signer);
         const transaction = await contract.mint(Address, tokenURI);
-
-        // récuperation de l'id du token minté
-        await contract.on('*', (event) => {
-            if(event.eventName === 'JuryMinted'){
-                const uri = ethers.toNumber(event.args[2]);
-                setTokenURI(uri);
-            }
-        });
 
         // récupération des informations du mint
         await transaction.wait().then(async (receipt: any) => {

@@ -3,8 +3,8 @@ import {useEffect, useState} from "react";
 import contractsInterface from "../contracts/contracts.ts";
 import {fetchPeople, listenToNewPeople} from "../services/PeopleService.service.ts";
 
-const Realisateur = () => {
-    const [directors, setDirectors]: any = useState([]);
+const Director = () => {
+    const [directors, ]: any = useState([]);
     const [isLoading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -12,8 +12,8 @@ const Realisateur = () => {
             directors.push(people);
         }
 
-        fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, setLoading, addToDirectors);
-        listenToNewPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors);
+        fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, setLoading, addToDirectors).then();
+        listenToNewPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors).then();
     }, [directors]);
 
     /*const realisateurs = [
@@ -101,4 +101,4 @@ const Realisateur = () => {
         </article>
     )
 }
-export default Realisateur;
+export default Director;
