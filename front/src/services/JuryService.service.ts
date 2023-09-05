@@ -1,14 +1,14 @@
-import {provider} from "../provider/providers.ts";
-import {ethers, EventLog} from "ethers";
 import {ipfsGetContent} from "../components/common/ipfs.ts";
 import {toString as uint8ArrayToString} from "uint8arrays/to-string";
+import {provider} from "../provider/providers.ts";
+import {ethers, EventLog} from "ethers";
 
 /**
- * Récuperation des data et creation de l'objet people
+ * Récuperation des data et creation de l'objet jury
  * @param tokenId
  * @param tokenUri
  */
-export const getPeopleData = async (tokenId: number, tokenUri: string) => {
+export const getJuryData = async (tokenId: number, tokenUri: string) => {
     // parse des données récupérées en object
     const metadataString = await ipfsGetContent(tokenUri);
     const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'));
@@ -17,20 +17,20 @@ export const getPeopleData = async (tokenId: number, tokenUri: string) => {
         id: tokenId,
         Firstname: data.attributes[0].value,
         Lastname: data.attributes[1].value,
-        Picture: data.attributes[2].value.replace('ipfs://', 'https://ipfs.io/ipfs/'),
+        Picture: data.image.replace('ipfs://', 'https://ipfs.io/ipfs/'),
         Address: data.attributes[3].value
     };
 }
 
 /**
- * Fonction de récupération des données des acteurs et réalisateurs par event
+ * Fonction de récupération des données des jurys
  * @param eventType
  * @param contractAddress
  * @param contractAbi
  * @param setLoading
- * @param addToPeopleList
+ * @param addToJurys
  */
-export const fetchPeople = async (eventType: string, contractAddress: string, contractAbi: any, setLoading: Function, addToPeopleList: Function) => {
+export const fetchJury = async (eventType: string, contractAddress: string, contractAbi: any, setLoading: Function, addToJurys: Function) => {
     setLoading(true);
     if (provider) {
         // initialisation du contract
@@ -39,16 +39,14 @@ export const fetchPeople = async (eventType: string, contractAddress: string, co
         const filter = contract.filters[eventType];
         // récupération des evenements en fonction du filtre
         const events = await contract.queryFilter(filter, 0);
+
         try{
             for (const event of events) {
-                let tokenUri: string = '';
-                // récupération de l'id du token parsé car initialement on le recoit en bigNumber
-                const id = ethers.toNumber((event as EventLog).args[0]);
-                // récupération du tokenURI, url des metadonnée du token
-                tokenUri = await contract.tokenURI(id);
+                const id = ethers.toNumber((event as EventLog).args[1]);
+                const tokenUri: string = (event as EventLog).args[2];
 
                 if(tokenUri) {
-                    await addToPeopleList(await getPeopleData(id, tokenUri));
+                    await addToJurys(await getJuryData(id, tokenUri));
                 }
             }
         } catch (err) {
@@ -61,28 +59,26 @@ export const fetchPeople = async (eventType: string, contractAddress: string, co
 }
 
 /**
- * Fonction qui ecoute les nouveaux peoples
+ * Fonction qui ecoute les nouveaux jurys
  * @param eventType
  * @param contractAddress
  * @param contractAbi
- * @param addToPeopleList
+ * @param addToJurys
  */
-export const listenToNewPeople = async (eventType: string, contractAddress: string, contractAbi: any, addToPeopleList: Function) => {
+export const listenToNewJury = async (eventType: string, contractAddress: string, contractAbi: any, addToJurys: Function) => {
     if (provider) {
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
 
-        await contract.on(eventType, async (event: any) => {
-            let tokenUri: string = '';
-            const id = ethers.toNumber(event.args[0]);
-            // récupération du tokenURI, url des metadonnée du token
-            tokenUri = await contract.tokenURI(id);
+        await contract.emit(eventType, async (event: any) => {
+            const tokenUri: string = event.args[2];
+            const id = ethers.toNumber(event.args[1]);
+            console.log(event);
 
             if (tokenUri) {
-               await addToPeopleList(await getPeopleData(id, tokenUri));
+                await addToJurys(await getJuryData(id, tokenUri));
             }
         });
 
     }
 }
-

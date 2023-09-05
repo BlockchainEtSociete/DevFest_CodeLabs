@@ -261,7 +261,7 @@ const JuryGenerator = () => {
 
             <GenerateJuryGenerator cardInfos={juryInfo} />
             <div>
-                <img id="generatedCard" src={cardDataUrl}></img>
+                <img id="generatedCard" src={cardDataUrl} alt={juryInfo.Firstname + ' ' + juryInfo.Lastname}></img>
             </div>
 
             <div>
