@@ -30,11 +30,11 @@ const CompetitionGenerator = () => {
     const [directors, setDirectors]: any = useState([]);
     const [actors, setActors]: any = useState([]);
     const [movies, setMovies]: any = useState([]);
-    const [jurys, ]: any = useState([]);
+    let [jurys, ]: any = useState([]);
 
     // variables de la competitions
     const [title, setTitle]: any = useState('');
-    let idsJurys: number[] = [];
+    const [idJury, setIdJury]: any = useState(0);
     let idsOption: number[] = [];
     const [Picture, setPicture]: any = useState('');
     const [typeCompetition, setTypeCompetition]: any = useState(0);
@@ -164,15 +164,13 @@ const CompetitionGenerator = () => {
      * Verification des données des jurys de la competitions avant sauvegarde dans la blockchain
      */
     const verifyFormJury = async () => {
-        idsJurys.forEach((id: number) => {
-            if(!Number.isInteger(id)){
-                setMitting(false);
-                setMessage(`Invalide id`)
-                setSeverity('error')
-                setOpen(true)
-                return false;
-            }
-        })
+        if(!Number.isInteger(idJury) && idJury != 0){
+            setMitting(false);
+            setMessage(`Invalide id`)
+            setSeverity('error')
+            setOpen(true)
+            return false;
+        }
         await addJurysCompetition();
     }
 
@@ -352,7 +350,7 @@ const CompetitionGenerator = () => {
         let transaction;
 
         try {
-            transaction = await contract.addJurysCompetition(tokenId, idsJurys);
+            transaction = await contract.addJurysCompetition(tokenId, idJury);
         }catch (e) {
             setMitting(false);
             setMessage(`Minting in error`)
@@ -388,9 +386,22 @@ const CompetitionGenerator = () => {
             }
         })
 
+        jurys = jurys.filter((el: any) => el.id != idJury)
+        setIdJury(0);
+
+        setMessage('Minting finished ! :)')
+        setSeverity('success')
+        setOpen(true)
+        return true;
+    }
+
+    /**
+     * Reset all variables of form
+     */
+    const resetForm = () => {
         setTitle('');
         setPicture('');
-        idsJurys = [];
+        setIdJury(0);
         idsOption = [];
         setTypeCompetition(0);
         setStartDate(0);
@@ -398,11 +409,6 @@ const CompetitionGenerator = () => {
         setOpenJury(false);
         setOpenOption(false);
         setOpenCompetition(true);
-
-        setMessage('Minting finished ! :)')
-        setSeverity('success')
-        setOpen(true)
-        return true;
     }
 
     /**
@@ -426,9 +432,6 @@ const CompetitionGenerator = () => {
                 });
         }
     }
-
-    // à récuperer sur la blockchain
-    const getJury = () => {}
 
     /**
      * retourne le timestamp de la date selectionné
@@ -461,31 +464,6 @@ const CompetitionGenerator = () => {
             idsOption.push(number);
         }else{
             idsOption.splice(idsOption.indexOf(number),1);
-        }
-    }
-
-    /**
-     * permet d'ajouter les ids des jurys et ou les supprimer de la liste
-     * @param idJury
-     */
-    const addJuryId = (idJury: number) => {
-        let contain = false;
-        if(!Number.isInteger(idJury)){
-            setMitting(false);
-            setMessage(`Invalide id`)
-            setSeverity('error')
-            setOpen(true)
-            return false;
-        }
-        idsJurys?.map((id: number) => {
-            if(id == idJury){
-                contain = true;
-            }
-        })
-        if(!contain){
-            idsJurys.push(idJury);
-        }else{
-            idsJurys.splice(idsJurys.indexOf(idJury),1);
         }
     }
 
@@ -578,21 +556,23 @@ const CompetitionGenerator = () => {
             <section className={(!openJury ? 'openBlockCompetition' : '')}>
                 <div  className="form-ligne">
                     <h5>Les Jurys : </h5>
-                    <div>
-                        {
-                            jurys && jurys.length > 0 && jurys.map((jury: any, index: number) => {
+                    <div style={{display: 'flex', justifyContent: 'center', flexDirection: 'column'}}>
+                        { jurys && jurys.length > 0 && jurys.map((jury: any, index: number) => {
                                 const fullName = jury.Lastname + " " + jury.Firstname;
                                 return (
                                     <label key={`id-${index}`}> {fullName} :
-                                        <input name="jury" type="checkbox" onChange={e => addJuryId(Number(e.target.value))}
-                                               value={jury.id}/>
+                                        <input name="jury" type="radio" onChange={e => setIdJury(Number(e.target.value))}
+                                               value={jury.id} />
                                     </label>
                                 )
                             })
                         }
                     </div>
+                    <div>
+                        <button onClick={verifyFormJury}>Ajout des Jurys de la compétition</button>
+                        <button className="btn-reset" onClick={resetForm}>Fin de la création de la compétition </button>
+                    </div>
 
-                    <button onClick={verifyFormJury}>Ajout des Jurys de la compétition</button>
                 </div>
             </section>
 
