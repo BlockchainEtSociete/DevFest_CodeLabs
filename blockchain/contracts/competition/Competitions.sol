@@ -48,7 +48,7 @@ contract Competitions {
 
     CompetitionVotingSession[] public votingCompetitions;
     mapping (uint => mapping(address => Voter)) votingCompetitionsVoters;
-    mapping(uint => uint) listJuryByCompetition;
+    mapping(uint => uint[]) listJuryByCompetition;
 
     Jurys immutable juryContract;
 
@@ -106,7 +106,7 @@ contract Competitions {
     function addJurysCompetition(uint _tokenCompetition, uint _idJury) external {
         require(juryContract.isTokenValid(_idJury), "Your jury is invalid");
 
-        listJuryByCompetition[_tokenCompetition] = _idJury;
+        listJuryByCompetition[_tokenCompetition].push(_idJury);
 
         emit JurysCompetitionsRegistered(_tokenCompetition, _idJury);
     }
