@@ -1,4 +1,3 @@
-import * as React from 'react';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -7,64 +6,91 @@ import Menu from '@mui/material/Menu';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import PersonPinIcon from "@mui/icons-material/PersonPin";
-import {useNavigate} from "react-router-dom";
-import {useState} from "react";
-import {provider} from "../../provider/providers.ts";
+import SnackbarAlert from "../common/SnackbarAlert.tsx";
+import {AlertColor} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import {useSyncExternalStore, useState, useEffect} from "react";
+import { connectedUserStore } from "../../provider/ConnectedUserStore.ts";
+import { provider } from "../../provider/providers.ts";
 
 function ResponsiveAppBar() {
-    const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
     const navigate = useNavigate();
-    const [connectedUserAddress, setConnectedUserAddress] = useState('');
+    const [, setRefresh] = useState(false);
+    const connectedUser = useSyncExternalStore(connectedUserStore.subscribe, connectedUserStore.getSnapshot)
+    const [isMenuOpen, toggleMenu] = useState(false)
+
+    const [open, setOpen] = useState(false)
+    const [message, setMessage] = useState('')
+    const [severity, setSeverity] = useState<AlertColor | undefined>('success')
+
+    // Refresh appbar on chain or account change
+    useEffect(() => {
+        const events = ["chainChanged", "accountsChanged"];
+        const handleChange = async () => {
+            const signer = await provider?.getSigner()
+
+            if (signer) {
+                await connectedUserStore.updateConnectedUser(signer)
+                setRefresh(refresh => !refresh)
+                toggleMenu(false)
+            }
+        };
+
+        events.forEach(e => window.ethereum.on(e, handleChange));
+        return () => {
+            events.forEach(e => window.ethereum.removeListener(e, handleChange));
+        };
+    }, [connectedUserStore, connectedUser]);
 
     async function accountNavigate() {
-        if(connectedUserAddress) navigate("/account");
+        if (connectedUser.address) {
+            navigate("/account")
+            toggleMenu(false)
+        }
     }
 
-    async function administrationNavigate(){
-        if(connectedUserAddress) navigate("/admin");
+    async function administrationNavigate() {
+        if (connectedUser.address && connectedUserStore.isAdmin()) {
+            navigate("/admin")
+            toggleMenu(false)
+        }
     }
 
-    const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorElUser(event.currentTarget);
-    };
-
-    const connect = () => {
+    const connect = async () => {
         if (provider) {
+            setOpen(false)
             provider.send("eth_requestAccounts", []).then(async () => {
                 const signer = await provider?.getSigner()
 
                 if (signer) {
-                    setConnectedUserAddress(await signer.getAddress())
+                    await connectedUserStore.updateConnectedUser(signer)
+                    toggleMenu(false)
                 }
             })
         }
     }
 
-    const handleCloseUserMenu = () => {
-        setAnchorElUser(null);
-    };
-
     const disconnect = () => {
-        setConnectedUserAddress('')
+        connectedUserStore.resetConnectedUser()
         navigate("/");
+        toggleMenu(false)
     }
 
     return (
         <AppBar>
             <Box sx={{ flexGrow: 0, position: 'absolute', top: '7px', right: '30px', display: 'flex', alignItems: 'center' }}>
                 <Tooltip title="Open settings">
-                    <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                    <IconButton onClick={() => toggleMenu(true)} sx={{ p: 0 }}>
                         {
-                            connectedUserAddress !== ''
-                                ? <p style={{display: 'flex', alignItems: 'center'}}><span>{connectedUserAddress.substring(0,5)}...{connectedUserAddress.substring(38,42)}</span>  <PersonPinIcon fontSize="large"/></p>
-                                : <p style={{display: 'flex', alignItems: 'center'}}><span>Mon compte</span>  <PersonPinIcon fontSize="large"/></p>
+                            connectedUser && connectedUser.address !== ''
+                                ? <p style={{ display: 'flex', alignItems: 'center' }}><span>{connectedUser.address.substring(0, 5)}...{connectedUser.address.substring(38, 42)}</span>  <PersonPinIcon fontSize="large" /></p>
+                                : <p style={{ display: 'flex', alignItems: 'center' }}><span>Mon compte</span>  <PersonPinIcon fontSize="large" /></p>
                         }
                     </IconButton>
                 </Tooltip>
                 <Menu
                     sx={{ mt: '45px' }}
                     id="menu-appbar"
-                    anchorEl={anchorElUser}
                     anchorOrigin={{
                         vertical: 'top',
                         horizontal: 'right',
@@ -74,27 +100,28 @@ function ResponsiveAppBar() {
                         vertical: 'top',
                         horizontal: 'right',
                     }}
-                    open={Boolean(anchorElUser)}
-                    onClose={handleCloseUserMenu}
+                    open={isMenuOpen}
+                    onClose={() => toggleMenu(false)}
                 >
-                    <MenuItem onClick={() => {accountNavigate()}}>
+                    {connectedUser.address && <MenuItem onClick={() => { accountNavigate() }}>
                         <Typography textAlign="center">Mon Compte</Typography>
-                    </MenuItem>
-                    <MenuItem onClick={() => {administrationNavigate()}}>
+                    </MenuItem>}
+                    {connectedUser.address && connectedUserStore.isAdmin() && <MenuItem onClick={() => { administrationNavigate() }}>
                         <Typography textAlign="center">Administration</Typography>
-                    </MenuItem>
+                    </MenuItem>}
                     {
-                        connectedUserAddress !== ''
-                            ?  <MenuItem onClick={() => {handleCloseUserMenu(); disconnect();}}>
+                        connectedUser.address !== ''
+                            ? <MenuItem onClick={disconnect}>
                                 <Typography textAlign="center">Logout</Typography>
                             </MenuItem>
-                            : <MenuItem onClick={() => {connect();}}>
+                            : <MenuItem onClick={connect}>
                                 <Typography textAlign="center">Connexion</Typography>
                             </MenuItem>
                     }
                 </Menu>
             </Box>
-        </AppBar>
+            <SnackbarAlert open={open} setOpen={setOpen} message={message} severity={severity} />
+        </AppBar >
     );
 }
 export default ResponsiveAppBar;
