@@ -28,7 +28,7 @@ const config: HardhatUserConfig = {
     ganache: {
       accounts: {
         count: 10,
-        mnemonic: `stool goddess amazing auction bargain lamp empty hire similar vote peanut kidney`,
+        mnemonic: `${process.env.MNEMONIC}`,
       },
       chainId: 1337,
       url: `http://127.0.0.1:8545`,
