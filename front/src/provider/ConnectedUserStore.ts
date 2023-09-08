@@ -1,5 +1,6 @@
 import { JsonRpcSigner } from 'ethers'
 import { AccessRights, ConnectedUser } from '../types/ConnectedUser'
+import {computeAccessRights} from "../services/AccessRights.service.ts";
 let connectedUser: ConnectedUser = { accessRights: { canAddPeople: false, canAddMovie: false, canAddCompetition: false, isJury: false }, address: '' }
 let listeners: (() => void)[] = []
 
@@ -30,8 +31,13 @@ export const connectedUserStore = {
         emitChange()
     },
     isAdmin(): boolean {
-        const { canAddPeople, canAddMovie, canAddCompetition } = connectedUser.accessRights
+        const {canAddPeople, canAddMovie, canAddCompetition} = connectedUser.accessRights
         return canAddPeople || canAddMovie || canAddCompetition
+    },
+    async updateConnectedUser(signer: JsonRpcSigner):Promise<void> {
+        const accessRights = await computeAccessRights(signer.address)
+        connectedUserStore.setConnectedUser(signer)
+        connectedUserStore.setAccessRights(accessRights)
     },
     resetConnectedUser() {
         connectedUser = { accessRights: { canAddPeople: false, canAddMovie: false, canAddCompetition: false, isJury: false }, address: '' }

@@ -9,19 +9,38 @@ import PersonPinIcon from "@mui/icons-material/PersonPin";
 import SnackbarAlert from "../common/SnackbarAlert.tsx";
 import {AlertColor} from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useSyncExternalStore, useState } from "react";
+import {useSyncExternalStore, useState, useEffect} from "react";
 import { connectedUserStore } from "../../provider/ConnectedUserStore.ts";
 import { provider } from "../../provider/providers.ts";
-import { computeAccessRights, hasAccessToApp } from '../../services/AccessRights.service.ts';
 
 function ResponsiveAppBar() {
     const navigate = useNavigate();
+    const [, setRefresh] = useState(false);
     const connectedUser = useSyncExternalStore(connectedUserStore.subscribe, connectedUserStore.getSnapshot)
     const [isMenuOpen, toggleMenu] = useState(false)
 
     const [open, setOpen] = useState(false)
     const [message, setMessage] = useState('')
     const [severity, setSeverity] = useState<AlertColor | undefined>('success')
+
+    // Refresh appbar on chain or account change
+    useEffect(() => {
+        const events = ["chainChanged", "accountsChanged"];
+        const handleChange = async () => {
+            const signer = await provider?.getSigner()
+
+            if (signer) {
+                await connectedUserStore.updateConnectedUser(signer)
+                setRefresh(refresh => !refresh)
+                toggleMenu(false)
+            }
+        };
+
+        events.forEach(e => window.ethereum.on(e, handleChange));
+        return () => {
+            events.forEach(e => window.ethereum.removeListener(e, handleChange));
+        };
+    }, [connectedUserStore, connectedUser]);
 
     async function accountNavigate() {
         if (connectedUser.address) {
@@ -44,16 +63,8 @@ function ResponsiveAppBar() {
                 const signer = await provider?.getSigner()
 
                 if (signer) {
-                    const accessRights = await computeAccessRights(signer.address)
-                    if (hasAccessToApp(accessRights)) {
-                        connectedUserStore.setConnectedUser(signer)
-                        connectedUserStore.setAccessRights(accessRights)
-                        toggleMenu(false)
-                    } else {
-                        setMessage("Vous n'avez pas d'accès suffisants pour vous connecter")
-                        setSeverity('error')
-                        setOpen(true)
-                    }
+                    await connectedUserStore.updateConnectedUser(signer)
+                    toggleMenu(false)
                 }
             })
         }
@@ -71,7 +82,7 @@ function ResponsiveAppBar() {
                 <Tooltip title="Open settings">
                     <IconButton onClick={() => toggleMenu(true)} sx={{ p: 0 }}>
                         {
-                            connectedUser.address !== ''
+                            connectedUser && connectedUser.address !== ''
                                 ? <p style={{ display: 'flex', alignItems: 'center' }}><span>{connectedUser.address.substring(0, 5)}...{connectedUser.address.substring(38, 42)}</span>  <PersonPinIcon fontSize="large" /></p>
                                 : <p style={{ display: 'flex', alignItems: 'center' }}><span>Mon compte</span>  <PersonPinIcon fontSize="large" /></p>
                         }
@@ -95,7 +106,7 @@ function ResponsiveAppBar() {
                     {connectedUser.address && <MenuItem onClick={() => { accountNavigate() }}>
                         <Typography textAlign="center">Mon Compte</Typography>
                     </MenuItem>}
-                    {connectedUser.address && <MenuItem onClick={() => { administrationNavigate() }}>
+                    {connectedUser.address && connectedUserStore.isAdmin() && <MenuItem onClick={() => { administrationNavigate() }}>
                         <Typography textAlign="center">Administration</Typography>
                     </MenuItem>}
                     {
