@@ -48,13 +48,11 @@ contract Competitions {
 
     CompetitionVotingSession[] public votingCompetitions;
     mapping (uint => mapping(address => Voter)) votingCompetitionsVoters;
-    mapping(uint => uint[]) listJuryByCompetition;
 
     Jurys immutable juryContract;
 
     /// Event
     event CompetitionSessionRegistered(uint competitionId);
-    event JurysCompetitionsRegistered(uint competitionId, uint juryId);
     event OptionsCompetitionsRegistered(uint competitionId, string message);
     event Voted(uint competitionId, bool vote, uint nbVotes);
 
@@ -98,17 +96,6 @@ contract Competitions {
         }
 
         emit OptionsCompetitionsRegistered(_tokenCompetition, 'Options ajouter avec succes !');
-    }
-
-    /// @notice Adds jury for a competition.
-    /// @param _tokenCompetition id of competition
-    /// @param _idJury id token of voting juries.
-    function addJurysCompetition(uint _tokenCompetition, uint _idJury) external {
-        require(juryContract.isTokenValid(_idJury), "Your jury is invalid");
-
-        listJuryByCompetition[_tokenCompetition].push(_idJury);
-
-        emit JurysCompetitionsRegistered(_tokenCompetition, _idJury);
     }
 
     /// @notice Gets the voting competition status according to the current timestamp.

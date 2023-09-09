@@ -345,12 +345,12 @@ const CompetitionGenerator = () => {
         setMitting(true);
         const signer = await provider?.getSigner();
 
-        // création de l'appel du mint
-        const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
+        // création de l'appel du smart contract
+        const contract = new ethers.Contract(contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, signer );
         let transaction;
 
         try {
-            transaction = await contract.addJurysCompetition(tokenId, idJury);
+            transaction = await contract.addCompetitionByJury(tokenId, idJury);
         }catch (e) {
             setMitting(false);
             setMessage(`Minting in error`)
