@@ -1,8 +1,6 @@
 import {ChangeEvent, useState} from "react";
 import {AlertColor} from "@mui/material";
-import {fetchMovie} from "../../services/MovieService.service.ts";
 import contractsInterface from "../../contracts/contracts.ts";
-import {fetchPeople} from "../../services/PeopleService.service.ts";
 import CardCompetitionSelect from "./CardCompetitionSelect.tsx";
 import {ethers} from "ethers";
 import SnackbarAlert from "../common/SnackbarAlert.tsx";
@@ -12,7 +10,6 @@ import {provider} from "../../provider/providers.ts";
 import CompetitionDisplay from "./CompetitionDisplay.tsx";
 
 const CompetitionGenerator = () => {
-    const [, setLoading] = useState(false);
     const [mitting, setMitting] = useState(false);
 
     const [open, setOpen] = useState(false)
@@ -239,7 +236,7 @@ const CompetitionGenerator = () => {
         setDirectors([]);
         setMovies([]);
 
-        if(type == 1){
+       /* if(type == 1){
             setTitle("Les Acteurs en compétition pour le chevrons d'argent");
             fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, setLoading)
                 .then((peoples) => {
@@ -257,7 +254,7 @@ const CompetitionGenerator = () => {
                 .then((films) => {
                     setMovies(films);
                 });
-        }
+        }*/
     }
 
     /**

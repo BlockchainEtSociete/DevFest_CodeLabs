@@ -1,18 +1,20 @@
 import PeopleCard from "../components/peoples/PeopleCard.tsx";
 import {useEffect, useState} from "react";
 import contractsInterface from "../contracts/contracts.ts";
-import {fetchPeople} from "../services/PeopleService.service.ts";
+import {fetchPeople, listenToNewPeople} from "../services/PeopleService.service.ts";
 
-const Realisateur = () => {
-    const [directors, setDirectors]: any = useState([]);
+const Director = () => {
+    const [directors, ]: any = useState([]);
     const [isLoading, setLoading] = useState(false);
 
     useEffect(() => {
-        fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, setLoading)
-            .then((peoples) => {
-                setDirectors(peoples);
-            });
-    }, []);
+        const addToDirectors = async (people: any) => {
+            directors.push(people);
+        }
+
+        fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, setLoading, addToDirectors).then();
+        listenToNewPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors).then();
+    }, [directors]);
 
     /*const realisateurs = [
         {
@@ -99,4 +101,4 @@ const Realisateur = () => {
         </article>
     )
 }
-export default Realisateur;
+export default Director;

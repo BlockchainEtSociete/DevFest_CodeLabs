@@ -1,8 +1,23 @@
-import PeopleCard from "../components/peoples/PeopleCard.tsx";
+import {useEffect, useState} from "react";
+import contractsInterface from "../contracts/contracts.ts";
+import {fetchJury, listenToNewJury} from "../services/JuryService.service.ts";
 
 const Jury = () => {
 
-    const jurys = [
+    const [jurys, ]: any = useState([]);
+    const [isLoading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const addToJurys = async (jury: any) => {
+            jurys.push(jury);
+        }
+
+        fetchJury("JuryMinted", contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, setLoading, addToJurys).then();
+        listenToNewJury("JuryMinted", contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, addToJurys).then();
+
+    }, [jurys])
+
+    /*const jurys = [
         {
             id: 1,
             name: 'Dupont',
@@ -63,20 +78,17 @@ const Jury = () => {
             lastname: 'Emilie',
             url: 'default-profil.png',
         }
-    ]
+    ]*/
 
     return (
         <div>
             <h2>Les Jurys des compétitions du devfest 2023</h2>
 
             <section style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap'}}>
-                {jurys.map((jury, index) => (
-                    <PeopleCard
-                        key={`${jury.id}-${index}`}
-                        Firstname={jury.name}
-                        Lastname={jury.lastname}
-                        Picture={`/peoples/${jury.url}`}
-                    />
+                {!isLoading && jurys && jurys.length > 0 && jurys.map((jury: any, index: number) => (
+                    <div  key={`${jury.id}-${index}`}>
+                        <img src={jury.Picture} alt={jury.Firstname + ' ' + jury.Lastname} />
+                    </div>
                 ))}
             </section>
         </div>

@@ -42,7 +42,7 @@ const contractDeploy: DeployFunction = async (hre: HardhatRuntimeEnvironment) =>
   await deploy('Competitions', {
     contract: 'Competitions',
     from: deployer,
-    args: ["DevFest competition", "CPT"],
+    args: [juryContract.address],
     log: true
   });
 };

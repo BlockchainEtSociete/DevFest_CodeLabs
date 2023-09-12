@@ -1,18 +1,20 @@
 import PeopleCard from "../components/peoples/PeopleCard.tsx";
 import {useEffect, useState} from "react";
 import contractsInterface from "../contracts/contracts.ts";
-import {fetchPeople} from "../services/PeopleService.service.ts";
+import {fetchPeople, listenToNewPeople} from "../services/PeopleService.service.ts";
 
-const Acteur = () => {
-    const [actors, setActors]: any = useState([]);
+const Actor = () => {
+    const [actors, ]: any = useState([]);
     const [isLoading, setLoading] = useState(false);
 
     useEffect(() => {
-        fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, setLoading)
-            .then((peoples) => {
-                setActors(peoples);
-            });
-    }, []);
+        const addToActors = async (people: any) => {
+            actors.push(people);
+        }
+
+        fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, setLoading, addToActors).then();
+        listenToNewPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, addToActors).then();
+    }, [actors]);
 
     /*const acteurs = [
         {
@@ -142,4 +144,4 @@ const Acteur = () => {
         </article>
     )
 }
-export default Acteur;
+export default Actor;
