@@ -86,3 +86,43 @@ export const listenToNewPeople = async (eventType: string, contractAddress: stri
     }
 }
 
+/**
+ * récuperation d'un people que ca soit un acteur ou un réalisateur
+ * @param contractAddress
+ * @param contractAbi
+ * @param tokenId
+ * @param setLoading
+ */
+export async function fetchOnePeople(contractAddress: string, contractAbi: any, tokenId: number, setLoading: Function){
+    setLoading(true);
+    if (provider) {
+        let people;
+        // initialisation du contract
+        const contract = new ethers.Contract(contractAddress, contractAbi, provider);
+
+        try{
+            // récupération du tokenURI, url des metadonnée du token
+            const tokenUri = await contract.tokenURI(tokenId);
+
+            if(tokenUri) {
+                // parse des données récupérées en object
+                const metadataString = await ipfsGetContent(tokenUri)
+                const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'))
+
+                people = {
+                    id: tokenId,
+                    Firstname: data.attributes[0].value,
+                    Lastname: data.attributes[1].value,
+                    Picture: data.attributes[2].value.replace('ipfs://', 'https://ipfs.io/ipfs/'),
+                    Address: data.attributes[3].value
+                }
+            }
+        } catch (err) {
+            console.log(err);
+            setLoading(false);
+            return false;
+        }
+        setLoading(false);
+        return people;
+    }
+}
