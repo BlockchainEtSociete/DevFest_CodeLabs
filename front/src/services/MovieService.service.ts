@@ -1,6 +1,6 @@
 import {provider} from "../provider/providers.ts";
 import {ethers, EventLog} from "ethers";
-import {ipfsGetContent} from "../components/common/ipfs.ts";
+import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs.ts";
 import {toString as uint8ArrayToString} from "uint8arrays/to-string";
 import contractsInterface from "../contracts/contracts.ts";
 
@@ -44,7 +44,7 @@ export async function fetchMovie(eventType: string, contractAddress: string, con
                         id: id,
                         Title: data.attributes[0].value,
                         Description: data.attributes[1].value,
-                        Picture: data.attributes[2].value.replace('ipfs://', 'https://ipfs.io/ipfs/'),
+                        Picture: ipfsGetUrl(data.attributes[2].value),
                         Director: {
                             Firstname: dataDirector.attributes[0].value,
                             Lastname: dataDirector.attributes[1].value
@@ -94,7 +94,7 @@ export async function fetchOneMovie(contractAddress: string, contractAbi: any, t
                     id: tokenId,
                     Title: data.attributes[0].value,
                     Description: data.attributes[1].value,
-                    Picture: data.attributes[2].value.replace('ipfs://', 'https://ipfs.io/ipfs/'),
+                    Picture: ipfsGetUrl(data.attributes[2].value),
                     Director: {
                         Firstname: dataDirector.attributes[0].value,
                         Lastname: dataDirector.attributes[1].value

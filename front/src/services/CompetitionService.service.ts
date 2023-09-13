@@ -1,7 +1,7 @@
 import {provider} from "../provider/providers";
 import {ethers, EventLog} from "ethers";
 import contractsInterface from "../contracts/contracts";
-import {ipfsGetContent} from "../components/common/ipfs";
+import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import {toString as uint8ArrayToString} from "uint8arrays/to-string";
 import {fetchOnePeople} from "./PeopleService.service";
 import {fetchOneMovie} from "./MovieService.service";
@@ -118,7 +118,7 @@ export async function fetchOneCompetition(contractAddress: string, contractAbi: 
                 movie = {
                     id: tokenId,
                     title: data.attributes[0].value,
-                    Picture: data.attributes[1].value.replace('ipfs://', 'https://ipfs.io/ipfs/'),
+                    Picture: ipfsGetUrl(data.attributes[1].value),
                     typeCompetition: ethers.toNumber(competition.typeCompetitions),
                     startDate: ethers.toNumber(competition.startTime),
                     endDate: ethers.toNumber(competition.endTime),

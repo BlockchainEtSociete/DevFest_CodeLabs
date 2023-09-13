@@ -20,9 +20,9 @@ const Administrator = () => {
             <article>
                 <h2>Administration</h2>
                 <div>
-                    {canAddPeople && <a className="choice_add" onClick={() => {setAddPeople(!addPeople); setAddMovie(false); setAddCompetition(false); }} >Ajout d'un acteurs ou réalisateurs</a>}
-                    {canAddMovie && <a className="choice_add" onClick={() => {setAddMovie(!addMovie); setAddPeople(false); setAddCompetition(false);} }>Ajout d'un nouveau film</a>}
-                    {canAddCompetition && <a className="choice_add" onClick={() => {setAddCompetition(!addCompetition); setAddPeople(false); setAddMovie(false); } }>Nouvelle competition</a>}
+                    {canAddPeople && <a className="choice_add" onClick={() => {setAddPeople(!addPeople); setAddMovie(false); setAddCompetition(false); setAddJury(false); }} >Ajout d'un acteurs ou réalisateurs</a>}
+                    {canAddMovie && <a className="choice_add" onClick={() => {setAddMovie(!addMovie); setAddPeople(false); setAddCompetition(false); setAddJury(false);} }>Ajout d'un nouveau film</a>}
+                    {canAddCompetition && <a className="choice_add" onClick={() => {setAddCompetition(!addCompetition); setAddPeople(false); setAddMovie(false); setAddJury(false); } }>Nouvelle competition</a>}
                     <a className="choice_add" onClick={() => {setAddJury(!addJury); setAddPeople(false); setAddMovie(false); setAddCompetition(false)} }>Ajout d'un nouveau jury</a>
                 </div>
                 {

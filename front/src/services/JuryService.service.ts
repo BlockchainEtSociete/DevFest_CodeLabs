@@ -1,4 +1,4 @@
-import {ipfsGetContent} from "../components/common/ipfs.ts";
+import ipfs, { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs.ts";
 import {toString as uint8ArrayToString} from "uint8arrays/to-string";
 import {provider} from "../provider/providers.ts";
 import {ethers, EventLog} from "ethers";
@@ -17,7 +17,7 @@ export const getJuryData = async (tokenId: number, tokenUri: string) => {
         id: tokenId,
         Firstname: data.attributes[0].value,
         Lastname: data.attributes[1].value,
-        Picture: data.image.replace('ipfs://', 'https://ipfs.io/ipfs/'),
+        Picture: ipfsGetUrl(data.image),
         Address: data.attributes[3].value
     };
 }
