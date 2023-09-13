@@ -8,43 +8,58 @@ export async function computeAccessRights(address: string): Promise<AccessRights
     const actorsContract = new ethers.Contract(contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, provider)
     const moviesContract = new ethers.Contract(contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, provider)
     const competitionsContract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider)
+    const jurysContract = new ethers.Contract(contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, provider)
 
     let canAddPeople = false
     let canAddMovie = false
     let canAddCompetition = false
+    let canAddJury = false
     let isJury = false
 
     try {
         const directorsContractOwnerAddress = await directorsContract.owner()
         canAddPeople = directorsContractOwnerAddress === address
     } catch (e) {
-        console.error(e)
+        console.error("Erreur récupération du owner du contrat Directors", e)
     }
 
     try {
         const actorsContractOwnerAddress = await actorsContract.owner()
         canAddPeople = canAddPeople || actorsContractOwnerAddress === address
     } catch (e) {
-        console.error(e)
+        console.error("Erreur récupération du owner du contrat People", e)
     }
 
     try {
         const moviesContractOwnerAddress = await moviesContract.owner()
         canAddMovie = moviesContractOwnerAddress === address
     } catch (e) {
-        console.error(e)
+        console.error("Erreur récupération du owner du contrat Movies", e)
     }
 
     try {
         const competitionsContractOwnerAddress = await competitionsContract.owner()
         canAddCompetition = competitionsContractOwnerAddress === address
     } catch (e) {
-        console.error(e)
+        console.error("Erreur récupération du owner du contrat Competitions", e)
     }
 
-    // TODO isJury
+    try {
+        const jurysContractOwnerAddress = await jurysContract.owner()
+        canAddJury = jurysContractOwnerAddress === address
+    } catch (e) {
+        console.error("Erreur récupération du owner du contrat Jurys", e)
+    }
 
-    return { canAddPeople, canAddMovie, canAddCompetition, isJury }
+    try {
+        await jurysContract.getJuryId(address)
+        isJury = true
+    } catch (e) {
+        isJury = false
+        console.error("Erreur appel getJuryId sur le contrat Jurys", e)
+    }
+
+    return { canAddPeople, canAddMovie, canAddCompetition, canAddJury, isJury }
 }
 
 export function hasAccessToApp(accessRights: AccessRights): boolean {

@@ -8,7 +8,7 @@ import JuryGenerator from "../components/jurys/JuryGenerator.tsx";
 
 const Administrator = () => {
     const connectedUser = useSyncExternalStore(connectedUserStore.subscribe, connectedUserStore.getSnapshot)
-    const { canAddPeople, canAddMovie, canAddCompetition } = connectedUser.accessRights
+    const { canAddPeople, canAddMovie, canAddCompetition, canAddJury } = connectedUser.accessRights
 
     const [addPeople, setAddPeople] = useState(false);
     const [addMovie, setAddMovie] = useState(false);
@@ -23,7 +23,7 @@ const Administrator = () => {
                     {canAddPeople && <a className="choice_add" onClick={() => {setAddPeople(!addPeople); setAddMovie(false); setAddCompetition(false); setAddJury(false); }} >Ajout d'un acteurs ou réalisateurs</a>}
                     {canAddMovie && <a className="choice_add" onClick={() => {setAddMovie(!addMovie); setAddPeople(false); setAddCompetition(false); setAddJury(false);} }>Ajout d'un nouveau film</a>}
                     {canAddCompetition && <a className="choice_add" onClick={() => {setAddCompetition(!addCompetition); setAddPeople(false); setAddMovie(false); setAddJury(false); } }>Nouvelle competition</a>}
-                    <a className="choice_add" onClick={() => {setAddJury(!addJury); setAddPeople(false); setAddMovie(false); setAddCompetition(false)} }>Ajout d'un nouveau jury</a>
+                    {canAddJury && <a className="choice_add" onClick={() => {setAddJury(!addJury); setAddPeople(false); setAddMovie(false); setAddCompetition(false)} }>Ajout d'un nouveau jury</a>}
                 </div>
                 {
                     addPeople
