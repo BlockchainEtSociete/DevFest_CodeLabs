@@ -11,6 +11,7 @@ export interface CompetitionNomineesFormProps {
     reset: boolean,
     minting: boolean,
     typeCompetition: number,
+    tokenId: number,
     setMinting: (minting: boolean) => void,
     setLoading: (loading: boolean) => void,
     setOpenNominees: (openNominee: boolean) => void,
@@ -19,12 +20,12 @@ export interface CompetitionNomineesFormProps {
     setMessage: (message: string) => void,
     setSeverity: (severity: AlertColor | undefined) => void,
 }
-export const CompetitionNomineesForm = ({reset, minting, typeCompetition, setMinting, setLoading, setOpenNominees, setOpenJury, setOpen, setMessage, setSeverity}: CompetitionNomineesFormProps) => {
+export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetition, setMinting, setLoading, setOpenNominees, setOpenJury, setOpen, setMessage, setSeverity}: CompetitionNomineesFormProps) => {
 
     // variables des listes des options
     let idsNominees: number[] = [];
     const [directors, setDirectors]: any = useState([]);
-    const [actors, setActors]: any = useState([]);
+    const [actors, setActors]: any = useState({});
     const [movies, setMovies]: any = useState([]);
 
     useEffect(() => {
@@ -39,7 +40,8 @@ export const CompetitionNomineesForm = ({reset, minting, typeCompetition, setMin
     }, [reset, typeCompetition]);
 
     const addToActors = async (people: any) => {
-        actors.push(people);
+        actors[people.id] = people;
+        setActors(actors);
     }
     const addToDirectors = async (people: any) => {
         directors.push(people);
@@ -56,6 +58,7 @@ export const CompetitionNomineesForm = ({reset, minting, typeCompetition, setMin
         setMovies([]);
 
         if(type == 1){
+            console.log('fetching actors');
             fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, setLoading, addToActors).then();
         } else if(type == 2){
             fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, setLoading, addToDirectors).then();
@@ -103,7 +106,7 @@ export const CompetitionNomineesForm = ({reset, minting, typeCompetition, setMin
         let transaction;
 
         try {
-            transaction = await contract.addNomineesCompetition(tokenId, idsOption);
+            transaction = await contract.addNomineesCompetition(tokenId, idsNominees);
         }catch (e) {
             setMinting(false);
             setMessage(`Minting in error`)
@@ -166,12 +169,12 @@ export const CompetitionNomineesForm = ({reset, minting, typeCompetition, setMin
     return (
         <div>
             <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center'}}>
-                {actors && actors.length > 0 && actors.map((actor: any, index: number) => (
-                    <div key={`${actor.id}-${index}`}
-                         onClick={() => addTokenIdNominee(actor.id)}>
+                {actors && Object.keys(actors).length > 0 && Object.keys(actors).map((actorId: any) => (
+                    <div key={`${actors[actorId].id}`}
+                         onClick={() => addTokenIdNominee(actors[actorId].id)}>
                         <CardCompetitionSelect
-                            Info={actor.Firstname + " " + actor.Lastname}
-                            Picture={actor.Picture}
+                            Info={actors[actorId].Firstname + " " + actors[actorId].Lastname}
+                            Picture={actors[actorId].Picture}
                         />
                     </div>
                 ))

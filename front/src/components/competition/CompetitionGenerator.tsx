@@ -47,7 +47,6 @@ const CompetitionGenerator = () => {
         setReset(false);
     }
 
-
     return (
         <div>
             <h2>Création d'une nouvelle compétition</h2>
@@ -71,6 +70,7 @@ const CompetitionGenerator = () => {
                 <CompetitionNomineesForm
                     reset={reset}
                     minting={minting}
+                    tokenId={tokenId}
                     setMinting={setMinting}
                     setLoading={setLoading}
                     setOpenNominees={setOpenNominees}
