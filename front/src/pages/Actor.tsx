@@ -4,12 +4,14 @@ import contractsInterface from "../contracts/contracts.ts";
 import {fetchPeople, listenToNewPeople} from "../services/PeopleService.service.ts";
 
 const Actor = () => {
-    const [actors, ]: any = useState([]);
+    const [actors, ]: any = useState({});
     const [isLoading, setLoading] = useState(false);
 
     useEffect(() => {
         const addToActors = async (people: any) => {
-            actors.push(people);
+            if (!actors[people.id]) {
+                actors[people.id] = people;
+            }
         }
 
         fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, setLoading, addToActors).then();
@@ -132,12 +134,12 @@ const Actor = () => {
             <h2>Les Acteurs en compétition du devfest 2023</h2>
 
             <section style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap'}}>
-                {!isLoading && actors && actors.length > 0 && actors.map((actor: any, index: number) => (
+                {!isLoading && actors && Object.keys(actors).length > 0 && Object.keys(actors).map((actorId: any) => (
                     <PeopleCard
-                        key={`${actor.id}-${index}`}
-                        Firstname={actor.Firstname}
-                        Lastname={actor.Lastname}
-                        Picture={actor.Picture}
+                        key={`${actors[actorId].id}`}
+                        Firstname={actors[actorId].Firstname}
+                        Lastname={actors[actorId].Lastname}
+                        Picture={actors[actorId].Picture}
                     />
                 ))}
             </section>
