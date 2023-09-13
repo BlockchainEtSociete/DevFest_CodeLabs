@@ -3,6 +3,7 @@ export interface AccessRights {
     canAddPeople: boolean
     canAddMovie: boolean
     canAddCompetition: boolean
+    canAddJury: boolean
     isJury: boolean
 }
 export interface ConnectedUser {

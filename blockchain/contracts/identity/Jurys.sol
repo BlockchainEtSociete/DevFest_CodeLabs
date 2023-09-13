@@ -8,10 +8,10 @@ import "../token/ERC5484.sol";
 /// @notice this contract generates digital ids for jury's members of a competition.
 contract Jurys is ERC5484 {
 
-    /// @notice Mapping for token URIs
-    mapping(uint256 => string) private _tokenURIs;
+    mapping(uint => uint[]) listCompetitionByJury;
 
     event JuryMinted(address jury, uint tokenId, string tokerURI);
+    event JurysCompetitionsRegistered(uint competitionId, uint juryId);
     event JuryBurnt(address jury, uint tokenId);
 
     constructor (string memory name, string memory symbol) ERC5484(name, symbol) {}
@@ -32,6 +32,17 @@ contract Jurys is ERC5484 {
         emit JuryMinted(_recipient, tokenId, _tokenURI);
 
         _approve(owner(), tokenId);
+    }
+
+    /// @notice Adds competition by jury
+    /// @param _tokenCompetition id of competition
+    /// @param _idJury id token of voting juries.
+    function addCompetitionByJury(uint _tokenCompetition, uint _idJury) external {
+        require(isTokenValid(_idJury), "Your jury is invalid");
+
+        listCompetitionByJury[_idJury].push(_tokenCompetition);
+
+        emit JurysCompetitionsRegistered(_tokenCompetition, _idJury);
     }
 
     /// @notice Get the jury id

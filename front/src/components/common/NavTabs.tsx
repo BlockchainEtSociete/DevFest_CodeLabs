@@ -3,9 +3,9 @@ import {Box, Tab, Tabs} from "@mui/material";
 import Home from "../../pages/Home.tsx";
 import Administrator from "../../pages/Administrator.tsx";
 import Jury from "../../pages/Jury.tsx";
-import Acteur from "../../pages/Acteur.tsx";
-import Film from "../../pages/Film.tsx";
-import Realisateur from "../../pages/Realisateur.tsx";
+import Actor from "../../pages/Actor.tsx";
+import Movie from "../../pages/Movie.tsx";
+import Director from "../../pages/Director.tsx";
 import Competition from "../../pages/Competition.tsx";
 import Account from "../../pages/Account.tsx";
 
@@ -23,7 +23,7 @@ const useRouteMatch = (patterns: string[]) => {
 }
 
 const NavTab = () => {
-    const routeMatch = useRouteMatch(['/', '/admin', '/jury', '/acteur', '/film', '/realisateur', '/competition', '/account']);
+    const routeMatch = useRouteMatch(['/', '/jury', '/acteur', '/film', '/realisateur', '/competition', '/account']);
     const currentTab = routeMatch?.pattern?.path || '/';
 
     return (
@@ -45,9 +45,9 @@ const NavTab = () => {
                     <Route path="/admin" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Administrator /></Box>}></Route>
                     <Route path="/account" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Account /></Box>}></Route>
                     <Route path="/jury" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Jury /></Box>}></Route>
-                    <Route path="/acteur" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Acteur /></Box>}></Route>
-                    <Route path="/realisateur" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Realisateur /></Box>}></Route>
-                    <Route path="/film" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Film /></Box>}></Route>
+                    <Route path="/acteur" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Actor /></Box>}></Route>
+                    <Route path="/realisateur" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Director /></Box>}></Route>
+                    <Route path="/film" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Movie /></Box>}></Route>
                     <Route path="/competition" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Competition /></Box>}></Route>
                 </Routes>
             </Box>

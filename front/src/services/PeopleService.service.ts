@@ -1,12 +1,36 @@
 import {provider} from "../provider/providers.ts";
 import {ethers, EventLog} from "ethers";
-import {ipfsGetContent} from "../components/common/ipfs.ts";
+import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs.ts";
 import {toString as uint8ArrayToString} from "uint8arrays/to-string";
 
 /**
- * Fonction de récupération des données des acteurs et réalisateurs
- * */
-export async function fetchPeople(eventType: string, contractAddress: string, contractAbi: any, setLoading: Function) {
+ * Récuperation des data et creation de l'objet people
+ * @param tokenId
+ * @param tokenUri
+ */
+export const getPeopleData = async (tokenId: number, tokenUri: string) => {
+    // parse des données récupérées en object
+    const metadataString = await ipfsGetContent(tokenUri);
+    const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'));
+
+    return {
+        id: tokenId,
+        Firstname: data.attributes[0].value,
+        Lastname: data.attributes[1].value,
+        Picture: ipfsGetUrl(data.attributes[2].value),
+        Address: data.attributes[3].value
+    };
+}
+
+/**
+ * Fonction de récupération des données des acteurs et réalisateurs par event
+ * @param eventType
+ * @param contractAddress
+ * @param contractAbi
+ * @param setLoading
+ * @param addToPeopleList
+ */
+export const fetchPeople = async (eventType: string, contractAddress: string, contractAbi: any, setLoading: Function, addToPeopleList: Function) => {
     setLoading(true);
     if (provider) {
         // initialisation du contract
@@ -15,7 +39,6 @@ export async function fetchPeople(eventType: string, contractAddress: string, co
         const filter = contract.filters[eventType];
         // récupération des evenements en fonction du filtre
         const events = await contract.queryFilter(filter, 0);
-        const peoples: any = [];
         try{
             for (const event of events) {
                 let tokenUri: string = '';
@@ -25,18 +48,7 @@ export async function fetchPeople(eventType: string, contractAddress: string, co
                 tokenUri = await contract.tokenURI(id);
 
                 if(tokenUri) {
-                    // parse des données récupérées en object
-                    const metadataString = await ipfsGetContent(tokenUri)
-                    const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'))
-
-                    const people = {
-                        id: id,
-                        Firstname: data.attributes[0].value,
-                        Lastname: data.attributes[1].value,
-                        Picture: data.attributes[2].value.replace('ipfs://', 'https://ipfs.io/ipfs/'),
-                        Address: data.attributes[3].value
-                    }
-                    peoples.push(people);
+                    await addToPeopleList(await getPeopleData(id, tokenUri));
                 }
             }
         } catch (err) {
@@ -45,7 +57,72 @@ export async function fetchPeople(eventType: string, contractAddress: string, co
             return false;
         }
         setLoading(false);
-        return peoples;
     }
 }
 
+/**
+ * Fonction qui ecoute les nouveaux peoples
+ * @param eventType
+ * @param contractAddress
+ * @param contractAbi
+ * @param addToPeopleList
+ */
+export const listenToNewPeople = async (eventType: string, contractAddress: string, contractAbi: any, addToPeopleList: Function) => {
+    if (provider) {
+        // initialisation du contract
+        const contract = new ethers.Contract(contractAddress, contractAbi, provider);
+
+        await contract.on(eventType, async (event: any) => {
+            let tokenUri: string = '';
+            const id = ethers.toNumber(event.args[0]);
+            // récupération du tokenURI, url des metadonnée du token
+            tokenUri = await contract.tokenURI(id);
+
+            if (tokenUri) {
+               await addToPeopleList(await getPeopleData(id, tokenUri));
+            }
+        });
+
+    }
+}
+
+/**
+ * récuperation d'un people que ca soit un acteur ou un réalisateur
+ * @param contractAddress
+ * @param contractAbi
+ * @param tokenId
+ * @param setLoading
+ */
+export async function fetchOnePeople(contractAddress: string, contractAbi: any, tokenId: number, setLoading: Function){
+    setLoading(true);
+    if (provider) {
+        let people;
+        // initialisation du contract
+        const contract = new ethers.Contract(contractAddress, contractAbi, provider);
+
+        try{
+            // récupération du tokenURI, url des metadonnée du token
+            const tokenUri = await contract.tokenURI(tokenId);
+
+            if(tokenUri) {
+                // parse des données récupérées en object
+                const metadataString = await ipfsGetContent(tokenUri)
+                const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'))
+
+                people = {
+                    id: tokenId,
+                    Firstname: data.attributes[0].value,
+                    Lastname: data.attributes[1].value,
+                    Picture: ipfsGetUrl(data.attributes[2].value),
+                    Address: data.attributes[3].value
+                }
+            }
+        } catch (err) {
+            console.log(err);
+            setLoading(false);
+            return false;
+        }
+        setLoading(false);
+        return people;
+    }
+}

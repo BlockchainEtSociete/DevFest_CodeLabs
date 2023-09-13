@@ -1,18 +1,22 @@
 import PeopleCard from "../components/peoples/PeopleCard.tsx";
 import {useEffect, useState} from "react";
 import contractsInterface from "../contracts/contracts.ts";
-import {fetchPeople} from "../services/PeopleService.service.ts";
+import {fetchPeople, listenToNewPeople} from "../services/PeopleService.service.ts";
 
-const Acteur = () => {
-    const [actors, setActors]: any = useState([]);
+const Actor = () => {
+    const [actors, ]: any = useState({});
     const [isLoading, setLoading] = useState(false);
 
     useEffect(() => {
-        fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, setLoading)
-            .then((peoples) => {
-                setActors(peoples);
-            });
-    }, []);
+        const addToActors = async (people: any) => {
+            if (!actors[people.id]) {
+                actors[people.id] = people;
+            }
+        }
+
+        fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, setLoading, addToActors).then();
+        listenToNewPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, addToActors).then();
+    }, [actors]);
 
     /*const acteurs = [
         {
@@ -130,16 +134,16 @@ const Acteur = () => {
             <h2>Les Acteurs en compétition du devfest 2023</h2>
 
             <section style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap'}}>
-                {!isLoading && actors && actors.length > 0 && actors.map((actor: any, index: number) => (
+                {!isLoading && actors && Object.keys(actors).length > 0 && Object.keys(actors).map((actorId: any) => (
                     <PeopleCard
-                        key={`${actor.id}-${index}`}
-                        Firstname={actor.Firstname}
-                        Lastname={actor.Lastname}
-                        Picture={actor.Picture}
+                        key={`${actors[actorId].id}`}
+                        Firstname={actors[actorId].Firstname}
+                        Lastname={actors[actorId].Lastname}
+                        Picture={actors[actorId].Picture}
                     />
                 ))}
             </section>
         </article>
     )
 }
-export default Acteur;
+export default Actor;
