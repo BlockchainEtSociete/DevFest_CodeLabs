@@ -3,11 +3,12 @@ import PeopleGenerator from "../components/peoples/PeopleGenerator.tsx";
 import MovieGenerator from "../components/movies/MovieGenerator.tsx";
 import CompetitionGenerator from "../components/competition/CompetitionGenerator.tsx";
 import "../styles/account.css";
-import { connectedUserStore } from "../provider/ConnectedUserStore.ts";
+import useConnectedUserContext from '../context/ConnectedUserContextHook.tsx';
 import JuryGenerator from "../components/jurys/JuryGenerator.tsx";
+import { isUserAdmin } from '../types/ConnectedUser.ts';
 
 const Administrator = () => {
-    const connectedUser = useSyncExternalStore(connectedUserStore.subscribe, connectedUserStore.getSnapshot)
+    const {state: { connectedUser }} = useConnectedUserContext()
     const { canAddPeople, canAddMovie, canAddCompetition, canAddJury } = connectedUser.accessRights
 
     const [addPeople, setAddPeople] = useState(false);
@@ -15,7 +16,7 @@ const Administrator = () => {
     const [addCompetition, setAddCompetition] = useState(false);
     const [addJury, setAddJury] = useState(false);
 
-    if (connectedUser && connectedUserStore.isAdmin())
+    if (connectedUser && isUserAdmin(connectedUser))
         return (
             <article>
                 <h2>Administration</h2>
