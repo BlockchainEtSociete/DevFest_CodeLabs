@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "../identity/Jurys.sol";
 
 /// @title Management of Competition
@@ -30,13 +31,18 @@ contract Competitions is Ownable {
 
     /// @notice Voting competition structure to store a voting competition details.
     struct CompetitionVotingSession {
-        uint id;
         string tokenURI;
         TypeCompetitions typeCompetitions;
         Nominee[] nominees;
-        uint winnerCompetition;
+        uint winnerCompetition; // the nominee index in nominees array, +1
         uint startTime;
         uint endTime;
+    }
+
+    /// @notice represents competition and its voting status
+    struct CompetitionAndVotingStatus {
+        CompetitionVotingSession competition;
+        VotingCompetitionStatus votingStatus;
     }
 
     /// @notice Enum with the possible status for a competition session.
@@ -46,22 +52,30 @@ contract Competitions is Ownable {
         Ended
     }
 
-    CompetitionVotingSession[] public votingCompetitions;
+    CompetitionVotingSession[] votingCompetitions;
     mapping (uint => mapping(address => Voter)) votingCompetitionsVoters;
     mapping (uint => mapping(uint => bool)) jurysOfCompetitions;
 
     Jurys immutable juryContract;
 
-    /// Event
+    /// Events
     event CompetitionSessionRegistered(uint competitionId);
-    event NomineeCompetitionsRegistered(uint competitionId, uint nomineeId);
-    event Voted(uint competitionId, bool vote, uint nbVotes);
+    event NomineeCompetitionsRegistered(uint indexed competitionId, uint indexed nomineeId, uint indexed nomineeTokenId);
+    event VotedOnCompetition(uint competitionId, uint nomineeId, uint nbVotes);
     event JuryAddedToCompetition(uint indexed competitionId, uint indexed juryId);
 
     modifier onlyJuryOfCompetition(uint _competitionId) {
         uint juryId = juryContract.getJuryId(msg.sender);
+        uint competitionIndex = _competitionId - 1;
         require(juryId >= 0, "You are not a jury");
-        require(jurysOfCompetitions[_competitionId][juryId], "You are not a jury for this competition");
+        require(competitionIndex < votingCompetitions.length, "Voting competition doesn't exist");
+        require(jurysOfCompetitions[competitionIndex][juryId], "You are not a jury for this competition");
+        _;
+    }
+
+    modifier competitionExists(uint _competitionId) {
+        uint competitionIndex = _competitionId - 1;
+        require(competitionIndex < votingCompetitions.length, string.concat("Voting competition ", string.concat(Strings.toString(_competitionId), " doesn't exist")));
         _;
     }
 
@@ -80,99 +94,109 @@ contract Competitions is Ownable {
         require(_startDate < _endDate, "Your competition end date can't be before the start date");
         require(keccak256(abi.encode(_typeCompetitions)) != keccak256(abi.encode("")), "Your competition must contain type of competition");
 
-        uint tokenId = votingCompetitions.length + 1;
-
         CompetitionVotingSession storage newCompetitionVotingSession = votingCompetitions.push();
-        newCompetitionVotingSession.id = tokenId;
         newCompetitionVotingSession.tokenURI = _tokenURI;
         newCompetitionVotingSession.typeCompetitions = _typeCompetitions;
         newCompetitionVotingSession.startTime = _startDate;
         newCompetitionVotingSession.endTime = _endDate;
+        newCompetitionVotingSession.winnerCompetition = 0;
 
-        emit CompetitionSessionRegistered(tokenId);
+        uint competitionId = votingCompetitions.length;
+        emit CompetitionSessionRegistered(competitionId);
     }
 
     /// @notice Adds nominee to a competition.
-    /// @param _tokenCompetition id of competition
-    /// @param _idNominee Id of nominee
-    function addNomineeCompetition(uint _tokenCompetition, uint _idNominee) external {
-        votingCompetitions[_tokenCompetition - 1].nominees.push(Nominee(_idNominee, 0));
+    /// @param _competitionId id of competition
+    /// @param _nomineeTokenId token id of the nominee
+    function addNomineeCompetition(uint _competitionId, uint _nomineeTokenId) competitionExists(_competitionId) onlyOwner external {
+        uint competitionIndex = _competitionId - 1;
 
-        emit NomineeCompetitionsRegistered(_tokenCompetition, votingCompetitions[_tokenCompetition - 1].nominees.length-1);
+        votingCompetitions[competitionIndex].nominees.push(Nominee(_nomineeTokenId, 0));
+        uint nomineeId = votingCompetitions[competitionIndex].nominees.length;
+
+        emit NomineeCompetitionsRegistered(_competitionId, nomineeId, _nomineeTokenId);
     }
 
     /// @notice Adds jury to a competition.
     /// @param _competitionId The voting competition number.
     /// @param _juryId The jury id.
-    function addJuryToCompetition(uint _competitionId, uint _juryId) onlyOwner external {
-        require(_competitionId <= votingCompetitions.length, "Competition: Voting competition doesn't exist");
-        require(juryContract.isTokenValid(_juryId), "Your jury is invalid");
+    function addJuryToCompetition(uint _competitionId, uint _juryId) competitionExists(_competitionId) onlyOwner external {
+        require(juryContract.isTokenValid(_juryId), "Jury is invalid");
 
-        jurysOfCompetitions[_competitionId][_juryId] = true;
+        uint competitionIndex = _competitionId - 1; // see addCompetition
+        jurysOfCompetitions[competitionIndex][_juryId] = true;
 
         emit JuryAddedToCompetition(_competitionId, _juryId);
+    }
+
+    /// @notice Allows you to vote for an option in a competition during a voting session.
+    /// @param _competitionId The voting competition id on which the voter wants to vote
+    /// @param _nomineeId Index of the nominee in the array of nominees in the competition
+    function voteOnCompetition(uint _competitionId, uint _nomineeId) competitionExists(_competitionId) onlyJuryOfCompetition(_competitionId) external {
+        CompetitionVotingSession memory competition = getCompetition(_competitionId);
+        uint competitionIndex = _competitionId - 1; // see addCompetition
+        uint nomineeIndex = _nomineeId - 1; // see addNomineeCompetition
+
+        require(competition.startTime < block.timestamp, "Voting competition isn't open yet");
+        require(competition.endTime > block.timestamp, "Voting competition is closed");
+        require(nomineeIndex >= 0 && nomineeIndex < competition.nominees.length, "This nominee does not exist on this competition");
+        require(votingCompetitionsVoters[competitionIndex][msg.sender].hasVoted == false, "You already have voted on this competition");
+        
+        votingCompetitions[competitionIndex].nominees[nomineeIndex].voteCount = competition.nominees[nomineeIndex].voteCount + 1;
+        votingCompetitionsVoters[competitionIndex][msg.sender] = Voter(msg.sender, true);
+
+        // Determine the winner at each vote
+        if (competition.winnerCompetition == 0) {
+            // No winner yet
+            votingCompetitions[competitionIndex].winnerCompetition = nomineeIndex + 1;
+        } else {
+            uint currentWinnerCompetitionVoteCount = competition.nominees[competition.winnerCompetition - 1].voteCount;
+            if (votingCompetitions[competitionIndex].nominees[nomineeIndex].voteCount > currentWinnerCompetitionVoteCount) {
+                // New winner designated
+                votingCompetitions[competitionIndex].winnerCompetition = nomineeIndex + 1;
+            }
+        }
+
+        emit VotedOnCompetition(_competitionId, _nomineeId, votingCompetitions[competitionIndex].nominees[nomineeIndex].voteCount);
+    }
+
+    /// @notice get One competition
+    /// @param _competitionId the id of the competition
+    /// @return the competition
+    function getCompetition(uint _competitionId) competitionExists(_competitionId) public view returns(CompetitionVotingSession memory) {
+        uint competitionIndex = _competitionId - 1; // see addCompetition        
+        return votingCompetitions[competitionIndex];
     }
 
     /// @notice Gets the voting competition status according to the current timestamp.
     /// @param _competitionId The voting competition number.
     /// @return The voting competition status.
-    function getVotingCompetitionStatus(uint _competitionId) external view returns (VotingCompetitionStatus){
-        require(_competitionId <= votingCompetitions.length, "Competition: Voting competition doesn't exist");
+    function getVotingCompetitionStatus(uint _competitionId) competitionExists(_competitionId) public view returns(VotingCompetitionStatus) {
+        CompetitionVotingSession memory competition = getCompetition(_competitionId);
 
-        if (votingCompetitions[_competitionId].startTime > block.timestamp) {
+        if (competition.startTime > block.timestamp) {
             return VotingCompetitionStatus.Pending;
         }
-        else if (votingCompetitions[_competitionId].endTime < block.timestamp) {
+        else if (competition.endTime < block.timestamp) {
             return VotingCompetitionStatus.Ended;
         }
 
         return VotingCompetitionStatus.InProgress;
     }
 
-    /// @notice Returns whether the user has voted on the voting competition.
-    /// @param _competitionId The voting competition identifier.
-    /// @return True if msg.sender has already voted on this competition id.
-    function getVoterStatus(uint _competitionId) external view onlyJuryOfCompetition(_competitionId) returns(bool) {
-        require(_competitionId <= votingCompetitions.length, "Competition: Voting competition doesn't exist");
-
-        return votingCompetitionsVoters[_competitionId][msg.sender].hasVoted;
-    }
-
-    /// @notice Allows you to vote for an option in a competition during a voting session.
-    /// @dev Voting is only possible if the timestamp of the current block is between startTime and endTime of the session and if the voter's address is in the list. event Voted when jury has been voted
-    /// @param _competitionId The voting competition on which the voter wants to vote.
-    /// @param _tokenIdOption The token id of the option chosen by the voter.
-    function voteOnCompetition(uint _competitionId, uint _tokenIdOption) onlyJuryOfCompetition(_competitionId) external {
-        require(_competitionId <= votingCompetitions.length, "Competition: Voting competition doesn't exist");
-        require(votingCompetitions[_competitionId].startTime < block.timestamp, "Voting competition isn't open yet");
-        require(votingCompetitionsVoters[_competitionId][msg.sender].hasVoted == false, "You have already voted");
-        uint nbVote;
-        CompetitionVotingSession memory competition = getCompetition(_competitionId);
-
-        for(uint i = 0; i < competition.nominees.length; i++ ){
-            if(competition.nominees[i].tokenId == _tokenIdOption){
-                competition.nominees[i].voteCount++;
-                nbVote = competition.nominees[i].voteCount;
-            }
-        }
-
-        // Determining if the voted proposal became the most voted. !!! A revoir lors de l'implementation des votes
-        for(uint i = 0; i < competition.nominees.length; i++ ){
-            if(competition.nominees[i].tokenId == competition.winnerCompetition && competition.nominees[i].voteCount > nbVote){
-                competition.winnerCompetition = _tokenIdOption;
-            }
-        }
-
-        votingCompetitionsVoters[_competitionId][msg.sender] = Voter(msg.sender, true);
-
-        emit Voted(_competitionId, true, nbVote);
-    }
-
-    /// @notice get One competition
-    /// @param _competitionId the id competition
+    /// @notice get a competition of a jury if it has not already voted on this competition
+    /// @param _competitionId id of competition
     /// @return the competition
-    function getCompetition(uint _competitionId) public view returns(CompetitionVotingSession memory){
-        require(_competitionId -1 < votingCompetitions.length, "Competition inexistante !");
-        return votingCompetitions[_competitionId - 1];
+    function getUnvotedCompetitionOfJury(uint _competitionId) competitionExists(_competitionId) onlyJuryOfCompetition(_competitionId) external view returns(CompetitionAndVotingStatus memory) {
+        CompetitionVotingSession memory competition = getCompetition(_competitionId);
+        uint competitionIndex = _competitionId - 1; // see addCompetition
+
+        require(votingCompetitionsVoters[competitionIndex][msg.sender].hasVoted == false, "You already have voted on this competition");
+
+        CompetitionAndVotingStatus memory newCompetitionAndVotingStatus;
+        newCompetitionAndVotingStatus.competition = competition;
+        newCompetitionAndVotingStatus.votingStatus = getVotingCompetitionStatus(_competitionId);
+
+        return newCompetitionAndVotingStatus;
     }
 }

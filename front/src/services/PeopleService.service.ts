@@ -1,7 +1,7 @@
-import {provider} from "../provider/providers";
-import {ethers, EventLog} from "ethers";
-import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
-import {toString as uint8ArrayToString} from "uint8arrays/to-string";
+import { provider } from "../provider/providers.ts";
+import { ethers, EventLog } from "ethers";
+import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs.ts";
+import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 
 /**
  * Récuperation des data et creation de l'objet people
@@ -76,7 +76,7 @@ export const listenToNewPeople = async (eventType: string, contractAddress: stri
             tokenUri = await contract.tokenURI(id);
 
             if (tokenUri) {
-               await addToPeopleList(await getPeopleData(id, tokenUri));
+                await addToPeopleList(await getPeopleData(id, tokenUri));
             }
         });
 
@@ -100,12 +100,11 @@ export const fetchOnePeople = async (contractAddress: string, contractAbi: any, 
             // récupération du tokenURI, url des metadonnée du token
             const tokenUri = await contract.tokenURI(tokenId);
 
-            if(tokenUri) {
+            if (tokenUri) {
                 people = await getPeopleData(tokenId, tokenUri)
             }
         } catch (err) {
             console.log(err);
-            return false;
         }
         return people;
     }

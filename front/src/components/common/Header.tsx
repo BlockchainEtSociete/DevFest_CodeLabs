@@ -6,7 +6,7 @@ const Header = () => {
         <Box sx={{textAlign: 'center', margin: '20px', clear: 'both'}}>
             <h1>DevFest Festival</h1>
             <AppBar />
-            <img src="/banniere.png" alt="banniere" height='auto' width='80%' />
+            <img src="/banniere.png" alt="banniere" height='auto' width='60%' />
         </Box>
     )
 }

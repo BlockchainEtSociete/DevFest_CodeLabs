@@ -5,7 +5,7 @@ export interface State {
     connectedUser: ConnectedUser
 }
 const initialState: State = {
-    connectedUser: { accessRights: { canAddPeople: false, canAddMovie: false, canAddCompetition: false, canAddJury: false, isJury: false }, address: '' }
+    connectedUser: { accessRights: { canAddPeople: false, canAddMovie: false, canAddCompetition: false, canAddJury: false, isJury: false }, address: '', juryId: -1 }
 }
 
 enum Actions {
@@ -16,7 +16,7 @@ enum Actions {
 
 export interface Action {
     type: Actions;
-    data?: JsonRpcSigner | AccessRights;
+    data?: JsonRpcSigner | {accessRights: AccessRights, juryId: number};
 }
 
 const reducer = (state: State, action: Action) => {
@@ -27,7 +27,9 @@ const reducer = (state: State, action: Action) => {
             state.connectedUser.address = (data as JsonRpcSigner)?.address || ''
             return { ...state }
         case Actions.UPDATE_RIGHTS:
-            state.connectedUser.accessRights = data as AccessRights
+            const { accessRights, juryId } = data as { accessRights: AccessRights, juryId: number };
+            state.connectedUser.accessRights = accessRights;
+            state.connectedUser.juryId = juryId;
             return { ...state }
         case Actions.DISCARD_USER:
             state.connectedUser = initialState.connectedUser

@@ -8,6 +8,8 @@ import Movie from "../../pages/Movie.tsx";
 import Director from "../../pages/Director.tsx";
 import Competition from "../../pages/Competition.tsx";
 import Account from "../../pages/Account.tsx";
+import Vote from "../../pages/Vote.tsx";
+import useConnectedUserContext from '../../context/ConnectedUserContextHook.tsx';
 
 const useRouteMatch = (patterns: string[]) => {
     const { pathname } = useLocation();
@@ -23,8 +25,11 @@ const useRouteMatch = (patterns: string[]) => {
 }
 
 const NavTab = () => {
-    const routeMatch = useRouteMatch(['/', '/jury', '/acteur', '/film', '/realisateur', '/competition', '/account']);
+    const routeMatch = useRouteMatch(['/', '/jury', '/acteur', '/film', '/realisateur', '/competition', '/account', '/vote']);
     const currentTab = routeMatch?.pattern?.path || '/';
+
+    const { state: { connectedUser } } = useConnectedUserContext();
+    const { isJury } = connectedUser.accessRights
 
     return (
         <>
@@ -39,6 +44,7 @@ const NavTab = () => {
                     <Tab label="Realisateurs" value='/realisateur' to='/realisateur' component={Link} />
                     <Tab label="Jurys" value='/jury' to='/jury' component={Link} />
                     <Tab label="Compétitions" value="/competition" to="/competition" component={Link} />
+                    {isJury && <Tab label="Voter👍👎" value="/vote" to="/vote" component={Link} />}
                 </Tabs>
                 <Routes>
                     <Route path="/" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Home /></Box>}></Route>
@@ -49,6 +55,7 @@ const NavTab = () => {
                     <Route path="/realisateur" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Director /></Box>}></Route>
                     <Route path="/film" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Movie /></Box>}></Route>
                     <Route path="/competition" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Competition /></Box>}></Route>
+                    <Route path="/vote" element={<Box sx={{ paddingLeft: 3, paddingRight: 3, width: "100%" }}><Vote /></Box>}></Route>
                 </Routes>
             </Box>
         </>

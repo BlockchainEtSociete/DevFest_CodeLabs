@@ -40,3 +40,45 @@ textarea{
 .blockCompetition{
     display: flex;
 }
+
+/* MODAL */
+.modal {
+    font-size: 12px;
+    background-color: white;
+    width: 800px;
+    border: 1px solid black;
+}
+.modal > .header {
+    width: 100%;
+    border-bottom: 1px solid gray;
+    font-size: 18px;
+    text-align: center;
+}
+.modal > .content {
+    width: 100%;
+    padding: 10px 5px;
+    text-align: center;
+    font-size: 50px;
+}
+.modal > .actions {
+    width: 100%;
+    padding: 10px 5px;
+    margin: auto;
+    text-align: center;
+}
+.close {
+    cursor: pointer;
+    position: absolute;
+    display: block;
+    padding: 2px 5px;
+    line-height: 20px;
+    right: -10px;
+    top: -10px;
+    font-size: 24px;
+    background: #ffffff;
+    border-radius: 18px;
+    border: 1px solid #cfcece;
+    height: auto;
+    width: auto;
+    color: red;
+}

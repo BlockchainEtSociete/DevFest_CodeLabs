@@ -9,6 +9,7 @@ export interface AccessRights {
 export interface ConnectedUser {
     signer?: JsonRpcSigner
     address: string
+    juryId: number
     accessRights: AccessRights
 }
 
