@@ -4,7 +4,7 @@ import { AlertColor } from "@mui/material";
 import ipfs from "../common/ipfs";
 import { CompetitionMetadata } from "../../types/Metadata";
 import { provider } from "../../provider/providers";
-import { ethers } from "ethers";
+import { ethers, ContractTransactionResponse, EventLog } from "ethers";
 import contractsInterface from "../../contracts/contracts";
 import { getTimestamp } from "../../utils/dateUtils";
 
@@ -103,10 +103,41 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
 
         // création de l'appel du mint
         const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer);
-        let transaction;
 
         try {
-            transaction = await contract.addCompetition(tokenURI, typeCompetition, startDate, endDate);
+            // création de la compétition
+            const transaction:ContractTransactionResponse = await contract.addCompetition(tokenURI, typeCompetition, startDate, endDate);
+
+            // vérification que la transaction c'est bien passé
+            const receipt = await transaction.wait();
+
+            if (receipt && receipt.status == 1) {
+
+                const competitionSessionRegistered = (receipt.logs as EventLog[]).find((log) => log.fragment.name === "CompetitionSessionRegistered")
+
+                if (!competitionSessionRegistered) {
+                    console.log("receipt", receipt)
+                    throw "Evenement de création attendu"
+                }
+
+                const competitionId = ethers.toNumber(competitionSessionRegistered.args[0]);
+                setTokenId(competitionId);
+
+                setMessage(`Minting in success`)
+                setSeverity('success')
+                setOpen(true)
+                setTimeout(
+                    function () {
+                        setOpen(false)
+                    }, 5000);
+                
+                setOpenNominees(true)
+                setOpenCompetition(false)
+
+            } else {
+                console.log("receipt", receipt)
+                throw "Receipt status incorrect"
+            }
         } catch (e) {
             setMinting(false);
             setMessage(`Minting in error`)
@@ -118,45 +149,7 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
                 }, 5000);
         }
 
-        // récupération de l'id du token minté
-        await contract.on('*', (event) => {
-            if (event.eventName == 'CompetitionSessionRegistered') {
-                const id = ethers.toNumber(event.args[0]);
-                setTokenId(id);
-            }
-        });
-
-        // vérification que la transaction c'est bien passé
-        await transaction.wait().then(async (receipt: any) => {
-            if(receipt && receipt.status == 1){
-                setMessage(`Minting in success`)
-                setSeverity('success')
-                setOpen(true)
-                setTimeout(
-                    function () {
-                        setOpen(false)
-                    }, 5000);
-            }
-        }).catch((err: any )=> {
-            if(err){
-                setMinting(false);
-                setMessage(`Minting in error`)
-                setSeverity('error')
-                setOpen(true)
-                setTimeout(
-                    function () {
-                        setOpen(false)
-                    }, 5000);
-            }
-        })
-
-        setOpenNominees(true)
-        setOpenCompetition(false)
-
-        setMessage('Minting finished ! :)')
-        setSeverity('success')
-        setOpen(true)
-        return true;
+        return false;
     }
 
     /**

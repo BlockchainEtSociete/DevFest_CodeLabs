@@ -1,8 +1,8 @@
-import {provider} from "../provider/providers";
-import {ethers, EventLog} from "ethers";
-import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
-import {toString as uint8ArrayToString} from "uint8arrays/to-string";
-import contractsInterface from "../contracts/contracts";
+import { provider } from "../provider/providers.ts";
+import { ethers, EventLog } from "ethers";
+import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs.ts";
+import { toString as uint8ArrayToString } from "uint8arrays/to-string";
+import contractsInterface from "../contracts/contracts.ts";
 
 /**
  * Récuperation des data et creation de l'objet movie
@@ -57,7 +57,7 @@ export const fetchMovie = async (eventType: string, contractAddress: string, con
                 tokenUri = await contract.tokenURI(id);
 
                 if (tokenUri) {
-                   await addToMovieList(await getMovieData(id, tokenUri));
+                    await addToMovieList(await getMovieData(id, tokenUri));
                 }
             }
         } catch (err) {
@@ -73,9 +73,8 @@ export const fetchMovie = async (eventType: string, contractAddress: string, con
  * @param contractAddress
  * @param contractAbi
  * @param tokenId
- * @param setLoading
  */
-export const fetchOneMovie = async (contractAddress: string, contractAbi: any, tokenId: number) => {
+export async function fetchOneMovie(contractAddress: string, contractAbi: any, tokenId: number) {
     if (provider) {
         let movie;
         // initialisation du contract
@@ -89,7 +88,7 @@ export const fetchOneMovie = async (contractAddress: string, contractAbi: any, t
             }
         } catch (err) {
             console.log(err);
-            return false;
+            return null;
         }
         return movie;
     }
@@ -102,7 +101,7 @@ export const fetchOneMovie = async (contractAddress: string, contractAbi: any, t
  * @param contractAbi
  * @param addToMovieList
  */
-export const listenToNewMovie =  async (eventType: string, contractAddress: string, contractAbi: any, addToMovieList: Function) => {
+export const listenToNewMovie = async (eventType: string, contractAddress: string, contractAbi: any, addToMovieList: Function) => {
     if (provider) {
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);

@@ -3,7 +3,7 @@ import { ethers } from "ethers"
 import contractsInterface from "../contracts/contracts.ts"
 import { AccessRights } from "../types/ConnectedUser"
 
-export async function computeAccessRights(address: string): Promise<AccessRights> {
+export async function computeAccessRights(address: string): Promise<{ accessRights: AccessRights, juryId?: number }> {
     const directorsContract = new ethers.Contract(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, provider)
     const actorsContract = new ethers.Contract(contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, provider)
     const moviesContract = new ethers.Contract(contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, provider)
@@ -15,6 +15,7 @@ export async function computeAccessRights(address: string): Promise<AccessRights
     let canAddCompetition = false
     let canAddJury = false
     let isJury = false
+    let juryId = -1;
 
     try {
         const directorsContractOwnerAddress = await directorsContract.owner()
@@ -52,14 +53,14 @@ export async function computeAccessRights(address: string): Promise<AccessRights
     }
 
     try {
-        await jurysContract.getJuryId(address)
+        juryId = ethers.toNumber(await jurysContract.getJuryId(address))
         isJury = true
     } catch (e) {
         isJury = false
         console.error("Erreur appel getJuryId sur le contrat Jurys", e)
     }
 
-    return { canAddPeople, canAddMovie, canAddCompetition, canAddJury, isJury }
+    return { accessRights: { canAddPeople, canAddMovie, canAddCompetition, canAddJury, isJury }, juryId }
 }
 
 export function hasAccessToApp(accessRights: AccessRights): boolean {

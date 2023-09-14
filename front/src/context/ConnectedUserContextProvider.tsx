@@ -12,8 +12,8 @@ export default ({children}: {children:ReactNode}) => {
             const signer = await provider?.getSigner()
             if (signer) {
                 dispatch({type: Actions.UPDATE_USER, data: signer})
-                const accessRights = await computeAccessRights(signer.address)
-                dispatch({type: Actions.UPDATE_RIGHTS, data: accessRights})
+                const {accessRights, juryId} = await computeAccessRights(signer.address)
+                dispatch({type: Actions.UPDATE_RIGHTS, data: {accessRights, juryId}})
             }
         } else {
             dispatch({type: Actions.DISCARD_USER})
