@@ -1,6 +1,6 @@
-import ipfs, { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs.ts";
+import {ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import {toString as uint8ArrayToString} from "uint8arrays/to-string";
-import {provider} from "../provider/providers.ts";
+import {provider} from "../provider/providers";
 import {ethers, EventLog} from "ethers";
 
 /**

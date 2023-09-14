@@ -1,13 +1,13 @@
 import {ChangeEvent, useState} from "react";
-import {provider} from "../../provider/providers.ts";
+import {provider} from "../../provider/providers";
 import {ethers} from "ethers";
-import contractsInterface from "../../contracts/contracts.ts";
+import contractsInterface from "../../contracts/contracts";
 import "../../styles/formBlock.css";
-import ipfs from "../common/ipfs.ts";
-import {PeopleMetadata} from "../../types/Metadata.ts";
-import PeopleDisplay from "./PeopleDisplay.tsx";
+import ipfs from "../common/ipfs";
+import {PeopleMetadata} from "../../types/Metadata";
+import PeopleDisplay from "./PeopleDisplay";
 import {AlertColor} from "@mui/material";
-import SnackbarAlert from "../common/SnackbarAlert.tsx";
+import SnackbarAlert from "../common/SnackbarAlert";
 
 const PeopleGenerator = () => {
     const [mitting, setMitting] = useState(false);

@@ -1,17 +1,45 @@
-import {provider} from "../provider/providers.ts";
+import {provider} from "../provider/providers";
 import {ethers, EventLog} from "ethers";
-import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs.ts";
+import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import {toString as uint8ArrayToString} from "uint8arrays/to-string";
-import contractsInterface from "../contracts/contracts.ts";
+import contractsInterface from "../contracts/contracts";
 
+/**
+ * Récuperation des data et creation de l'objet movie
+ * @param tokenId
+ * @param tokenUri
+ */
+export const getMovieData = async (tokenId: number, tokenUri: string) => {
+    // parse des données récupérées en object
+    const metadataString = await ipfsGetContent(tokenUri);
+    const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'));
+
+    // récuperation du réalisateur
+    const contractDirector = new ethers.Contract(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, provider);
+    const tokenUriDirector = await contractDirector.tokenURI(data.attributes[3].value);
+    const metaDataStringDirector = await ipfsGetContent(tokenUriDirector);
+    const dataDirector = JSON.parse(uint8ArrayToString(metaDataStringDirector, 'utf8'));
+
+    return {
+        id: tokenId,
+        Title: data.attributes[0].value,
+        Description: data.attributes[1].value,
+        Picture: ipfsGetUrl(data.attributes[2].value),
+        Director: {
+            Firstname: dataDirector.attributes[0].value,
+            Lastname: dataDirector.attributes[1].value
+        }
+    }
+}
 /**
  * récuperation de tout les films
  * @param eventType
  * @param contractAddress
  * @param contractAbi
  * @param setLoading
+ * @param addToMovieList
  */
-export async function fetchMovie(eventType: string, contractAddress: string, contractAbi: any, setLoading: Function) {
+export async function fetchMovie(eventType: string, contractAddress: string, contractAbi: any, setLoading: Function, addToMovieList: Function) {
     setLoading(true);
     if (provider) {
         // initialisation du contract
@@ -30,27 +58,7 @@ export async function fetchMovie(eventType: string, contractAddress: string, con
                 tokenUri = await contract.tokenURI(id);
 
                 if(tokenUri) {
-                    // parse des données récupérées en object
-                    const metadataString = await ipfsGetContent(tokenUri)
-                    const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'))
-
-                    // récuperation du réalisateur
-                    const contractDirector = new ethers.Contract(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, provider);
-                    const tokenUriDirector = await contractDirector.tokenURI(data.attributes[3].value);
-                    const metaDataStringDirector = await ipfsGetContent(tokenUriDirector)
-                    const dataDirector = JSON.parse(uint8ArrayToString(metaDataStringDirector, 'utf8'))
-
-                    const movie = {
-                        id: id,
-                        Title: data.attributes[0].value,
-                        Description: data.attributes[1].value,
-                        Picture: ipfsGetUrl(data.attributes[2].value),
-                        Director: {
-                            Firstname: dataDirector.attributes[0].value,
-                            Lastname: dataDirector.attributes[1].value
-                        }
-                    }
-                    movies.push(movie);
+                   await addToMovieList(await getMovieData(id, tokenUri));
                 }
             }
         } catch (err) {
@@ -81,25 +89,7 @@ export async function fetchOneMovie(contractAddress: string, contractAbi: any, t
             // récupération du tokenURI, url des metadonnée du token
             const tokenUri = await contract.tokenURI(tokenId);
             if(tokenUri){
-                const metadataString = await ipfsGetContent(tokenUri)
-                const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'))
-
-                // récuperation du réalisateur
-                const contractDirector = new ethers.Contract(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, provider);
-                const tokenUriDirector = await contractDirector.tokenURI(data.attributes[3].value);
-                const metaDataStringDirector = await ipfsGetContent(tokenUriDirector)
-                const dataDirector = JSON.parse(uint8ArrayToString(metaDataStringDirector, 'utf8'))
-
-                movie = {
-                    id: tokenId,
-                    Title: data.attributes[0].value,
-                    Description: data.attributes[1].value,
-                    Picture: ipfsGetUrl(data.attributes[2].value),
-                    Director: {
-                        Firstname: dataDirector.attributes[0].value,
-                        Lastname: dataDirector.attributes[1].value
-                    }
-                }
+                movie = await getMovieData(tokenId, tokenUri);
             }
         } catch (err) {
             console.log(err);
@@ -111,3 +101,27 @@ export async function fetchOneMovie(contractAddress: string, contractAbi: any, t
     }
 }
 
+/**
+ * Fonction qui ecoute les nouveaux films
+ * @param eventType
+ * @param contractAddress
+ * @param contractAbi
+ * @param addToMovieList
+ */
+export const listenToNewMovie =  async (eventType: string, contractAddress: string, contractAbi: any, addToMovieList: Function) => {
+    if(provider){
+        // initialisation du contract
+        const contract = new ethers.Contract(contractAddress, contractAbi, provider);
+
+        await contract.on(eventType, async (event: any) => {
+            let tokenUri: string = '';
+            // récupération de l'id du token parsé car initialement on le recoit en bigNumber
+            const id = ethers.toNumber((event as EventLog).args[0]);
+            // récupération du tokenURI, url des metadonnée du token
+            tokenUri = await contract.tokenURI(id);
+            if (tokenUri) {
+                await addToMovieList(await getMovieData(id, tokenUri));
+            }
+        });
+    }
+}

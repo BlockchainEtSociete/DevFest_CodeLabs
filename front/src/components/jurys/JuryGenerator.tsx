@@ -1,13 +1,13 @@
-import SnackbarAlert from "../common/SnackbarAlert.tsx";
+import SnackbarAlert from "../common/SnackbarAlert";
 import {ChangeEvent, useState} from "react";
 import {AlertColor} from "@mui/material";
 import {ethers} from "ethers";
-import {JuryMetadata} from "../../types/Metadata.ts";
-import {provider} from "../../provider/providers.ts";
-import contractsInterface from "../../contracts/contracts.ts";
-import ipfs from "../common/ipfs.ts";
-import {GenerateJuryGenerator, GenerateJuryImage, JuryInfos} from "./JuryImageGenerator.tsx";
-import {dataUrlToFile, selectedPhotoToken} from "../../services/IpfsService.service.ts";
+import {JuryMetadata} from "../../types/Metadata";
+import {provider} from "../../provider/providers";
+import contractsInterface from "../../contracts/contracts";
+import ipfs from "../common/ipfs";
+import {GenerateJuryGenerator, GenerateJuryImage, JuryInfos} from "./JuryImageGenerator";
+import {dataUrlToFile, selectedPhotoToken} from "../../services/IpfsService.service";
 
 const JuryGenerator = () => {
     const [mitting, setMitting] = useState(false);
@@ -209,6 +209,9 @@ const JuryGenerator = () => {
             }
         })
 
+        setTimeout(function() {
+            setCardDataUrl('');
+        }, 10000);
         setMessage('Minting finished ! :)')
         setSeverity('success')
         setOpen(true)
@@ -260,10 +263,13 @@ const JuryGenerator = () => {
             <button onClick={verifyFormJury} disabled={mitting}>Ajouter</button>
 
             <GenerateJuryGenerator cardInfos={juryInfo} />
-            <div>
-                <img id="generatedCard" src={cardDataUrl} alt={juryInfo.Firstname + ' ' + juryInfo.Lastname}></img>
-            </div>
-
+            {
+                cardDataUrl ?
+                    <div>
+                        <img id="generatedCard" src={cardDataUrl} alt={juryInfo.Firstname + ' ' + juryInfo.Lastname}></img>
+                    </div>
+                 : ''
+            }
             <div>
                 <SnackbarAlert open={open} setOpen={setOpen} message={message} severity={severity} />
             </div>

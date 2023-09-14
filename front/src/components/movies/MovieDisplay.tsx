@@ -34,6 +34,10 @@ const MovieDisplay = ({tokenId}: MovieDisplayProps  ) => {
                         const imageContent = await ipfsGetContent(data.attributes[2].value)
                         setMovieImage(uint8ArrayToString(imageContent, 'base64'))
                     }
+                    setTimeout(function() {
+                        setMetadata('');
+                        setMovieImage('')
+                    }, 10000);
                 }
             })()
         }
