@@ -4,19 +4,24 @@ import contractsInterface from "../contracts/contracts";
 import {fetchMovie, listenToNewMovie} from "../services/MovieService.service";
 
 const Movie = () => {
-    const [movies, ]: any = useState({});
+    const [movies, setMovies]: any = useState({});
     const [isLoading, setLoading] = useState(false);
 
     useEffect(() => {
         const addToMovieList = async (movie: any) => {
             if(!movies[movie.id]){
                 movies[movie.id] = movie;
+                setMovies(movies);
             }
         }
 
-        fetchMovie("MovieMinted", contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, setLoading, addToMovieList).then();
-        listenToNewMovie("MovieMinted", contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, addToMovieList).then();
-    }, [movies]);
+        (async () => {
+            setLoading(true)
+            await  fetchMovie("MovieMinted", contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, addToMovieList);
+            await listenToNewMovie("MovieMinted", contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, addToMovieList);
+            setLoading(false)
+        })();
+    }, [movies,setMovies]);
 
     return (
         <article>

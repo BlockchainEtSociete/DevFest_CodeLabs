@@ -5,11 +5,10 @@ export interface CardListCompetitionProps{
     picture: string,
     startDate: number,
     endDate: number,
-    options: any,
+    nominees: any[],
     typeCompetition: number
 }
-function CardListCompetition({title, picture, startDate, endDate, options, typeCompetition}: CardListCompetitionProps){
-
+function CardListCompetition({title, picture, startDate, endDate, nominees, typeCompetition}: CardListCompetitionProps){
     const dateDebut = new Date(startDate * 1000)
     const dateFin = new Date(endDate * 1000);
 
@@ -24,31 +23,24 @@ function CardListCompetition({title, picture, startDate, endDate, options, typeC
                     <p>Début de la compétition : {dateDebut.toLocaleString("fr")}</p>
                     <p>Fin de la competition :  {dateFin.toLocaleString("fr")}</p>
                     <h4>Les nominés sont :</h4>
-                    {
-                        typeCompetition == 1 || typeCompetition == 2 && options.map((option: any, index: number) => {
-                            return ([
-                                    <div key={`${option.id}-${index}`}>
-                                        <CardCompetitionSelect
-                                            Info={option.option.Firstname + " " + option.option.Lastname}
-                                            Picture={option.option.Picture}
-                                        />
-                                    </div>
-                                ]
-                            )
-                        })
-                    }
-                    {
-                        typeCompetition == 3 && options.map((option: any, index: number) => {
-                            return ([
-                                    <div key={`${option.id}-${index}`}>
-                                        <CardCompetitionSelect
-                                            Info={option.option.title}
-                                            Picture={option.option.Picture}
-                                        />
-                                    </div>
-                                ]
-                            )
-                        })
+
+                    { nominees.map((nominee: any) => {
+                        let info = ''
+                        if (typeCompetition == 1 || typeCompetition == 2) {
+                            info = `${nominee.nominee.Firstname} ${nominee.nominee.Lastname}`
+                        }
+                        else {
+                            info = nominee.nominee.title
+                        }
+
+                        return (
+                            <div key={nominee.nominee.id}>
+                                <CardCompetitionSelect
+                                    Info={info}
+                                    Picture={nominee.nominee.Picture}
+                                />
+                            </div>
+                        )})
                     }
                 </div>
             </div>

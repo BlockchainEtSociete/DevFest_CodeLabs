@@ -4,19 +4,24 @@ import contractsInterface from "../contracts/contracts";
 import {fetchPeople, listenToNewPeople} from "../services/PeopleService.service";
 
 const Director = () => {
-    const [directors, ]: any = useState({});
+    const [directors, setDirectors]: any = useState({});
     const [isLoading, setLoading] = useState(false);
 
     useEffect(() => {
         const addToDirectors = async (people: any) => {
             if (!directors[people.id]) {
                 directors[people.id] = people;
+                setDirectors(directors);
             }
         }
 
-        fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, setLoading, addToDirectors).then();
-        listenToNewPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors).then();
-    }, [directors]);
+        (async () => {
+            setLoading(true)
+            await fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors);
+            await listenToNewPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors);
+            setLoading(false)
+        })();
+    }, [directors, setDirectors]);
 
     return (
         <article>

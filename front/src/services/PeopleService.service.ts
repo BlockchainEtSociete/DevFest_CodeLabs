@@ -30,8 +30,7 @@ export const getPeopleData = async (tokenId: number, tokenUri: string) => {
  * @param setLoading
  * @param addToPeopleList
  */
-export const fetchPeople = async (eventType: string, contractAddress: string, contractAbi: any, setLoading: Function, addToPeopleList: Function) => {
-    setLoading(true);
+export const fetchPeople = async (eventType: string, contractAddress: string, contractAbi: any, addToPeopleList: Function) => {
     if (provider) {
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
@@ -53,10 +52,8 @@ export const fetchPeople = async (eventType: string, contractAddress: string, co
             }
         } catch (err) {
             console.log(err);
-            setLoading(false);
             return false;
         }
-        setLoading(false);
     }
 }
 
@@ -93,8 +90,7 @@ export const listenToNewPeople = async (eventType: string, contractAddress: stri
  * @param tokenId
  * @param setLoading
  */
-export async function fetchOnePeople(contractAddress: string, contractAbi: any, tokenId: number, setLoading: Function){
-    setLoading(true);
+export async function fetchOnePeople(contractAddress: string, contractAbi: any, tokenId: number){
     if (provider) {
         let people;
         // initialisation du contract
@@ -109,10 +105,8 @@ export async function fetchOnePeople(contractAddress: string, contractAbi: any, 
             }
         } catch (err) {
             console.log(err);
-            setLoading(false);
             return false;
         }
-        setLoading(false);
         return people;
     }
 }

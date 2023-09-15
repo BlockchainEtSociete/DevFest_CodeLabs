@@ -4,19 +4,24 @@ import contractsInterface from "../contracts/contracts";
 import CardListCompetition from "../components/competition/CardListCompetition";
 
 const Competition = () => {
-    const [competitions, ]: any = useState({});
+    const [competitions, setCompetitions] : any = useState({});
     const [isLoading, setLoading] = useState(false);
 
     useEffect(() => {
-        const addToCompetitions = async (competition: any) => {
+        const addToCompetitions = (competition: any) => {
             if (!competitions[competition.id]) {
                 competitions[competition.id] = competition;
+                setCompetitions(competitions);
             }
         }
 
-        fetchCompetitions('CompetitionSessionRegistered', contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, setLoading, addToCompetitions).then();
-        listenToNewCompetition('CompetitionSessionRegistered', contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, setLoading, addToCompetitions).then();
-    }, []);
+        (async () => {
+            setLoading(true)
+            await fetchCompetitions('CompetitionSessionRegistered', contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, addToCompetitions);
+            await listenToNewCompetition('CompetitionSessionRegistered', contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, addToCompetitions);
+            setLoading(false)
+        })()
+    }, [competitions, setCompetitions]);
 
     return(
         <article>
@@ -29,7 +34,7 @@ const Competition = () => {
                             picture={competitions[competition].Picture}
                             startDate={competitions[competition].startDate}
                             endDate={competitions[competition].endDate}
-                            options={competitions[competition].options}
+                            nominees={competitions[competition].nominees}
                             typeCompetition={competitions[competition].typeCompetition}
                         />
                     ))

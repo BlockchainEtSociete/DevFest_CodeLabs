@@ -1,37 +1,38 @@
 import { AlertColor } from "@mui/material";
 import { useEffect, useState } from "react";
-import { fetchJury, listenToNewJury } from "../../services/JuryService.service.ts";
-import contractsInterface from "../../contracts/contracts.ts";
-import { provider } from "../../provider/providers.ts";
+import { fetchJury, listenToNewJury } from "../../services/JuryService.service";
+import contractsInterface from "../../contracts/contracts";
+import { provider } from "../../provider/providers";
 import { ethers } from "ethers";
 
 export interface CompetitionJuryFormProps {
     reset: boolean,
     minting: boolean,
+    tokenId: number,
     setMinting: (minting: boolean) => void,
-    setLoading: (loading: boolean) => void,
     setOpenJury: (openJury: boolean) => void,
     setOpen: (open: boolean) => void,
     setMessage: (message: string) => void,
     setSeverity: (severity: AlertColor | undefined) => void,
 }
 
-export const CompetitionJuryForm = ({reset, minting, setMinting, setLoading, setOpenJury, setOpen, setMessage, setSeverity}: CompetitionJuryFormProps) => {
+export const CompetitionJuryForm = ({reset, minting, tokenId, setMinting, setOpenJury, setOpen, setMessage, setSeverity}: CompetitionJuryFormProps) => {
     const [idJury, setIdJury]: any = useState(0);
-    let [jurys, ]: any = useState([]);
+    let [jurys, setJurys]: any = useState([]);
 
     useEffect(() => {
         const addToJurys = async (jury: any) => {
-            jurys.push(jury);
+            jurys[jury.id] = jury;
+            setIdJury(jury);
         }
 
-        fetchJury("JuryMinted", contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, setLoading, addToJurys).then();
-        listenToNewJury("JuryMinted", contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, addToJurys).then();
-
+        (async () => {
+            await fetchJury("JuryMinted", contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, addToJurys);
+            await listenToNewJury("JuryMinted", contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, addToJurys);
+        })();
         if (reset) {
             setIdJury(0);
         }
-
     }, [jurys, reset])
 
     /**
@@ -54,13 +55,12 @@ export const CompetitionJuryForm = ({reset, minting, setMinting, setLoading, set
     const addJurysCompetition = async () => {
         setMinting(true);
         const signer = await provider?.getSigner();
-
         // création de l'appel du smart contract
-        const contract = new ethers.Contract(contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, signer );
+        const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
         let transaction;
 
         try {
-            transaction = await contract.addCompetitionByJury(tokenId, idJury);
+            transaction = await contract.addJuryToCompetition(tokenId, idJury);
         }catch (e) {
             setMinting(false);
             setMessage(`Minting in error`)
@@ -96,7 +96,6 @@ export const CompetitionJuryForm = ({reset, minting, setMinting, setLoading, set
             }
         })
 
-        jurys = jurys.filter((el: any) => el.id != idJury)
         setIdJury(0);
 
         setMessage('Minting finished ! :)')
@@ -109,21 +108,19 @@ export const CompetitionJuryForm = ({reset, minting, setMinting, setLoading, set
         <div  className="form-ligne">
             <h5>Les Jurys : </h5>
             <div style={{display: 'flex', justifyContent: 'center', flexDirection: 'column'}}>
-                { jurys && jurys.length > 0 && jurys.map((jury: any, index: number) => {
-                    const fullName = jury.Lastname + " " + jury.Firstname;
+                { jurys && Object.keys(jurys).length > 0 && Object.keys(jurys).map((jury: any) => {
+                    const fullName = jurys[jury].Lastname + " " + jurys[jury].Firstname;
                     return (
-                        <label key={`id-${index}`}> {fullName} :
+                        <label key={`${jurys[jury].id}`}> {fullName} :
                             <input name="jury" type="radio" onChange={e => setIdJury(Number(e.target.value))}
-                                   value={jury.id} />
+                                   value={jurys[jury].id} />
                         </label>
-                    )
-                })
-                }
+                    )}
+            )}
             </div>
             <div>
-                <button onClick={verifyFormJury} disabled={minting}>Ajout des Jurys de la compétition</button>
+                <button onClick={verifyFormJury} >Ajout des Jurys de la compétition</button>
             </div>
-
         </div>
     )
 }

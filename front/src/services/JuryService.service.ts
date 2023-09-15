@@ -30,8 +30,7 @@ export const getJuryData = async (tokenId: number, tokenUri: string) => {
  * @param setLoading
  * @param addToJurys
  */
-export const fetchJury = async (eventType: string, contractAddress: string, contractAbi: any, setLoading: Function, addToJurys: Function) => {
-    setLoading(true);
+export const fetchJury = async (eventType: string, contractAddress: string, contractAbi: any, addToJurys: Function) => {
     if (provider) {
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
@@ -51,10 +50,8 @@ export const fetchJury = async (eventType: string, contractAddress: string, cont
             }
         } catch (err) {
             console.log(err);
-            setLoading(false);
             return false;
         }
-        setLoading(false);
     }
 }
 

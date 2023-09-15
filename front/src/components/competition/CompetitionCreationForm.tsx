@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { dataUrlToFile, selectedPhotoToken } from "../../services/IpfsService.service.ts";
 import { AlertColor } from "@mui/material";
-import ipfs from "../common/ipfs.ts";
-import { CompetitionMetadata } from "../../types/Metadata.ts";
-import { provider } from "../../provider/providers.ts";
+import ipfs from "../common/ipfs";
+import { CompetitionMetadata } from "../../types/Metadata";
+import { provider } from "../../provider/providers";
 import { ethers } from "ethers";
-import contractsInterface from "../../contracts/contracts.ts";
-import { getTimestamp } from "../../utils/dateUtils.ts";
+import contractsInterface from "../../contracts/contracts";
+import { getTimestamp } from "../../utils/dateUtils";
 
 export interface CompetitionCreationFormProps {
     reset: boolean,
@@ -33,7 +33,7 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
         if(reset){
             setTitle('');
             setPicture('');
-            setTypeCompetition(0);
+            setTypeCompetition(-1);
             setStartDate(0);
             setEndDate(0);
             setFile(null);
@@ -173,7 +173,7 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
             setOpen(true)
             return false
         }
-        if(typeCompetition > 3 || typeCompetition <= 0){
+        if(typeCompetition > 2 || typeCompetition < 0){
             setMinting(false);
             setMessage(`Invalide type competition`)
             setSeverity('error')
@@ -221,10 +221,10 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
             <div className="form-ligne">
                 <label> Type de compétition :
                     <select name="type" onChange={e => setTypeCompetition(parseInt(e.target.value))}>
-                        <option>Selectionnez le type de compétition</option>
-                        <option value={1}>Acteur</option>
-                        <option value={2}>Réalisateur</option>
-                        <option value={3}>Film</option>
+                        <option>Selectionnez le type de compétition {typeCompetition}</option>
+                        <option value={0}>Acteur</option>
+                        <option value={1}>Réalisateur</option>
+                        <option value={2}>Film</option>
                     </select>
                 </label>
             </div>

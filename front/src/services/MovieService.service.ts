@@ -39,8 +39,7 @@ export const getMovieData = async (tokenId: number, tokenUri: string) => {
  * @param setLoading
  * @param addToMovieList
  */
-export async function fetchMovie(eventType: string, contractAddress: string, contractAbi: any, setLoading: Function, addToMovieList: Function) {
-    setLoading(true);
+export async function fetchMovie(eventType: string, contractAddress: string, contractAbi: any, addToMovieList: Function) {
     if (provider) {
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
@@ -63,10 +62,8 @@ export async function fetchMovie(eventType: string, contractAddress: string, con
             }
         } catch (err) {
             console.log(err);
-            setLoading(false);
             return false;
         }
-        setLoading(false);
         return movies;
     }
 }
@@ -78,8 +75,7 @@ export async function fetchMovie(eventType: string, contractAddress: string, con
  * @param tokenId
  * @param setLoading
  */
-export async function fetchOneMovie(contractAddress: string, contractAbi: any, tokenId: number, setLoading: Function){
-    setLoading(true);
+export async function fetchOneMovie(contractAddress: string, contractAbi: any, tokenId: number){
     if(provider) {
         let movie;
         // initialisation du contract
@@ -93,10 +89,8 @@ export async function fetchOneMovie(contractAddress: string, contractAbi: any, t
             }
         } catch (err) {
             console.log(err);
-            setLoading(false);
             return false;
         }
-        setLoading(false);
         return movie;
     }
 }

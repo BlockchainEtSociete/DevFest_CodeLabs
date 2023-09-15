@@ -11,55 +11,45 @@ import {fetchOneMovie} from "./MovieService.service";
  * @param tokenId
  * @param contract
  */
-export const getCompetitionData = async (tokenId: number, contract: any, setLoading: Function) => {
+export const getCompetitionData = async (tokenId: number, contract: any) => {
     // récupération de la compétition
     const competition = await contract.getCompetition(tokenId);
 
     const tokenUri = competition.tokenURI;
 
     // parse des listes
-    const options = competition.options ? [...competition.options] : [];
+    const nominees = competition.nominees ? [...competition.nominees] : [];
     if(tokenUri) {
-        let listOptions: {
-            option: boolean | { id: number; Firstname: any; Lastname: any; Picture: any; Address: any; } | {
-                id: number; Title: any; Description: any; Picture: any;
-                Director: { Firstname: any; Lastname: any; };
-            } | undefined; voteCount: number;
-        }[] = [];
+        let listNominees: any[] = [];
 
-        if(competition.options){
-            if(ethers.toNumber(competition.typeCompetitions) == 1){
+        if(nominees.length > 0){
+            if(ethers.toNumber(competition.typeCompetitions) == 0){
                 //actor
-                for(const option of options){
-                    fetchOnePeople(contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, ethers.toNumber(option.tokenId), setLoading)
-                        .then((people) => {
-                            listOptions.push({
-                                option: people,
-                                voteCount: ethers.toNumber(option.voteCount)
-                            })
-                        });
+                for(const nominee of nominees){
+                   const people =  await fetchOnePeople(contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, ethers.toNumber(nominee.tokenId));
+
+                   listNominees.push({
+                        nominee: people,
+                        voteCount: ethers.toNumber(nominee.voteCount)
+                    })
                 }
-            } else if(ethers.toNumber(competition.typeCompetitions) == 2){
+            } else if(ethers.toNumber(competition.typeCompetitions) == 1){
                 //director
-                for(const option of options){
-                    fetchOnePeople(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, ethers.toNumber(option.tokenId), setLoading)
-                        .then((people) => {
-                            listOptions.push({
-                                option: people,
-                                voteCount: ethers.toNumber(option.voteCount)
-                            })
-                        });
+                for(const nominee of nominees){
+                    const people = await fetchOnePeople(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, ethers.toNumber(nominee.tokenId))
+                    listNominees.push({
+                        nominee: people,
+                        voteCount: ethers.toNumber(nominee.voteCount)
+                    })
                 }
             }else{
                 //movie
-                for(const option of options){
-                    fetchOneMovie(contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, ethers.toNumber(option.tokenId), setLoading)
-                        .then((film) => {
-                            listOptions.push({
-                                option: film,
-                                voteCount: ethers.toNumber(option.voteCount)
-                            })
-                        });
+                for(const nominee of nominees){
+                    const movie = await fetchOneMovie(contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, ethers.toNumber(nominee.tokenId));
+                    listNominees.push({
+                        nominee: movie,
+                        voteCount: ethers.toNumber(nominee.voteCount)
+                    })
                 }
             }
         }
@@ -75,7 +65,7 @@ export const getCompetitionData = async (tokenId: number, contract: any, setLoad
             typeCompetition: ethers.toNumber(competition.typeCompetitions),
             startDate: ethers.toNumber(competition.startTime),
             endDate: ethers.toNumber(competition.endTime),
-            options: listOptions
+            nominees: listNominees
         };
     }
 }
@@ -85,11 +75,9 @@ export const getCompetitionData = async (tokenId: number, contract: any, setLoad
  * @param eventType
  * @param contractAddress
  * @param contractAbi
- * @param setLoading
  * @param setCompetitions
  */
-export async function fetchCompetitions(eventType: string, contractAddress: string, contractAbi: any, setLoading: Function, addToCompetitions: Function){
-    setLoading(true);
+export async function fetchCompetitions(eventType: string, contractAddress: string, contractAbi: any, addToCompetitions: Function){
     if(provider){
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
         // création du filtre
@@ -101,14 +89,12 @@ export async function fetchCompetitions(eventType: string, contractAddress: stri
                 // récupération de l'id du token parsé car initialement on le recoit en bigNumber
                 const id = ethers.toNumber((event as EventLog).args[0]);
 
-                await addToCompetitions(await getCompetitionData(id, contract, setLoading));
+                await addToCompetitions(await getCompetitionData(id, contract));
             }
         }catch (err) {
             console.log(err);
-            setLoading(false);
             return false;
         }
-        setLoading(false);
     }
 }
 
@@ -117,23 +103,19 @@ export async function fetchCompetitions(eventType: string, contractAddress: stri
  * @param contractAddress
  * @param contractAbi
  * @param tokenId
- * @param setLoading
  */
-export async function fetchOneCompetition(contractAddress: string, contractAbi: any, tokenId: number, setLoading: Function){
-    setLoading(true);
+export async function fetchOneCompetition(contractAddress: string, contractAbi: any, tokenId: number){
     if(provider){
         let movie;
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
 
         try{
-            movie = await getCompetitionData(tokenId, contract, setLoading)
+            movie = await getCompetitionData(tokenId, contract)
         }catch (err) {
             console.log(err);
-            setLoading(false);
             return false;
         }
-        setLoading(false);
         return movie;
     }
 
@@ -144,18 +126,16 @@ export async function fetchOneCompetition(contractAddress: string, contractAbi: 
  * @param eventType
  * @param contractAddress
  * @param contractAbi
- * @param setLoading
  * @param addToCompetitions
  */
-export const listenToNewCompetition = async (eventType: string, contractAddress: string, contractAbi: any, setLoading: Function, addToCompetitions: Function) => {
-    if(provider){
-        // initialisation du contract
+export const listenToNewCompetition = async (eventType: string, contractAddress: string, contractAbi: any, addToCompetitions: Function) => {
+    if(provider){       // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
 
         await contract.on(eventType, async (event: any) => {
             const id = ethers.toNumber(event.args[0]);
 
-            await addToCompetitions(await getCompetitionData(id, contract, setLoading));
+            await addToCompetitions(await getCompetitionData(id, contract));
         });
     }
 }
