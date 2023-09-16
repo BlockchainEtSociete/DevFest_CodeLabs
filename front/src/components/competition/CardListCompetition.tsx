@@ -26,7 +26,7 @@ function CardListCompetition({title, picture, startDate, endDate, nominees, type
 
                     { nominees.map((nominee: any) => {
                         let info = ''
-                        if (typeCompetition == 1 || typeCompetition == 2) {
+                        if (typeCompetition == 0 || typeCompetition == 1) {
                             info = `${nominee.nominee.Firstname} ${nominee.nominee.Lastname}`
                         }
                         else {

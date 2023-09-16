@@ -27,12 +27,10 @@ const CompetitionGenerator = () => {
      */
     const resetForm = () => {
         setReset(true);
-
         setOpenJury(false);
         setOpenNominees(false);
         setOpenCompetition(true);
         setMinting(false);
-
         setReset(false);
     }
 
@@ -42,12 +40,11 @@ const CompetitionGenerator = () => {
             <section className={(!openCompetition ? 'openBlockCompetition' : '')}>
                 <CompetitionCreationForm
                     reset={reset}
-                    setReset={setReset}
                     minting={minting}
                     setMinting={setMinting}
+                    setTokenId={setTokenId}
                     typeCompetition={typeCompetition}
                     setTypeCompetition={setTypeCompetition}
-                    setTokenId={setTokenId}
                     setOpenCompetition={setOpenCompetition}
                     setOpenNominees={setOpenNominees}
                     setOpen={setOpen}
@@ -59,14 +56,14 @@ const CompetitionGenerator = () => {
                 <CompetitionNomineesForm
                     reset={reset}
                     minting={minting}
+                    typeCompetition={typeCompetition}
                     tokenId={tokenId}
                     setMinting={setMinting}
                     setOpenNominees={setOpenNominees}
                     setOpenJury={setOpenJury}
                     setOpen={setOpen}
                     setMessage={setMessage}
-                    setSeverity={setSeverity}
-                    typeCompetition={typeCompetition} />
+                    setSeverity={setSeverity} />
             </section>
 
             <section className={(!openJury ? 'openBlockCompetition' : '')}>

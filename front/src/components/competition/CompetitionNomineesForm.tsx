@@ -19,23 +19,21 @@ export interface CompetitionNomineesFormProps {
     setMessage: (message: string) => void,
     setSeverity: (severity: AlertColor | undefined) => void,
 }
-export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetition, setMinting, setOpenNominees, setOpenJury, setOpen, setMessage, setSeverity}: CompetitionNomineesFormProps) => {
-
-    // variables des listes des options
-    let idsNominees: number[] = [];
+export const CompetitionNomineesForm = ({reset, minting, typeCompetition, tokenId, setMinting, setOpenNominees, setOpenJury, setOpen, setMessage, setSeverity}: CompetitionNomineesFormProps) => {
+    // variables for options lists
     const [directors, setDirectors]: any = useState({});
     const [actors, setActors]: any = useState({});
     const [movies, setMovies]: any = useState({});
+    const [idsNominees, setIdsNominees]: any[] = useState([]);
 
     const [isLoading, setLoading] = useState(false);
 
     useEffect(() => {
-        if(reset){
+        if (reset) {
             setDirectors({});
             setActors({});
             setMovies({});
-        }
-        else {
+        } else {
             (async () => {
                 await getTypeCompetition(typeCompetition);
             })();
@@ -61,14 +59,14 @@ export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetitio
      */
     const getTypeCompetition = async (type: number) => {
         setLoading(true)
-        idsNominees = [];
+        setIdsNominees([]);
         setActors({});
         setDirectors({});
         setMovies({});
 
-        if(type == 0){
+        if (type == 0) {
             await fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, addToActors);
-        } else if(type == 1){
+        } else if (type == 1) {
             await fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors);
         } else {
             await fetchMovie("MovieMinted", contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, addToMovies);
@@ -82,22 +80,14 @@ export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetitio
      */
     const addTokenIdNominee = (number: number) => {
         let contain = false;
-        if(!Number.isInteger(number)){
+        if (!Number.isInteger(number)) {
             setMessage(`Invalide id`)
             setSeverity('error')
             setOpen(true)
             return false;
         }
-        idsNominees?.map((id: number) => {
-            if(id == number){
-                contain = true;
-            }
-        })
-        if(!contain){
-            idsNominees.push(number);
-        }else{
-            idsNominees.splice(idsNominees.indexOf(number),1);
-        }
+        idsNominees?.map((id: number) => id == number ? contain = true : '');
+        !contain ? idsNominees.push(number) : idsNominees.splice(idsNominees.indexOf(number),1);
     }
 
     /**
@@ -113,7 +103,7 @@ export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetitio
 
         try {
             transaction = await contract.addNomineeCompetition(tokenId, idsNominees);
-        }catch (e) {
+        } catch (e) {
             setMinting(false);
             setMessage(`Minting in error`)
             setSeverity('error')
@@ -126,7 +116,7 @@ export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetitio
 
         // vérification que la transaction c'est bien passé
         await transaction.wait().then(async (receipt: any) => {
-            if(receipt && receipt.status == 1){
+            if (receipt && receipt.status == 1) {
                 setMessage(`Minting in success`)
                 setSeverity('success')
                 setOpen(true)
@@ -136,7 +126,7 @@ export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetitio
                     }, 5000);
             }
         }).catch((err: any )=> {
-            if(err){
+            if (err) {
                 setMinting(false);
                 setMessage(`Minting in error`)
                 setSeverity('error')
@@ -162,7 +152,7 @@ export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetitio
      */
     const verifyFormNominees = async () => {
         idsNominees.forEach((id: number) => {
-            if(!Number.isInteger(id)){
+            if (!Number.isInteger(id)) {
                 setMessage(`Invalide id`)
                 setSeverity('error')
                 setOpen(true)
@@ -176,15 +166,14 @@ export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetitio
         <div>
             <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center'}}>
                 {!isLoading && actors && Object.keys(actors).length > 0 && Object.keys(actors).map((actorId: any) => (
-                    <div key={`${actors[actorId].id}`}
+                    <div key={actors[actorId].id}
                          onClick={() => addTokenIdNominee(actors[actorId].id)}>
                         <CardCompetitionSelect
                             Info={actors[actorId].Firstname + " " + actors[actorId].Lastname}
                             Picture={actors[actorId].Picture}
                         />
                     </div>
-                ))
-                }
+                ))}
                 {!isLoading && directors && Object.keys(directors).length > 0 && Object.keys(directors).map((directorId: any) => (
                     <div key={directors[directorId].id}
                          onClick={() => addTokenIdNominee(directors[directorId].id)}>
@@ -193,18 +182,16 @@ export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetitio
                             Picture={directors[directorId].Picture}
                         />
                     </div>
-                ))
-                }
-                {!isLoading && movies && Object.keys(movies).length > 0 && Object.keys(movies).map((movie: any) => (
-                    <div key={`${movies[movie].id}`}
-                         onClick={() => addTokenIdNominee(movies[movie].id)}>
+                ))}
+                {!isLoading && movies && Object.keys(movies).length > 0 && Object.keys(movies).map((movieId: any) => (
+                    <div key={movies[movieId].id}
+                         onClick={() => addTokenIdNominee(movies[movieId].id)}>
                         <CardCompetitionSelect
-                            Info={movies[movie].Title}
-                            Picture={movies[movie].Picture}
+                            Info={movies[movieId].Title}
+                            Picture={movies[movieId].Picture}
                         />
                     </div>
-                ))
-                }
+                ))}
             </div>
             <button onClick={verifyFormNominees} disabled={minting}>Ajout des nominées de la compétition</button>
         </div>

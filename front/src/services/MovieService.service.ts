@@ -39,7 +39,7 @@ export const getMovieData = async (tokenId: number, tokenUri: string) => {
  * @param setLoading
  * @param addToMovieList
  */
-export async function fetchMovie(eventType: string, contractAddress: string, contractAbi: any, addToMovieList: Function) {
+export const fetchMovie = async (eventType: string, contractAddress: string, contractAbi: any, addToMovieList: Function) => {
     if (provider) {
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
@@ -48,7 +48,7 @@ export async function fetchMovie(eventType: string, contractAddress: string, con
         // récupération des evenements en fonction du filtre
         const events = await contract.queryFilter(filter, 0);
         const movies: any = [];
-        try{
+        try {
             for (const event of events) {
                 let tokenUri: string = '';
                 // récupération de l'id du token parsé car initialement on le recoit en bigNumber
@@ -56,7 +56,7 @@ export async function fetchMovie(eventType: string, contractAddress: string, con
                 // récupération du tokenURI, url des metadonnée du token
                 tokenUri = await contract.tokenURI(id);
 
-                if(tokenUri) {
+                if (tokenUri) {
                    await addToMovieList(await getMovieData(id, tokenUri));
                 }
             }
@@ -75,16 +75,16 @@ export async function fetchMovie(eventType: string, contractAddress: string, con
  * @param tokenId
  * @param setLoading
  */
-export async function fetchOneMovie(contractAddress: string, contractAbi: any, tokenId: number){
-    if(provider) {
+export const fetchOneMovie = async (contractAddress: string, contractAbi: any, tokenId: number) => {
+    if (provider) {
         let movie;
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
 
-        try{
+        try {
             // récupération du tokenURI, url des metadonnée du token
             const tokenUri = await contract.tokenURI(tokenId);
-            if(tokenUri){
+            if (tokenUri) {
                 movie = await getMovieData(tokenId, tokenUri);
             }
         } catch (err) {
@@ -103,7 +103,7 @@ export async function fetchOneMovie(contractAddress: string, contractAbi: any, t
  * @param addToMovieList
  */
 export const listenToNewMovie =  async (eventType: string, contractAddress: string, contractAbi: any, addToMovieList: Function) => {
-    if(provider){
+    if (provider) {
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
 

@@ -39,7 +39,7 @@ export const fetchJury = async (eventType: string, contractAddress: string, cont
         // récupération des evenements en fonction du filtre
         const events = await contract.queryFilter(filter, 0);
 
-        try{
+        try {
             for (const event of events) {
                 const id = ethers.toNumber((event as EventLog).args[1]);
                 const tokenUri: string = (event as EventLog).args[2];

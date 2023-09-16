@@ -4,6 +4,7 @@ import { fetchJury, listenToNewJury } from "../../services/JuryService.service";
 import contractsInterface from "../../contracts/contracts";
 import { provider } from "../../provider/providers";
 import { ethers } from "ethers";
+import { fetchIdsByFilter } from "../../services/CompetitionService.service";
 
 export interface CompetitionJuryFormProps {
     reset: boolean,
@@ -18,12 +19,14 @@ export interface CompetitionJuryFormProps {
 
 export const CompetitionJuryForm = ({reset, minting, tokenId, setMinting, setOpenJury, setOpen, setMessage, setSeverity}: CompetitionJuryFormProps) => {
     const [idJury, setIdJury]: any = useState(0);
-    let [jurys, setJurys]: any = useState([]);
+    const [jurys, setJurys]: any = useState([]);
+    const [idsJury, setIdsJurys]: any = useState([]);
+    const [, setIdsCompetition]: any = useState();
 
     useEffect(() => {
         const addToJurys = async (jury: any) => {
             jurys[jury.id] = jury;
-            setIdJury(jury);
+            setJurys(jurys);
         }
 
         (async () => {
@@ -33,13 +36,15 @@ export const CompetitionJuryForm = ({reset, minting, tokenId, setMinting, setOpe
         if (reset) {
             setIdJury(0);
         }
-    }, [jurys, reset])
+    }, [jurys, setJurys, reset, setIdJury])
+
+    const updateIdJuryCompetition = (e: React.ChangeEvent<HTMLInputElement>) => setIdJury(Number(e.target.value));
 
     /**
      * Verification des données des jurys de la competitions avant sauvegarde dans la blockchain
      */
     const verifyFormJury = async () => {
-        if(!Number.isInteger(idJury) && idJury != 0){
+        if (!Number.isInteger(idJury) && idJury != 0) {
             setMinting(false);
             setMessage(`Invalide id`)
             setSeverity('error')
@@ -55,13 +60,13 @@ export const CompetitionJuryForm = ({reset, minting, tokenId, setMinting, setOpe
     const addJurysCompetition = async () => {
         setMinting(true);
         const signer = await provider?.getSigner();
-        // création de l'appel du smart contract
+        // building smart contract call
         const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
         let transaction;
 
         try {
             transaction = await contract.addJuryToCompetition(tokenId, idJury);
-        }catch (e) {
+        } catch (e) {
             setMinting(false);
             setMessage(`Minting in error`)
             setSeverity('error')
@@ -82,6 +87,8 @@ export const CompetitionJuryForm = ({reset, minting, tokenId, setMinting, setOpe
                     function () {
                         setOpen(false)
                     }, 5000);
+
+                await getIdsJury();
             }
         }).catch((err: any )=> {
             if(err){
@@ -104,6 +111,25 @@ export const CompetitionJuryForm = ({reset, minting, tokenId, setMinting, setOpe
         return true;
     }
 
+    /**
+     * Récupération des ids jury deja ajouté à la competition et les enlevers de la liste
+     */
+    const getIdsJury = async () => {
+        try {
+            await fetchIdsByFilter(tokenId, null, contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, setIdsCompetition, setIdsJurys);
+            !idsJury.includes(idJury) ? idsJury.push(idJury) : '';
+        } catch (e) {
+            setMinting(false);
+            setMessage(`Minting in error`)
+            setSeverity('error')
+            setOpen(true)
+            setTimeout(
+                function () {
+                    setOpen(false)
+                }, 5000);
+        }
+    }
+
     return (
         <div  className="form-ligne">
             <h5>Les Jurys : </h5>
@@ -111,8 +137,8 @@ export const CompetitionJuryForm = ({reset, minting, tokenId, setMinting, setOpe
                 { jurys && Object.keys(jurys).length > 0 && Object.keys(jurys).map((jury: any) => {
                     const fullName = jurys[jury].Lastname + " " + jurys[jury].Firstname;
                     return (
-                        <label key={`${jurys[jury].id}`}> {fullName} :
-                            <input name="jury" type="radio" onChange={e => setIdJury(Number(e.target.value))}
+                        <label key={jurys[jury].id} style={{ display: idsJury.includes(jurys[jury].id) ? 'none': 'block' }}> {fullName} :
+                            <input name="jury" type="radio" onChange={updateIdJuryCompetition}
                                    value={jurys[jury].id} />
                         </label>
                     )}

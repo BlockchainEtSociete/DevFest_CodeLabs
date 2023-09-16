@@ -29,7 +29,7 @@ const Competition = () => {
             <section>
                 { !isLoading && competitions && Object.keys(competitions).length > 0 && Object.keys(competitions).map((competition: any) => (
                         <CardListCompetition
-                            key={`${competitions[competition].id}`}
+                            key={competitions[competition].id}
                             title={competitions[competition].title}
                             picture={competitions[competition].Picture}
                             startDate={competitions[competition].startDate}

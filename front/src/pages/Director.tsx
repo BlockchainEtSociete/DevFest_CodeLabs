@@ -27,9 +27,9 @@ const Director = () => {
         <article>
             <h2>Les Réalisateurs en compétition du devfest 2023</h2>
             <section style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap'}}>
-                {!isLoading && directors && Object.keys(directors).length > 0 && Object.keys(directors).map((director: any, index: number) => (
+                {!isLoading && directors && Object.keys(directors).length > 0 && Object.keys(directors).map((director: any) => (
                     <PeopleCard
-                        key={`${directors[director].id}`}
+                        key={directors[director].id}
                         Firstname={directors[director].Firstname}
                         Lastname={directors[director].Lastname}
                         Picture={directors[director].Picture}

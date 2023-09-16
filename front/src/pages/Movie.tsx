@@ -29,7 +29,7 @@ const Movie = () => {
             <section>
                 {!isLoading && movies && Object.keys(movies).length > 0 && Object.keys(movies).map((film: any) => (
                     <CardFilm
-                        key={`${movies[film].id}`}
+                        key={movies[film].id}
                         Title={movies[film].Title}
                         Description={movies[film].Description}
                         Picture={movies[film].Picture}

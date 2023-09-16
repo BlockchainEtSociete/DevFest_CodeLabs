@@ -19,13 +19,13 @@ export const getCompetitionData = async (tokenId: number, contract: any) => {
 
     // parse des listes
     const nominees = competition.nominees ? [...competition.nominees] : [];
-    if(tokenUri) {
+    if (tokenUri) {
         let listNominees: any[] = [];
 
-        if(nominees.length > 0){
-            if(ethers.toNumber(competition.typeCompetitions) == 0){
+        if (nominees.length > 0) {
+            if (ethers.toNumber(competition.typeCompetitions) == 0) {
                 //actor
-                for(const nominee of nominees){
+                for (const nominee of nominees) {
                    const people =  await fetchOnePeople(contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, ethers.toNumber(nominee.tokenId));
 
                    listNominees.push({
@@ -33,18 +33,18 @@ export const getCompetitionData = async (tokenId: number, contract: any) => {
                         voteCount: ethers.toNumber(nominee.voteCount)
                     })
                 }
-            } else if(ethers.toNumber(competition.typeCompetitions) == 1){
+            } else if (ethers.toNumber(competition.typeCompetitions) == 1) {
                 //director
-                for(const nominee of nominees){
+                for (const nominee of nominees) {
                     const people = await fetchOnePeople(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, ethers.toNumber(nominee.tokenId))
                     listNominees.push({
                         nominee: people,
                         voteCount: ethers.toNumber(nominee.voteCount)
                     })
                 }
-            }else{
+            } else {
                 //movie
-                for(const nominee of nominees){
+                for (const nominee of nominees) {
                     const movie = await fetchOneMovie(contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, ethers.toNumber(nominee.tokenId));
                     listNominees.push({
                         nominee: movie,
@@ -77,21 +77,21 @@ export const getCompetitionData = async (tokenId: number, contract: any) => {
  * @param contractAbi
  * @param setCompetitions
  */
-export async function fetchCompetitions(eventType: string, contractAddress: string, contractAbi: any, addToCompetitions: Function){
-    if(provider){
+export const fetchCompetitions = async (eventType: string, contractAddress: string, contractAbi: any, addToCompetitions: Function) => {
+    if (provider) {
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
         // création du filtre
         const filter = contract.filters[eventType];
         const events = await contract.queryFilter(filter, 0);
 
-        try{
-            for(const event of events) {
+        try {
+            for (const event of events) {
                 // récupération de l'id du token parsé car initialement on le recoit en bigNumber
                 const id = ethers.toNumber((event as EventLog).args[0]);
 
                 await addToCompetitions(await getCompetitionData(id, contract));
             }
-        }catch (err) {
+        } catch (err) {
             console.log(err);
             return false;
         }
@@ -104,15 +104,15 @@ export async function fetchCompetitions(eventType: string, contractAddress: stri
  * @param contractAbi
  * @param tokenId
  */
-export async function fetchOneCompetition(contractAddress: string, contractAbi: any, tokenId: number){
-    if(provider){
+export const fetchOneCompetition = async (contractAddress: string, contractAbi: any, tokenId: number) => {
+    if (provider) {
         let movie;
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
 
-        try{
+        try {
             movie = await getCompetitionData(tokenId, contract)
-        }catch (err) {
+        } catch (err) {
             console.log(err);
             return false;
         }
@@ -129,7 +129,7 @@ export async function fetchOneCompetition(contractAddress: string, contractAbi: 
  * @param addToCompetitions
  */
 export const listenToNewCompetition = async (eventType: string, contractAddress: string, contractAbi: any, addToCompetitions: Function) => {
-    if(provider){       // initialisation du contract
+    if (provider) {       // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
 
         await contract.on(eventType, async (event: any) => {
@@ -137,5 +137,38 @@ export const listenToNewCompetition = async (eventType: string, contractAddress:
 
             await addToCompetitions(await getCompetitionData(id, contract));
         });
+    }
+}
+
+/**
+ * Function qui retourne les listes d'ids en fonction des paramettre du filtre
+ * @param competitionId
+ * @param juryId
+ * @param contractAddress
+ * @param contractAbi
+ * @param setIdsCompetition
+ * @param setIdsJurys
+ */
+export const fetchIdsByFilter = async (competitionId: number | null, juryId: number | null, contractAddress: string, contractAbi: any, setIdsCompetition: Function, setIdsJurys: Function) => {
+    if (provider) {
+        const contract = new ethers.Contract(contractAddress, contractAbi, provider);
+        const filter = contract.filters.JuryAddedToCompetition(competitionId, juryId);
+
+        try {
+            const events = await contract.queryFilter(filter, 0);
+            const idsCompetition: any[] = []
+            const idsJurys: any[] = [];
+
+            for (const event of events) {
+                !idsCompetition.includes(ethers.toNumber((event as EventLog).args[0])) ? idsCompetition.push(ethers.toNumber((event as EventLog).args[0])) : '';
+                !idsJurys.includes(ethers.toNumber((event as EventLog).args[1])) ? idsJurys.push( ethers.toNumber((event as EventLog).args[1])) : '';
+            }
+
+            setIdsCompetition(idsCompetition);
+            setIdsJurys(idsJurys);
+        } catch (err) {
+            console.log(err);
+            return false;
+        }
     }
 }

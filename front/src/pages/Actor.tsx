@@ -30,7 +30,7 @@ const Actor = () => {
             <section style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap'}}>
                 {!isLoading && actors && Object.keys(actors).length > 0 && Object.keys(actors).map((actor: any) => (
                     <PeopleCard
-                        key={`${actors[actor].id}`}
+                        key={actors[actor].id}
                         Firstname={actors[actor].Firstname}
                         Lastname={actors[actor].Lastname}
                         Picture={actors[actor].Picture}

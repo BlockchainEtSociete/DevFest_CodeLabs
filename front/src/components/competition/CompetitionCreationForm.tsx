@@ -30,7 +30,7 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
     const [, setFile] = useState(null);
 
     useEffect(() => {
-        if(reset){
+        if (reset) {
             setTitle('');
             setPicture('');
             setTypeCompetition(-1);
@@ -39,7 +39,12 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
             setFile(null);
             setTokenId(0);
         }
-    }, [reset]);
+    }, [reset, setTitle, setPicture, setTypeCompetition, setStartDate, setEndDate, setFile, setTokenId]);
+
+    const updateTypeCompetition = (e: React.ChangeEvent<HTMLInputElement>) => setTypeCompetition(parseInt(e.target.value));
+    const updateTitleCompetition = (e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value);
+    const updateStartDate = (e: React.ChangeEvent<HTMLInputElement>) => setStartDate(getTimestamp(e.target.value));
+    const updateEndDate = (e: React.ChangeEvent<HTMLInputElement>) => setEndDate(getTimestamp(e.target.value));
 
     /**
      * Choix de la photo
@@ -102,7 +107,7 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
 
         try {
             transaction = await contract.addCompetition(tokenURI, typeCompetition, startDate, endDate);
-        }catch (e) {
+        } catch (e) {
             setMinting(false);
             setMessage(`Minting in error`)
             setSeverity('error')
@@ -159,35 +164,35 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
      */
     const verifyForm = async () => {
         // controle des champs
-        if(!startDate || (new Date(startDate)).getTime() <= 0){
+        if (!startDate || (new Date(startDate)).getTime() <= 0) {
             setMinting(false);
             setMessage(`Invalide start date`)
             setSeverity('error')
             setOpen(true)
             return false
         }
-        if(!endDate || (new Date(endDate)).getTime() <= 0 || endDate < startDate){
+        if (!endDate || (new Date(endDate)).getTime() <= 0 || endDate < startDate) {
             setMinting(false);
             setMessage(`Invalide end date`)
             setSeverity('error')
             setOpen(true)
             return false
         }
-        if(typeCompetition > 2 || typeCompetition < 0){
+        if (typeCompetition > 2 || typeCompetition < 0) {
             setMinting(false);
             setMessage(`Invalide type competition`)
             setSeverity('error')
             setOpen(true)
             return false
         }
-        if(!Picture){
+        if (!Picture) {
             setMinting(false);
             setMessage(`invalid Picture`)
             setSeverity('error')
             setOpen(true)
             return false;
         }
-        if(!title || title.length == 0){
+        if (!title || title.length == 0) {
             setMinting(false);
             setMessage(`Invalide Title`)
             setSeverity('error')
@@ -215,12 +220,12 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
         <div>
             <div className="form-ligne">
                 <label> Titre de la compétition :
-                    <input name="title" type="text" onChange={e => setTitle(e.target.value)} />
+                    <input name="title" type="text" onChange={updateTitleCompetition} />
                 </label>
             </div>
             <div className="form-ligne">
                 <label> Type de compétition :
-                    <select name="type" onChange={e => setTypeCompetition(parseInt(e.target.value))}>
+                    <select name="type" onChange={updateTypeCompetition}>
                         <option>Selectionnez le type de compétition {typeCompetition}</option>
                         <option value={0}>Acteur</option>
                         <option value={1}>Réalisateur</option>
@@ -230,12 +235,12 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
             </div>
             <div className="form-ligne">
                 <label> Debut de la compétition :
-                    <input name="startDate" type="datetime-local" onChange={e => setStartDate(getTimestamp(e.target.value))} />
+                    <input name="startDate" type="datetime-local" onChange={updateStartDate} />
                 </label>
             </div>
             <div className="form-ligne">
                 <label> Fin de la competition :
-                    <input name="endDate" type="datetime-local" onChange={e => setEndDate(getTimestamp(e.target.value))} />
+                    <input name="endDate" type="datetime-local" onChange={updateEndDate} />
                 </label>
             </div>
             <div className="form-ligne">
