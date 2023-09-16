@@ -67,7 +67,7 @@ export const listenToNewJury = async (eventType: string, contractAddress: string
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
 
-        await contract.emit(eventType, async (event: any) => {
+        await contract.on(eventType, async (event: any) => {
             const tokenUri: string = event.args[2];
             const id = ethers.toNumber(event.args[1]);
             console.log(event);
