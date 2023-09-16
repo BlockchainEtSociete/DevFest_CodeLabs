@@ -70,12 +70,10 @@ export const listenToNewJury = async (eventType: string, contractAddress: string
         await contract.on(eventType, async (event: any) => {
             const tokenUri: string = event.args[2];
             const id = ethers.toNumber(event.args[1]);
-            console.log(event);
 
             if (tokenUri) {
                 await addToJurys(await getJuryData(id, tokenUri));
             }
         });
-
     }
 }
