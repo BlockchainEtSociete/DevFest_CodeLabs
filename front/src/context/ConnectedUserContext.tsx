@@ -6,10 +6,9 @@ export interface ConnectedUserContextType {
   dispatch : Dispatch<Action>
 }
 
-const initContext = {
+const initContext: ConnectedUserContextType = {
   state: initialState,
   dispatch: () => initialState
 }
-const context = createContext(initContext)
 
-export const ConnectedUserContext = createContext(context);
+export const ConnectedUserContext = createContext(initContext);

@@ -1,6 +1,6 @@
 import { useContext } from "react";
-import { ConnectedUserContext, ConnectedUserContextType } from "./ConnectedUserContext";
+import { ConnectedUserContext } from "./ConnectedUserContext";
 
-const useConnectedUserContext = () => useContext(ConnectedUserContext) as unknown as ConnectedUserContextType;
+const useConnectedUserContext = () => useContext(ConnectedUserContext)
 
 export default useConnectedUserContext;
