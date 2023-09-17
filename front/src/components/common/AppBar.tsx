@@ -6,73 +6,25 @@ import Menu from '@mui/material/Menu';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import PersonPinIcon from "@mui/icons-material/PersonPin";
-import SnackbarAlert from "../common/SnackbarAlert.tsx";
-import {AlertColor} from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import {useSyncExternalStore, useState, useEffect} from "react";
-import { connectedUserStore } from "../../provider/ConnectedUserStore.ts";
-import { provider } from "../../provider/providers.ts";
+import { useState } from "react";
+
+import useConnectedUserContext from '../../context/ConnectedUserContextHook.tsx';
+import { isUserAdmin } from '../../types/ConnectedUser.ts';
 
 function ResponsiveAppBar() {
+    const {state: { connectedUser }} = useConnectedUserContext()
+
     const navigate = useNavigate();
-    const [, setRefresh] = useState(false);
-    const connectedUser = useSyncExternalStore(connectedUserStore.subscribe, connectedUserStore.getSnapshot)
     const [isMenuOpen, toggleMenu] = useState(false)
 
-    const [open, setOpen] = useState(false)
-    const [message, setMessage] = useState('')
-    const [severity, setSeverity] = useState<AlertColor | undefined>('success')
-
-    // Refresh appbar on chain or account change
-    useEffect(() => {
-        const events = ["chainChanged", "accountsChanged"];
-        const handleChange = async () => {
-            const signer = await provider?.getSigner()
-
-            if (signer) {
-                await connectedUserStore.updateConnectedUser(signer)
-                setRefresh(refresh => !refresh)
-                toggleMenu(false)
-            }
-        };
-
-        events.forEach(e => window.ethereum.on(e, handleChange));
-        return () => {
-            events.forEach(e => window.ethereum.removeListener(e, handleChange));
-        };
-    }, [connectedUserStore, connectedUser]);
-
     async function accountNavigate() {
-        if (connectedUser.address) {
-            navigate("/account")
-            toggleMenu(false)
-        }
+        navigate("/account")
+        toggleMenu(false)
     }
 
     async function administrationNavigate() {
-        if (connectedUser.address && connectedUserStore.isAdmin()) {
-            navigate("/admin")
-            toggleMenu(false)
-        }
-    }
-
-    const connect = async () => {
-        if (provider) {
-            setOpen(false)
-            provider.send("eth_requestAccounts", []).then(async () => {
-                const signer = await provider?.getSigner()
-
-                if (signer) {
-                    await connectedUserStore.updateConnectedUser(signer)
-                    toggleMenu(false)
-                }
-            })
-        }
-    }
-
-    const disconnect = () => {
-        connectedUserStore.resetConnectedUser()
-        navigate("/");
+        navigate("/admin")
         toggleMenu(false)
     }
 
@@ -106,21 +58,11 @@ function ResponsiveAppBar() {
                     {connectedUser.address && <MenuItem onClick={() => { accountNavigate() }}>
                         <Typography textAlign="center">Mon Compte</Typography>
                     </MenuItem>}
-                    {connectedUser.address && connectedUserStore.isAdmin() && <MenuItem onClick={() => { administrationNavigate() }}>
+                    {connectedUser.address && isUserAdmin(connectedUser) && <MenuItem onClick={() => { administrationNavigate() }}>
                         <Typography textAlign="center">Administration</Typography>
                     </MenuItem>}
-                    {
-                        connectedUser.address !== ''
-                            ? <MenuItem onClick={disconnect}>
-                                <Typography textAlign="center">Logout</Typography>
-                            </MenuItem>
-                            : <MenuItem onClick={connect}>
-                                <Typography textAlign="center">Connexion</Typography>
-                            </MenuItem>
-                    }
                 </Menu>
             </Box>
-            <SnackbarAlert open={open} setOpen={setOpen} message={message} severity={severity} />
         </AppBar >
     );
 }

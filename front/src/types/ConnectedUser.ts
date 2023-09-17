@@ -11,3 +11,8 @@ export interface ConnectedUser {
     address: string
     accessRights: AccessRights
 }
+
+export const isUserAdmin = (connectedUser: ConnectedUser): boolean => {
+    const { canAddPeople, canAddMovie, canAddCompetition } = connectedUser.accessRights
+    return canAddPeople || canAddMovie || canAddCompetition
+}
