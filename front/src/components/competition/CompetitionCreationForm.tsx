@@ -41,7 +41,7 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
         }
     }, [reset, setTitle, setPicture, setTypeCompetition, setStartDate, setEndDate, setFile, setTokenId]);
 
-    const updateTypeCompetition = (e: React.ChangeEvent<HTMLInputElement>) => setTypeCompetition(parseInt(e.target.value));
+    const updateTypeCompetition = (e: React.ChangeEvent<HTMLSelectElement>) => setTypeCompetition(parseInt(e.target.value));
     const updateTitleCompetition = (e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value);
     const updateStartDate = (e: React.ChangeEvent<HTMLInputElement>) => setStartDate(getTimestamp(e.target.value));
     const updateEndDate = (e: React.ChangeEvent<HTMLInputElement>) => setEndDate(getTimestamp(e.target.value));
