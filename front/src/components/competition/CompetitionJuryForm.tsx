@@ -1,44 +1,50 @@
 import { AlertColor } from "@mui/material";
 import { useEffect, useState } from "react";
-import { fetchJury, listenToNewJury } from "../../services/JuryService.service.ts";
-import contractsInterface from "../../contracts/contracts.ts";
-import { provider } from "../../provider/providers.ts";
+import { fetchJury, listenToNewJury } from "../../services/JuryService.service";
+import contractsInterface from "../../contracts/contracts";
+import { provider } from "../../provider/providers";
 import { ethers } from "ethers";
+import { fetchIdsByFilter } from "../../services/CompetitionService.service";
 
 export interface CompetitionJuryFormProps {
     reset: boolean,
     minting: boolean,
+    tokenId: number,
     setMinting: (minting: boolean) => void,
-    setLoading: (loading: boolean) => void,
     setOpenJury: (openJury: boolean) => void,
     setOpen: (open: boolean) => void,
     setMessage: (message: string) => void,
     setSeverity: (severity: AlertColor | undefined) => void,
 }
 
-export const CompetitionJuryForm = ({reset, minting, setMinting, setLoading, setOpenJury, setOpen, setMessage, setSeverity}: CompetitionJuryFormProps) => {
+export const CompetitionJuryForm = ({reset, minting, tokenId, setMinting, setOpenJury, setOpen, setMessage, setSeverity}: CompetitionJuryFormProps) => {
     const [idJury, setIdJury]: any = useState(0);
-    let [jurys, ]: any = useState([]);
+    const [jurys, setJurys]: any = useState([]);
+    const [idsJury, setIdsJurys]: any = useState([]);
+    const [, setIdsCompetition]: any = useState();
 
     useEffect(() => {
         const addToJurys = async (jury: any) => {
-            jurys.push(jury);
+            jurys[jury.id] = jury;
+            setJurys(jurys);
         }
 
-        fetchJury("JuryMinted", contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, setLoading, addToJurys).then();
-        listenToNewJury("JuryMinted", contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, addToJurys).then();
-
+        (async () => {
+            await fetchJury("JuryMinted", contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, addToJurys);
+            await listenToNewJury("JuryMinted", contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, addToJurys);
+        })();
         if (reset) {
             setIdJury(0);
         }
+    }, [jurys, setJurys, reset, setIdJury])
 
-    }, [jurys, reset])
+    const updateIdJuryCompetition = (e: React.ChangeEvent<HTMLInputElement>) => setIdJury(Number(e.target.value));
 
     /**
      * Verification des données des jurys de la competitions avant sauvegarde dans la blockchain
      */
     const verifyFormJury = async () => {
-        if(!Number.isInteger(idJury) && idJury != 0){
+        if (!Number.isInteger(idJury) && idJury != 0) {
             setMinting(false);
             setMessage(`Invalide id`)
             setSeverity('error')
@@ -54,14 +60,13 @@ export const CompetitionJuryForm = ({reset, minting, setMinting, setLoading, set
     const addJurysCompetition = async () => {
         setMinting(true);
         const signer = await provider?.getSigner();
-
-        // création de l'appel du smart contract
-        const contract = new ethers.Contract(contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, signer );
+        // building smart contract call
+        const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
         let transaction;
 
         try {
-            transaction = await contract.addCompetitionByJury(tokenId, idJury);
-        }catch (e) {
+            transaction = await contract.addJuryToCompetition(tokenId, idJury);
+        } catch (e) {
             setMinting(false);
             setMessage(`Minting in error`)
             setSeverity('error')
@@ -82,6 +87,8 @@ export const CompetitionJuryForm = ({reset, minting, setMinting, setLoading, set
                     function () {
                         setOpen(false)
                     }, 5000);
+
+                await getIdsJury();
             }
         }).catch((err: any )=> {
             if(err){
@@ -96,7 +103,6 @@ export const CompetitionJuryForm = ({reset, minting, setMinting, setLoading, set
             }
         })
 
-        jurys = jurys.filter((el: any) => el.id != idJury)
         setIdJury(0);
 
         setMessage('Minting finished ! :)')
@@ -105,25 +111,42 @@ export const CompetitionJuryForm = ({reset, minting, setMinting, setLoading, set
         return true;
     }
 
+    /**
+     * Récupération des ids jury deja ajouté à la competition et les enlevers de la liste
+     */
+    const getIdsJury = async () => {
+        try {
+            await fetchIdsByFilter(tokenId, null, contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, setIdsCompetition, setIdsJurys);
+            !idsJury.includes(idJury) ? idsJury.push(idJury) : '';
+        } catch (e) {
+            setMinting(false);
+            setMessage(`Minting in error`)
+            setSeverity('error')
+            setOpen(true)
+            setTimeout(
+                function () {
+                    setOpen(false)
+                }, 5000);
+        }
+    }
+
     return (
         <div  className="form-ligne">
             <h5>Les Jurys : </h5>
             <div style={{display: 'flex', justifyContent: 'center', flexDirection: 'column'}}>
-                { jurys && jurys.length > 0 && jurys.map((jury: any, index: number) => {
-                    const fullName = jury.Lastname + " " + jury.Firstname;
+                { jurys && Object.keys(jurys).length > 0 && Object.keys(jurys).map((jury: any) => {
+                    const fullName = jurys[jury].Lastname + " " + jurys[jury].Firstname;
                     return (
-                        <label key={`id-${index}`}> {fullName} :
-                            <input name="jury" type="radio" onChange={e => setIdJury(Number(e.target.value))}
-                                   value={jury.id} />
+                        <label key={jurys[jury].id} style={{ display: idsJury.includes(jurys[jury].id) ? 'none': 'block' }}> {fullName} :
+                            <input name="jury" type="radio" onChange={updateIdJuryCompetition}
+                                   value={jurys[jury].id} />
                         </label>
-                    )
-                })
-                }
+                    )}
+            )}
             </div>
             <div>
-                <button onClick={verifyFormJury} disabled={minting}>Ajout des Jurys de la compétition</button>
+                <button onClick={verifyFormJury} >Ajout des Jurys de la compétition</button>
             </div>
-
         </div>
     )
 }

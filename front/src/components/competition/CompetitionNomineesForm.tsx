@@ -1,10 +1,10 @@
-import CardCompetitionSelect from "./CardCompetitionSelect.tsx";
+import CardCompetitionSelect from "./CardCompetitionSelect";
 import { AlertColor } from "@mui/material";
-import { fetchPeople } from "../../services/PeopleService.service.ts";
-import contractsInterface from "../../contracts/contracts.ts";
-import { fetchMovie } from "../../services/MovieService.service.ts";
+import { fetchPeople } from "../../services/PeopleService.service";
+import contractsInterface from "../../contracts/contracts";
+import { fetchMovie } from "../../services/MovieService.service";
 import { useEffect, useState } from "react";
-import { provider } from "../../provider/providers.ts";
+import { provider } from "../../provider/providers";
 import { ethers } from "ethers";
 
 export interface CompetitionNomineesFormProps {
@@ -13,61 +13,65 @@ export interface CompetitionNomineesFormProps {
     typeCompetition: number,
     tokenId: number,
     setMinting: (minting: boolean) => void,
-    setLoading: (loading: boolean) => void,
     setOpenNominees: (openNominee: boolean) => void,
     setOpenJury: (openJury: boolean) => void,
     setOpen: (open: boolean) => void,
     setMessage: (message: string) => void,
     setSeverity: (severity: AlertColor | undefined) => void,
 }
-export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetition, setMinting, setLoading, setOpenNominees, setOpenJury, setOpen, setMessage, setSeverity}: CompetitionNomineesFormProps) => {
-
-    // variables des listes des options
-    let idsNominees: number[] = [];
-    const [directors, setDirectors]: any = useState([]);
+export const CompetitionNomineesForm = ({reset, minting, typeCompetition, tokenId, setMinting, setOpenNominees, setOpenJury, setOpen, setMessage, setSeverity}: CompetitionNomineesFormProps) => {
+    // variables for options lists
+    const [directors, setDirectors]: any = useState({});
     const [actors, setActors]: any = useState({});
-    const [movies, setMovies]: any = useState([]);
+    const [movies, setMovies]: any = useState({});
+    const [idsNominees, setIdsNominees]: any[] = useState([]);
+
+    const [isLoading, setLoading] = useState(false);
 
     useEffect(() => {
-        if(reset){
-            setDirectors([]);
-            setActors([]);
-            setMovies([]);
+        if (reset) {
+            setDirectors({});
+            setActors({});
+            setMovies({});
+        } else {
+            (async () => {
+                await getTypeCompetition(typeCompetition);
+            })();
         }
-        else {
-            getTypeCompetition(typeCompetition);
-        }
-    }, [reset, typeCompetition]);
+    }, [setDirectors, setActors, setMovies, typeCompetition, reset]);
 
     const addToActors = async (people: any) => {
         actors[people.id] = people;
         setActors(actors);
     }
     const addToDirectors = async (people: any) => {
-        directors.push(people);
+        directors[people.id] = people;
+        setDirectors(directors);
+    }
+    const addToMovies = async (movie: any) => {
+        movies[movie.id] = movie;
+        setMovies(movies);
     }
 
     /**
      * Permet en fonction du type de compétition de récupérer les données ipfs des nfts correspondant
      * @param type
      */
-    const getTypeCompetition = (type: any) => {
-        idsNominees = [];
-        setActors([]);
-        setDirectors([]);
-        setMovies([]);
+    const getTypeCompetition = async (type: number) => {
+        setLoading(true)
+        setIdsNominees([]);
+        setActors({});
+        setDirectors({});
+        setMovies({});
 
-        if(type == 1){
-            console.log('fetching actors');
-            fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, setLoading, addToActors).then();
-        } else if(type == 2){
-            fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, setLoading, addToDirectors).then();
+        if (type == 0) {
+            await fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, addToActors);
+        } else if (type == 1) {
+            await fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors);
         } else {
-            fetchMovie("MovieMinted", contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, setLoading)
-                .then((films) => {
-                    setMovies(films);
-                });
+            await fetchMovie("MovieMinted", contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, addToMovies);
         }
+        setLoading(false)
     }
 
     /**
@@ -76,22 +80,14 @@ export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetitio
      */
     const addTokenIdNominee = (number: number) => {
         let contain = false;
-        if(!Number.isInteger(number)){
+        if (!Number.isInteger(number)) {
             setMessage(`Invalide id`)
             setSeverity('error')
             setOpen(true)
             return false;
         }
-        idsNominees?.map((id: number) => {
-            if(id == number){
-                contain = true;
-            }
-        })
-        if(!contain){
-            idsNominees.push(number);
-        }else{
-            idsNominees.splice(idsNominees.indexOf(number),1);
-        }
+        idsNominees?.map((id: number) => id == number ? contain = true : '');
+        !contain ? idsNominees.push(number) : idsNominees.splice(idsNominees.indexOf(number),1);
     }
 
     /**
@@ -106,8 +102,8 @@ export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetitio
         let transaction;
 
         try {
-            transaction = await contract.addNomineesCompetition(tokenId, idsNominees);
-        }catch (e) {
+            transaction = await contract.addNomineeCompetition(tokenId, idsNominees);
+        } catch (e) {
             setMinting(false);
             setMessage(`Minting in error`)
             setSeverity('error')
@@ -120,7 +116,7 @@ export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetitio
 
         // vérification que la transaction c'est bien passé
         await transaction.wait().then(async (receipt: any) => {
-            if(receipt && receipt.status == 1){
+            if (receipt && receipt.status == 1) {
                 setMessage(`Minting in success`)
                 setSeverity('success')
                 setOpen(true)
@@ -130,7 +126,7 @@ export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetitio
                     }, 5000);
             }
         }).catch((err: any )=> {
-            if(err){
+            if (err) {
                 setMinting(false);
                 setMessage(`Minting in error`)
                 setSeverity('error')
@@ -156,7 +152,7 @@ export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetitio
      */
     const verifyFormNominees = async () => {
         idsNominees.forEach((id: number) => {
-            if(!Number.isInteger(id)){
+            if (!Number.isInteger(id)) {
                 setMessage(`Invalide id`)
                 setSeverity('error')
                 setOpen(true)
@@ -169,36 +165,33 @@ export const CompetitionNomineesForm = ({reset, minting, tokenId, typeCompetitio
     return (
         <div>
             <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center'}}>
-                {actors && Object.keys(actors).length > 0 && Object.keys(actors).map((actorId: any) => (
-                    <div key={`${actors[actorId].id}`}
+                {!isLoading && actors && Object.keys(actors).length > 0 && Object.keys(actors).map((actorId: any) => (
+                    <div key={actors[actorId].id}
                          onClick={() => addTokenIdNominee(actors[actorId].id)}>
                         <CardCompetitionSelect
                             Info={actors[actorId].Firstname + " " + actors[actorId].Lastname}
                             Picture={actors[actorId].Picture}
                         />
                     </div>
-                ))
-                }
-                {directors && directors.length > 0 && directors.map((director: any, index: number) => (
-                    <div key={`${director.id}-${index}`}
-                         onClick={() => addTokenIdNominee(director.id)}>
+                ))}
+                {!isLoading && directors && Object.keys(directors).length > 0 && Object.keys(directors).map((directorId: any) => (
+                    <div key={directors[directorId].id}
+                         onClick={() => addTokenIdNominee(directors[directorId].id)}>
                         <CardCompetitionSelect
-                            Info={director.Firstname + " " + director.Lastname}
-                            Picture={director.Picture}
+                            Info={directors[directorId].Firstname + " " + directors[directorId].Lastname}
+                            Picture={directors[directorId].Picture}
                         />
                     </div>
-                ))
-                }
-                {movies && movies.length > 0 && movies.map((movie: any, index: number) => (
-                    <div key={`${movie.id}-${index}`}
-                         onClick={() => addTokenIdNominee(movie.id)}>
+                ))}
+                {!isLoading && movies && Object.keys(movies).length > 0 && Object.keys(movies).map((movieId: any) => (
+                    <div key={movies[movieId].id}
+                         onClick={() => addTokenIdNominee(movies[movieId].id)}>
                         <CardCompetitionSelect
-                            Info={movie.Title}
-                            Picture={movie.Picture}
+                            Info={movies[movieId].Title}
+                            Picture={movies[movieId].Picture}
                         />
                     </div>
-                ))
-                }
+                ))}
             </div>
             <button onClick={verifyFormNominees} disabled={minting}>Ajout des nominées de la compétition</button>
         </div>

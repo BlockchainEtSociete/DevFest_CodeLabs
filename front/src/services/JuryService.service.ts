@@ -1,6 +1,6 @@
-import ipfs, { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs.ts";
+import {ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import {toString as uint8ArrayToString} from "uint8arrays/to-string";
-import {provider} from "../provider/providers.ts";
+import {provider} from "../provider/providers";
 import {ethers, EventLog} from "ethers";
 
 /**
@@ -30,8 +30,7 @@ export const getJuryData = async (tokenId: number, tokenUri: string) => {
  * @param setLoading
  * @param addToJurys
  */
-export const fetchJury = async (eventType: string, contractAddress: string, contractAbi: any, setLoading: Function, addToJurys: Function) => {
-    setLoading(true);
+export const fetchJury = async (eventType: string, contractAddress: string, contractAbi: any, addToJurys: Function) => {
     if (provider) {
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
@@ -40,7 +39,7 @@ export const fetchJury = async (eventType: string, contractAddress: string, cont
         // récupération des evenements en fonction du filtre
         const events = await contract.queryFilter(filter, 0);
 
-        try{
+        try {
             for (const event of events) {
                 const id = ethers.toNumber((event as EventLog).args[1]);
                 const tokenUri: string = (event as EventLog).args[2];
@@ -51,10 +50,8 @@ export const fetchJury = async (eventType: string, contractAddress: string, cont
             }
         } catch (err) {
             console.log(err);
-            setLoading(false);
             return false;
         }
-        setLoading(false);
     }
 }
 
@@ -70,15 +67,13 @@ export const listenToNewJury = async (eventType: string, contractAddress: string
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
 
-        await contract.emit(eventType, async (event: any) => {
+        await contract.on(eventType, async (event: any) => {
             const tokenUri: string = event.args[2];
             const id = ethers.toNumber(event.args[1]);
-            console.log(event);
 
             if (tokenUri) {
                 await addToJurys(await getJuryData(id, tokenUri));
             }
         });
-
     }
 }

@@ -56,7 +56,7 @@ contract Competitions is Ownable {
     event CompetitionSessionRegistered(uint competitionId);
     event NomineeCompetitionsRegistered(uint competitionId, string message);
     event Voted(uint competitionId, bool vote, uint nbVotes);
-    event JuryAddedToCompetition(uint competitionId, uint juryId);
+    event JuryAddedToCompetition(uint indexed competitionId, uint indexed juryId);
 
     modifier onlyJuryOfCompetition(uint _competitionId) {
         uint juryId = juryContract.getJuryId(msg.sender);

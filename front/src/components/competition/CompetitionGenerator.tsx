@@ -1,28 +1,17 @@
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import {AlertColor} from "@mui/material";
-import {fetchMovie} from "../../services/MovieService.service";
-import contractsInterface from "../../contracts/contracts";
-import {fetchPeople} from "../../services/PeopleService.service";
-import CardCompetitionSelect from "./CardCompetitionSelect";
-import {ethers} from "ethers";
 import SnackbarAlert from "../common/SnackbarAlert";
-import ipfs from "../common/ipfs";
-import {CompetitionMetadata} from "../../types/Metadata";
-import {provider} from "../../provider/providers";
 import CompetitionDisplay from "./CompetitionDisplay";
-import {dataUrlToFile, selectedPhotoToken} from "../../services/IpfsService.service";
-import {fetchJury, listenToNewJury} from "../../services/JuryService.service.ts";
-import { CompetitionCreationForm } from "./CompetitionCreationForm.tsx";
-import { CompetitionNomineesForm } from "./CompetitionNomineesForm.tsx";
-import { CompetitionJuryForm } from "./CompetitionJuryForm.tsx";
+import { CompetitionCreationForm } from "./CompetitionCreationForm";
+import { CompetitionNomineesForm } from "./CompetitionNomineesForm";
+import { CompetitionJuryForm } from "./CompetitionJuryForm";
 
 const CompetitionGenerator = () => {
     const [, setLoading] = useState(false);
     const [minting, setMinting] = useState(false);
 
     const [tokenId, setTokenId]: any = useState(0);
-
-    const [typeCompetition, setTypeCompetition]: any = useState(0);
+    const [typeCompetition, setTypeCompetition]: any = useState(-1);
 
     const [openCompetition, setOpenCompetition] = useState(true);
     const [openNominees, setOpenNominees] = useState(false);
@@ -38,12 +27,10 @@ const CompetitionGenerator = () => {
      */
     const resetForm = () => {
         setReset(true);
-
         setOpenJury(false);
         setOpenNominees(false);
         setOpenCompetition(true);
         setMinting(false);
-
         setReset(false);
     }
 
@@ -53,12 +40,11 @@ const CompetitionGenerator = () => {
             <section className={(!openCompetition ? 'openBlockCompetition' : '')}>
                 <CompetitionCreationForm
                     reset={reset}
-                    setReset={setReset}
                     minting={minting}
                     setMinting={setMinting}
+                    setTokenId={setTokenId}
                     typeCompetition={typeCompetition}
                     setTypeCompetition={setTypeCompetition}
-                    setTokenId={setTokenId}
                     setOpenCompetition={setOpenCompetition}
                     setOpenNominees={setOpenNominees}
                     setOpen={setOpen}
@@ -70,23 +56,22 @@ const CompetitionGenerator = () => {
                 <CompetitionNomineesForm
                     reset={reset}
                     minting={minting}
+                    typeCompetition={typeCompetition}
                     tokenId={tokenId}
                     setMinting={setMinting}
-                    setLoading={setLoading}
                     setOpenNominees={setOpenNominees}
                     setOpenJury={setOpenJury}
                     setOpen={setOpen}
                     setMessage={setMessage}
-                    setSeverity={setSeverity}
-                    typeCompetition={typeCompetition} />
+                    setSeverity={setSeverity} />
             </section>
 
             <section className={(!openJury ? 'openBlockCompetition' : '')}>
                 <CompetitionJuryForm
                     reset={reset}
                     minting={minting}
+                    tokenId={tokenId}
                     setMinting={setMinting}
-                    setLoading={setLoading}
                     setOpenJury={setOpenJury}
                     setOpen={setOpen}
                     setMessage={setMessage}

@@ -1,12 +1,12 @@
 import {ChangeEvent, useEffect, useState} from "react";
 import {ethers} from "ethers";
-import contractsInterface from "../../contracts/contracts.ts";
-import ipfs from "../common/ipfs.ts";
-import {MovieMetadata} from "../../types/Metadata.ts";
-import {provider} from "../../provider/providers.ts";
-import MovieDisplay from "./MovieDisplay.tsx";
-import {fetchPeople, listenToNewPeople} from "../../services/PeopleService.service.ts";
-import SnackbarAlert from "../common/SnackbarAlert.tsx";
+import contractsInterface from "../../contracts/contracts";
+import ipfs from "../common/ipfs";
+import {MovieMetadata} from "../../types/Metadata";
+import {provider} from "../../provider/providers";
+import MovieDisplay from "./MovieDisplay";
+import {fetchPeople, listenToNewPeople} from "../../services/PeopleService.service";
+import SnackbarAlert from "../common/SnackbarAlert";
 import {AlertColor} from "@mui/material";
 
 const MovieGenerator = () => {
@@ -16,7 +16,7 @@ const MovieGenerator = () => {
     const [open, setOpen] = useState(false)
     const [message, setMessage] = useState('')
     const [severity, setSeverity] = useState<AlertColor | undefined>('success')
-    const [directors, setDirectors]: any = useState([]);
+    const [directors, setDirectors]: any = useState({});
 
     const [Title, setTitle]: any = useState('');
     const [Description, setDescription]: any = useState('');
@@ -31,66 +31,26 @@ const MovieGenerator = () => {
      */
     useEffect(() => {
         const addToDirectors = async (people: any) => {
-            directors.push(people);
+            if (!directors[people.id]) {
+                directors[people.id] = people;
+                setDirectors(directors);
+            }
         }
 
-        fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, setLoading, addToDirectors);
-        listenToNewPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors);
-    }, [directors]);
+        (async () => {
+            setLoading(true)
+            await fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors);
+            await listenToNewPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors);
+            setLoading(false)
+        })();
+    }, [directors, setDirectors]);
 
     /**
-     * Fonction qui appel le smart contract afin de minter le token uri dans la blockchain
-     * @param tokenURI
+     * Form events management
      */
-    async function mintMovie(tokenURI: string){
-        setMitting(true);
-        const signer = await provider?.getSigner();
-
-        // création de l'appel du mint
-        const contract = new ethers.Contract(contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, signer );
-        const transaction = await contract.mint(tokenURI);
-
-        // récupération de l'id du token minté
-        await contract.on('*', (event) => {
-            if (event.eventName == 'MovieMinted') {
-                const id = ethers.toNumber(event.args[0]);
-                setTokenId(id);
-            }
-        });
-
-        // vérification que la transaction c'est bien passé
-        await transaction.wait().then(async (receipt: any) => {
-            if(receipt && receipt.status == 1){
-                setTitle('');
-                setDescription('');
-                setPicture('');
-                setTokenIdDirector('');
-                setMessage(`Minting in success`)
-                setSeverity('success')
-                setOpen(true)
-                setTimeout(
-                    function () {
-                        setOpen(false)
-                    }, 5000);
-            }
-        }).catch((err: any )=> {
-            if(err){
-                setMitting(false);
-                setMessage(`Minting in error`)
-                setSeverity('error')
-                setOpen(true)
-                setTimeout(
-                    function () {
-                        setOpen(false)
-                    }, 5000);
-            }
-        })
-
-        setMessage('Minting finished ! :)')
-        setSeverity('success')
-        setOpen(true)
-        return true;
-    }
+    const updateTitle = (e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value);
+    const updateDescription = (e: ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value);
+    const updateTokenIdDirector = (e: ChangeEvent<HTMLSelectElement>) => setTokenIdDirector(e.target.value);
 
     /**
      * Verification du formulaire avant procédure du mint NFT
@@ -199,6 +159,60 @@ const MovieGenerator = () => {
     }
 
     /**
+     * Fonction qui appel le smart contract afin de minter le token uri dans la blockchain
+     * @param tokenURI
+     */
+    async function mintMovie(tokenURI: string){
+        setMitting(true);
+        const signer = await provider?.getSigner();
+
+        // création de l'appel du mint
+        const contract = new ethers.Contract(contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, signer );
+        const transaction = await contract.mint(tokenURI);
+
+        // récupération de l'id du token minté
+        await contract.on('*', (event) => {
+            if (event.eventName == 'MovieMinted') {
+                const id = ethers.toNumber(event.args[0]);
+                setTokenId(id);
+            }
+        });
+
+        // vérification que la transaction c'est bien passé
+        await transaction.wait().then(async (receipt: any) => {
+            if(receipt && receipt.status == 1){
+                setTitle('');
+                setDescription('');
+                setPicture('');
+                setTokenIdDirector('');
+                setMessage(`Minting in success`)
+                setSeverity('success')
+                setOpen(true)
+                setTimeout(
+                    function () {
+                        setOpen(false)
+                    }, 5000);
+            }
+        }).catch((err: any )=> {
+            if(err){
+                setMitting(false);
+                setMessage(`Minting in error`)
+                setSeverity('error')
+                setOpen(true)
+                setTimeout(
+                    function () {
+                        setOpen(false)
+                    }, 5000);
+            }
+        })
+
+        setMessage('Minting finished ! :)')
+        setSeverity('success')
+        setOpen(true)
+        return true;
+    }
+
+    /**
      * Choix de la photo
      * @param event
      */
@@ -246,14 +260,14 @@ const MovieGenerator = () => {
                 <div className="form-ligne">
                     <label>
                         Title :
-                        <input name="Title" onChange={e => setTitle(e.target.value)} value={Title} />
+                        <input name="Title" onChange={updateTitle} value={Title} />
                     </label>
                 </div>
                 <div className="form-ligne form-description">
                     <label>
                         Description :
                     </label>
-                    <textarea name="Description" rows={5} cols={25} value={Description} onChange={e => setDescription(e.target.value)}  />
+                    <textarea name="Description" rows={5} cols={25} value={Description} onChange={updateDescription}  />
                 </div>
                 <div className="form-ligne">
                     <label>
@@ -266,12 +280,12 @@ const MovieGenerator = () => {
                 </div>
                 <div className="form-ligne">
                     <label >Réalisateur :
-                        <select name="type" onChange={e => setTokenIdDirector(e.target.value)}>
+                        <select name="type" onChange={updateTokenIdDirector}>
                             <option>Sélectionner un réalisateur</option>
-                            {directors && directors.length > 0 && directors.map((director: any, index: number) => {
-                                const idNumber = ethers.toNumber(director.id);
+                            {directors && Object.keys(directors).length > 0 && Object.keys(directors).map((director: any, index: number) => {
+                                const idNumber = ethers.toNumber(directors[director].id);
                                 return (
-                                    <option key={`${idNumber}-${index}`} value={idNumber} >{director.Firstname} {director.Lastname}</option>
+                                    <option key={directors[director].id} value={idNumber} >{directors[director].Firstname} {directors[director].Lastname}</option>
                                 )
                             })
                             }

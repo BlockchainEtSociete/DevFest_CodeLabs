@@ -1,13 +1,13 @@
 import {ChangeEvent, useState} from "react";
-import {provider} from "../../provider/providers.ts";
+import {provider} from "../../provider/providers";
 import {ethers} from "ethers";
-import contractsInterface from "../../contracts/contracts.ts";
+import contractsInterface from "../../contracts/contracts";
 import "../../styles/formBlock.css";
-import ipfs from "../common/ipfs.ts";
-import {PeopleMetadata} from "../../types/Metadata.ts";
-import PeopleDisplay from "./PeopleDisplay.tsx";
+import ipfs from "../common/ipfs";
+import {PeopleMetadata} from "../../types/Metadata";
+import PeopleDisplay from "./PeopleDisplay";
 import {AlertColor} from "@mui/material";
-import SnackbarAlert from "../common/SnackbarAlert.tsx";
+import SnackbarAlert from "../common/SnackbarAlert";
 
 const PeopleGenerator = () => {
     const [mitting, setMitting] = useState(false);
@@ -194,8 +194,7 @@ const PeopleGenerator = () => {
     }
 
     /**
-     * Choix de la photo
-     * @param event
+     * Form events management.
      */
     const selectedPhoto = (event: ChangeEvent<HTMLInputElement>) => {
         const filesUploaded = event.currentTarget.files;
@@ -203,6 +202,11 @@ const PeopleGenerator = () => {
             setPictureBase64(filesUploaded[0]);
         }
     };
+
+    const updateFirstname = (e: React.ChangeEvent<HTMLInputElement>) => setFirstname(e.target.value)
+    const updateLastname = (e: React.ChangeEvent<HTMLInputElement>) => setLastname(e.target.value)
+    const updateAddress = (e: React.ChangeEvent<HTMLInputElement>) => setAddress(e.target.value)
+    const updateType = (e: React.ChangeEvent<HTMLSelectElement>) => setType(e.target.value)
 
     /**
      * Set l'url de la photo
@@ -241,13 +245,13 @@ const PeopleGenerator = () => {
                 <div className="form-ligne">
                     <label>
                         Prénom :
-                        <input name="Firstname" onChange={e => setFirstname(e.target.value)} value={Firstname}/>
+                        <input name="Firstname" onChange={updateFirstname} value={Firstname}/>
                     </label>
                 </div>
                 <div className="form-ligne">
                     <label>
                         Nom :
-                        <input name="Lastname" onChange={e => setLastname(e.target.value)} value={Lastname}/>
+                        <input name="Lastname" onChange={updateLastname} value={Lastname}/>
                     </label>
                 </div>
                 <div className="form-ligne">
@@ -262,13 +266,13 @@ const PeopleGenerator = () => {
                 <div className="form-ligne">
                     <label>
                         Addresse wallet :
-                        <input name="Address" onChange={e => setAddress(e.target.value)}
+                        <input name="Address" onChange={updateAddress}
                                value={Address}/>
                     </label>
                 </div>
                 <div className="form-ligne">
                     <label htmlFor="type">Type :
-                        <select id="type" onChange={e => setType(e.target.value)} >
+                        <select id="type" onChange={updateType} >
                             <option value={1}>Acteur</option>
                             <option value={2}>Réalisateur</option>
                         </select>
