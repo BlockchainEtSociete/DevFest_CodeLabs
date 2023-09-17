@@ -219,12 +219,12 @@ const JuryGenerator = () => {
     }
 
     /**
-     * Choix de la photo
-     * @param event
+     * Form events management.
      */
-    const selectedPhoto = (event: ChangeEvent<HTMLInputElement>) => {
-        selectedPhotoToken(event, setFile, setPicture);
-    };
+    const selectedPhoto = (event: ChangeEvent<HTMLInputElement>) => selectedPhotoToken(event, setFile, setPicture)
+    const updateFirstname = (event: ChangeEvent<HTMLInputElement>) => setFirstname(event.target.value)
+    const updateLastname = (event: ChangeEvent<HTMLInputElement>) => setLastname(event.target.value)
+    const updateAddress = (event: ChangeEvent<HTMLInputElement>) => setAddress(event.target.value)
 
     return (
         <section>
@@ -233,13 +233,13 @@ const JuryGenerator = () => {
                 <div className="form-ligne">
                     <label>
                         Prénom :
-                        <input name="Firstname" onChange={e => setFirstname(e.target.value)} value={Firstname}/>
+                        <input name="Firstname" onChange={updateFirstname} value={Firstname}/>
                     </label>
                 </div>
                 <div className="form-ligne">
                     <label>
                         Nom :
-                        <input name="Lastname" onChange={e => setLastname(e.target.value)} value={Lastname}/>
+                        <input name="Lastname" onChange={updateLastname} value={Lastname}/>
                     </label>
                 </div>
                 <div className="form-ligne">
@@ -254,7 +254,7 @@ const JuryGenerator = () => {
                 <div className="form-ligne">
                     <label>
                         Addresse wallet :
-                        <input name="Address" onChange={e => setAddress(e.target.value)}
+                        <input name="Address" onChange={updateAddress}
                                value={Address}/>
                     </label>
                 </div>

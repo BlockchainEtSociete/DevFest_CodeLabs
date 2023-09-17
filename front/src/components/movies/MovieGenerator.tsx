@@ -46,6 +46,13 @@ const MovieGenerator = () => {
     }, [directors, setDirectors]);
 
     /**
+     * Form events management
+     */
+    const updateTitle = (e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value);
+    const updateDescription = (e: ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value);
+    const updateTokenIdDirector = (e: ChangeEvent<HTMLSelectElement>) => setTokenIdDirector(e.target.value);
+
+    /**
      * Verification du formulaire avant procédure du mint NFT
      * */
     const verifyForm = async () => {
@@ -253,14 +260,14 @@ const MovieGenerator = () => {
                 <div className="form-ligne">
                     <label>
                         Title :
-                        <input name="Title" onChange={e => setTitle(e.target.value)} value={Title} />
+                        <input name="Title" onChange={updateTitle} value={Title} />
                     </label>
                 </div>
                 <div className="form-ligne form-description">
                     <label>
                         Description :
                     </label>
-                    <textarea name="Description" rows={5} cols={25} value={Description} onChange={e => setDescription(e.target.value)}  />
+                    <textarea name="Description" rows={5} cols={25} value={Description} onChange={updateDescription}  />
                 </div>
                 <div className="form-ligne">
                     <label>
@@ -273,12 +280,12 @@ const MovieGenerator = () => {
                 </div>
                 <div className="form-ligne">
                     <label >Réalisateur :
-                        <select name="type" onChange={e => setTokenIdDirector(e.target.value)}>
+                        <select name="type" onChange={updateTokenIdDirector}>
                             <option>Sélectionner un réalisateur</option>
                             {directors && Object.keys(directors).length > 0 && Object.keys(directors).map((director: any, index: number) => {
                                 const idNumber = ethers.toNumber(directors[director].id);
                                 return (
-                                    <option key={`${directors[director].id}`} value={idNumber} >{directors[director].Firstname} {directors[director].Lastname}</option>
+                                    <option key={directors[director].id} value={idNumber} >{directors[director].Firstname} {directors[director].Lastname}</option>
                                 )
                             })
                             }
