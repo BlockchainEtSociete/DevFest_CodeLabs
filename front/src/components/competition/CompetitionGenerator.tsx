@@ -69,10 +69,8 @@ const CompetitionGenerator = () => {
             <section className={(!openJury ? 'openBlockCompetition' : '')}>
                 <CompetitionJuryForm
                     reset={reset}
-                    minting={minting}
                     tokenId={tokenId}
                     setMinting={setMinting}
-                    setOpenJury={setOpenJury}
                     setOpen={setOpen}
                     setMessage={setMessage}
                     setSeverity={setSeverity} />

@@ -4,24 +4,19 @@ import { fetchJury, listenToNewJury } from "../../services/JuryService.service";
 import contractsInterface from "../../contracts/contracts";
 import { provider } from "../../provider/providers";
 import { ethers } from "ethers";
-import { fetchIdsByFilter } from "../../services/CompetitionService.service";
 
 export interface CompetitionJuryFormProps {
     reset: boolean,
-    minting: boolean,
     tokenId: number,
     setMinting: (minting: boolean) => void,
-    setOpenJury: (openJury: boolean) => void,
     setOpen: (open: boolean) => void,
     setMessage: (message: string) => void,
     setSeverity: (severity: AlertColor | undefined) => void,
 }
 
-export const CompetitionJuryForm = ({reset, minting, tokenId, setMinting, setOpenJury, setOpen, setMessage, setSeverity}: CompetitionJuryFormProps) => {
-    const [idJury, setIdJury]: any = useState(0);
+export const CompetitionJuryForm = ({reset, tokenId, setMinting, setOpen, setMessage, setSeverity}: CompetitionJuryFormProps) => {
+    const [selectedIdsJury, setSelectedIdsJury]: any = useState([]);
     const [jurys, setJurys]: any = useState([]);
-    const [idsJury, setIdsJurys]: any = useState([]);
-    const [, setIdsCompetition]: any = useState();
 
     useEffect(() => {
         const addToJurys = async (jury: any) => {
@@ -34,24 +29,40 @@ export const CompetitionJuryForm = ({reset, minting, tokenId, setMinting, setOpe
             await listenToNewJury("JuryMinted", contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, addToJurys);
         })();
         if (reset) {
-            setIdJury(0);
+            setSelectedIdsJury([]);
         }
-    }, [jurys, setJurys, reset, setIdJury])
+    }, [jurys, setJurys, reset, setSelectedIdsJury])
 
-    const updateIdJuryCompetition = (e: React.ChangeEvent<HTMLInputElement>) => setIdJury(Number(e.target.value));
+    const updateSelectedJurysCompetition = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked && !selectedIdsJury.includes(parseInt(e.target.value))) {
+            setSelectedIdsJury([...selectedIdsJury, parseInt(e.target.value)]);
+        } else if (!e.target.checked && selectedIdsJury.includes(parseInt(e.target.value))) {
+            setSelectedIdsJury(selectedIdsJury.filter((id: number) => id !== parseInt(e.target.value)));
+        }
+    }
 
     /**
      * Verification des données des jurys de la competitions avant sauvegarde dans la blockchain
      */
     const verifyFormJury = async () => {
-        if (!Number.isInteger(idJury) && idJury != 0) {
+        if (selectedIdsJury.length === 0) {
             setMinting(false);
-            setMessage(`Invalide id`)
+            setMessage(`No jury selected`)
             setSeverity('error')
             setOpen(true)
             return false;
         }
-        await addJurysCompetition();
+        const result = await addJurysCompetition();
+
+        if (result) {
+            setMessage(`Competition configuration complete`)
+            setSeverity('success')
+            setOpen(true)
+            setTimeout(
+                function () {
+                    setOpen(false)
+                }, 5000);
+        }
     }
 
     /**
@@ -62,36 +73,14 @@ export const CompetitionJuryForm = ({reset, minting, tokenId, setMinting, setOpe
         const signer = await provider?.getSigner();
         // building smart contract call
         const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
-        let transaction;
 
-        try {
-            transaction = await contract.addJuryToCompetition(tokenId, idJury);
-        } catch (e) {
-            setMinting(false);
-            setMessage(`Minting in error`)
-            setSeverity('error')
-            setOpen(true)
-            setTimeout(
-                function () {
-                    setOpen(false)
-                }, 5000);
-        }
+        let transactions = [];
+        for (const idJury of selectedIdsJury) {
+            let transaction;
 
-        // vérification que la transaction c'est bien passé
-        await transaction.wait().then(async (receipt: any) => {
-            if(receipt && receipt.status == 1){
-                setMessage(`Minting in success`)
-                setSeverity('success')
-                setOpen(true)
-                setTimeout(
-                    function () {
-                        setOpen(false)
-                    }, 5000);
-
-                await getIdsJury();
-            }
-        }).catch((err: any )=> {
-            if(err){
+            try {
+                transaction = await contract.addJuryToCompetition(tokenId, idJury);
+            } catch (e) {
                 setMinting(false);
                 setMessage(`Minting in error`)
                 setSeverity('error')
@@ -101,33 +90,40 @@ export const CompetitionJuryForm = ({reset, minting, tokenId, setMinting, setOpe
                         setOpen(false)
                     }, 5000);
             }
-        })
 
-        setIdJury(0);
+            // vérification que la transaction c'est bien passé
+            await transaction.wait().then(async (receipt: any) => {
+                if (receipt && receipt.status == 1) {
+                    transactions = transactions.filter((trans: any) => trans.id !== transaction.id);
+                    setMessage(`Minting in success`)
+                    setSeverity('success')
+                    setOpen(true)
+                    setTimeout(
+                        function () {
+                            setOpen(false)
+                        }, 5000);
+                }
+            }).catch((err: any) => {
+                if (err) {
+                    transactions = transactions.filter((trans: any) => trans.id !== transaction.id);
+                    setMinting(false);
+                    setMessage(`Minting in error`)
+                    setSeverity('error')
+                    setOpen(true)
+                    setTimeout(
+                        function () {
+                            setOpen(false)
+                        }, 5000);
+                }
+            })
+        }
+
+        setSelectedIdsJury([]);
 
         setMessage('Minting finished ! :)')
         setSeverity('success')
         setOpen(true)
         return true;
-    }
-
-    /**
-     * Récupération des ids jury deja ajouté à la competition et les enlevers de la liste
-     */
-    const getIdsJury = async () => {
-        try {
-            await fetchIdsByFilter(tokenId, null, contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, setIdsCompetition, setIdsJurys);
-            !idsJury.includes(idJury) ? idsJury.push(idJury) : '';
-        } catch (e) {
-            setMinting(false);
-            setMessage(`Minting in error`)
-            setSeverity('error')
-            setOpen(true)
-            setTimeout(
-                function () {
-                    setOpen(false)
-                }, 5000);
-        }
     }
 
     return (
@@ -137,8 +133,8 @@ export const CompetitionJuryForm = ({reset, minting, tokenId, setMinting, setOpe
                 { jurys && Object.keys(jurys).length > 0 && Object.keys(jurys).map((jury: any) => {
                     const fullName = jurys[jury].Lastname + " " + jurys[jury].Firstname;
                     return (
-                        <label key={jurys[jury].id} style={{ display: idsJury.includes(jurys[jury].id) ? 'none': 'block' }}> {fullName} :
-                            <input name="jury" type="radio" onChange={updateIdJuryCompetition}
+                        <label key={jurys[jury].id}> {fullName} :
+                            <input name="jury" type="checkbox" onChange={updateSelectedJurysCompetition}
                                    value={jurys[jury].id} />
                         </label>
                     )}
