@@ -54,7 +54,7 @@ contract Competitions is Ownable {
 
     /// Event
     event CompetitionSessionRegistered(uint competitionId);
-    event NomineeCompetitionsRegistered(uint competitionId, string message);
+    event NomineeCompetitionsRegistered(uint competitionId, uint nomineeId);
     event Voted(uint competitionId, bool vote, uint nbVotes);
     event JuryAddedToCompetition(uint indexed competitionId, uint indexed juryId);
 
@@ -94,17 +94,11 @@ contract Competitions is Ownable {
 
     /// @notice Adds nominee to a competition.
     /// @param _tokenCompetition id of competition
-    /// @param _idsNominees List of ids of nominees in competition (film, actor, director).
-    function addNomineeCompetition(uint _tokenCompetition, uint[] memory _idsNominees) external {
-        require(_idsNominees.length >= 2, "Your competition must contain at least 2 options");
+    /// @param _idNominee Id of nominee
+    function addNomineeCompetition(uint _tokenCompetition, uint _idNominee) external {
+        votingCompetitions[_tokenCompetition - 1].nominees.push(Nominee(_idNominee, 0));
 
-        uint counter = 0;
-        for(uint i = 0; i < _idsNominees.length; i++){
-            votingCompetitions[_tokenCompetition - 1].nominees.push(Nominee(_idsNominees[counter], 0));
-            counter ++;
-        }
-
-        emit NomineeCompetitionsRegistered(_tokenCompetition, 'Nominee added successfully!');
+        emit NomineeCompetitionsRegistered(_tokenCompetition, votingCompetitions[_tokenCompetition - 1].nominees.length-1);
     }
 
     /// @notice Adds jury to a competition.

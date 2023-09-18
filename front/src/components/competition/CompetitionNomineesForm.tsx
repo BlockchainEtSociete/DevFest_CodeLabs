@@ -99,34 +99,12 @@ export const CompetitionNomineesForm = ({reset, minting, typeCompetition, tokenI
 
         // création de l'appel du mint
         const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
-        let transaction;
 
-        try {
-            transaction = await contract.addNomineeCompetition(tokenId, idsNominees);
-        } catch (e) {
-            setMinting(false);
-            setMessage(`Minting in error`)
-            setSeverity('error')
-            setOpen(true)
-            setTimeout(
-                function () {
-                    setOpen(false)
-                }, 5000);
-        }
-
-        // vérification que la transaction c'est bien passé
-        await transaction.wait().then(async (receipt: any) => {
-            if (receipt && receipt.status == 1) {
-                setMessage(`Minting in success`)
-                setSeverity('success')
-                setOpen(true)
-                setTimeout(
-                    function () {
-                        setOpen(false)
-                    }, 5000);
-            }
-        }).catch((err: any )=> {
-            if (err) {
+        for(const idNominee of idsNominees) {
+            let transaction;
+            try {
+                transaction = await contract.addNomineeCompetition(tokenId, idNominee);
+            } catch (e) {
                 setMinting(false);
                 setMessage(`Minting in error`)
                 setSeverity('error')
@@ -136,7 +114,31 @@ export const CompetitionNomineesForm = ({reset, minting, typeCompetition, tokenI
                         setOpen(false)
                     }, 5000);
             }
-        })
+
+            // vérification que la transaction c'est bien passé
+            await transaction.wait().then(async (receipt: any) => {
+                if (receipt && receipt.status == 1) {
+                    setMessage(`Minting in success`)
+                    setSeverity('success')
+                    setOpen(true)
+                    setTimeout(
+                        function () {
+                            setOpen(false)
+                        }, 5000);
+                }
+            }).catch((err: any) => {
+                if (err) {
+                    setMinting(false);
+                    setMessage(`Minting in error`)
+                    setSeverity('error')
+                    setOpen(true)
+                    setTimeout(
+                        function () {
+                            setOpen(false)
+                        }, 5000);
+                }
+            })
+        }
 
         setOpenNominees(false);
         setOpenJury(true);
