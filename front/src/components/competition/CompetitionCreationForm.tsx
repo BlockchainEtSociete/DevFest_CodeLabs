@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { dataUrlToFile, selectedPhotoToken } from "../../services/IpfsService.service.ts";
 import { AlertColor } from "@mui/material";
 import ipfs from "../common/ipfs";
-import { CompetitionMetadata } from "../../types/Metadata";
+import { AwardMetadata } from "../../types/Metadata";
 import { provider } from "../../provider/providers";
 import { ethers, ContractTransactionResponse, EventLog } from "ethers";
 import contractsInterface from "../../contracts/contracts";
@@ -24,6 +24,7 @@ export interface CompetitionCreationFormProps {
 
 export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId, typeCompetition, setTypeCompetition, setOpenCompetition, setOpenNominees, setOpen, setMessage, setSeverity}: CompetitionCreationFormProps) => {
     const [title, setTitle]: any = useState('');
+    const [nameAward, setNameAward]: any = useState('');
     const [Picture, setPicture]: any = useState('');
     const [startDate, setStartDate]: any = useState(0);
     const [endDate, setEndDate]: any = useState(0);
@@ -45,6 +46,7 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
     const updateTitleCompetition = (e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value);
     const updateStartDate = (e: React.ChangeEvent<HTMLInputElement>) => setStartDate(getTimestamp(e.target.value));
     const updateEndDate = (e: React.ChangeEvent<HTMLInputElement>) => setEndDate(getTimestamp(e.target.value));
+    const updateNameAward = (e: React.ChangeEvent<HTMLInputElement>) => setNameAward(e.target.value);
 
     /**
      * Choix de la photo
@@ -59,16 +61,16 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
      * @param PictureUri
      * @param Title
      */
-    const generateNFTMetadataAndUploadToIpfs = async (PictureUri: string, Title: string) => {
-        const NFTMetaData: CompetitionMetadata = {
+    const generateNFTMetadataAndUploadToIpfs = async (PictureUri: string, Name: string) => {
+        const NFTMetaData: AwardMetadata = {
             "description": "Movie generated NFT metadata",
             "external_url": "",
             "image": PictureUri,
             "name": "Movie DevFest",
             "attributes": [
                 {
-                    "trait_type": "Title",
-                    "value": Title
+                    "trait_type": "Name",
+                    "value": Name
                 },
                 {
                     "trait_type": "Picture",
@@ -106,14 +108,14 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
 
         try {
             // création de la compétition
-            const transaction:ContractTransactionResponse = await contract.addCompetition(tokenURI, typeCompetition, startDate, endDate);
+            const transaction:ContractTransactionResponse = await contract.addCompetition(title, tokenURI, typeCompetition, startDate, endDate);
 
             // vérification que la transaction c'est bien passé
             const receipt = await transaction.wait();
 
             if (receipt && receipt.status == 1) {
 
-                const competitionSessionRegistered = (receipt.logs as EventLog[]).find((log) => log.fragment.name === "CompetitionSessionRegistered")
+                const competitionSessionRegistered = (receipt.logs as EventLog[]).find((log) => log.fragment && log.fragment.name === "CompetitionSessionRegistered")
 
                 if (!competitionSessionRegistered) {
                     console.log("receipt", receipt)
@@ -192,6 +194,13 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
             setOpen(true)
             return false;
         }
+        if (!nameAward || nameAward.length == 0) {
+            setMinting(false);
+            setMessage(`Invalide Name Award`)
+            setSeverity('error')
+            setOpen(true)
+            return false;
+        }
 
         // Upload de l'image sur ipfs
         const PictureFile = await dataUrlToFile(`data:image/*;${Picture}`, 'competition.jpg')
@@ -205,7 +214,7 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
         // création de l'uri - addresse de l'image uploadé
         if (ipfsPictureUploadResult) {
             const PictureUri = `ipfs://${ipfsPictureUploadResult.cid}`
-            await generateNFTMetadataAndUploadToIpfs(PictureUri, title);
+            await generateNFTMetadataAndUploadToIpfs(PictureUri, nameAward);
         }
     }
 
@@ -237,8 +246,13 @@ export const CompetitionCreationForm = ({reset, minting, setMinting, setTokenId,
                 </label>
             </div>
             <div className="form-ligne">
+                <label> Nom de la récompense :
+                    <input name="nameAward" type="text" onChange={updateNameAward} />
+                </label>
+            </div>
+            <div className="form-ligne">
                 <label>
-                    Photo :
+                    Photo de la récompense :
                     <div>
                         <img src={Picture} style={{width: '200px'}}/>
                     </div>

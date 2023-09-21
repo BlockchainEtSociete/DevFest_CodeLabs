@@ -48,14 +48,14 @@ export interface MovieMetadata {
     ]
 }
 
-export interface CompetitionMetadata {
+export interface AwardMetadata {
     "description": string;
     "external_url": string;
     "image": string;
     "name": string;
     "attributes": [
         {
-            "trait_type": "Title",
+            "trait_type": "Name",
             "value": string;
         },
         {
