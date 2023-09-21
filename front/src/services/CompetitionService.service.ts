@@ -61,7 +61,8 @@ export const getCompetitionData = async (tokenId: number, contract: any) => {
 
         return {
             id: tokenId,
-            title: data.attributes[0].value,
+            title: competition.title,
+            NameAward: data.attributes[0].value,
             Picture: ipfsGetUrl(data.attributes[1].value),
             typeCompetition: ethers.toNumber(competition.typeCompetitions),
             startDate: ethers.toNumber(competition.startTime),
@@ -175,13 +176,12 @@ export async function fetchCompetitionsOfOneJury(juryId: number, status: VotingC
 
                 if (ethers.toNumber(votingStatus) === status) {
                     const metadataString = JSON.parse(uint8ArrayToString(await ipfsGetContent(competition.tokenURI), 'utf8'))
-                    const title = metadataString.attributes[0].value
                     const pictureUrl = ipfsGetUrl(metadataString.attributes[1].value)
 
                     competitions.push({
                         id: ethers.toNumber(competitionId),
                         tokenURI: competition.tokenURI,
-                        title,
+                        title: competition.title,
                         pictureUrl,
                         typeCompetitions: ethers.toNumber(competition.typeCompetitions),
                         status: ethers.toNumber(votingStatus),

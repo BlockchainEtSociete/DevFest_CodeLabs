@@ -9,7 +9,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /// @title Management of Movies
 /// @author Colas Vincent
 /// @notice Smart contract to generate digital movie for the festival.
-contract Movies is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable{
+contract Movies is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
+
+    /// @notice stock idTokenDirector by tokenIdMovie
+    mapping(uint => uint) public directorMovie;
 
     /// @notice Event when token generated
     event MovieMinted(uint tokenId);
@@ -20,16 +23,25 @@ contract Movies is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable{
     /// @notice Mint a new movie.
     /// @dev event MovieMinted when movie is minted.
     /// @param _tokenURI The token URI.
-    function mint(string memory _tokenURI) external onlyOwner{
+    function mint(string memory _tokenURI, uint _tokenDirector) external onlyOwner{
         uint tokenId = totalSupply() +1;
         _safeMint(owner(), tokenId);
 
         require(_exists(tokenId), "Movie: token generation failed");
         _setTokenURI(tokenId, _tokenURI);
 
-        emit MovieMinted(tokenId);
+        directorMovie[tokenId] = _tokenDirector;
 
+        emit MovieMinted(tokenId);
         _approve(owner(), tokenId);
+    }
+
+    /// @notice Get tokenIdDirector.
+    /// @dev search tokenIdDirector with idTokenMovie
+    /// @param _tokenIdMovie The token id movie.
+    /// @return tokenIdDirector
+    function getIdTokenDirector(uint _tokenIdMovie) public view returns(uint) {
+        return directorMovie[_tokenIdMovie];
     }
 
     // The following functions are overrides required by Solidity.

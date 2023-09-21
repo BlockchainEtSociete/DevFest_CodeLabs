@@ -25,6 +25,10 @@ button{
 .btn-reset{
     background-color: red !important;
 }
+.btn-winner{
+    background-color: green !important;
+    width: 20rem;
+}
 .form-description{
     display: flex;
     justify-content: center;

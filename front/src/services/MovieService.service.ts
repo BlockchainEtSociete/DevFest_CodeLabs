@@ -26,8 +26,11 @@ export const getMovieData = async (tokenId: number, tokenUri: string) => {
         Description: data.attributes[1].value,
         Picture: ipfsGetUrl(data.attributes[2].value),
         Director: {
+            id: data.attributes[3].value,
             Firstname: dataDirector.attributes[0].value,
-            Lastname: dataDirector.attributes[1].value
+            Lastname: dataDirector.attributes[1].value,
+            Picture: dataDirector.attributes[2].value,
+            Address: dataDirector.attributes[3].value
         }
     }
 }

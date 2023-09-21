@@ -30,7 +30,9 @@ const Competition = () => {
                 { !isLoading && competitions && Object.keys(competitions).length > 0 && Object.keys(competitions).map((competition: any) => (
                         <CardListCompetition
                             key={competitions[competition].id}
+                            idCompetition={competitions[competition].id}
                             title={competitions[competition].title}
+                            nameAward={competitions[competition].NameAward}
                             picture={competitions[competition].Picture}
                             startDate={competitions[competition].startDate}
                             endDate={competitions[competition].endDate}

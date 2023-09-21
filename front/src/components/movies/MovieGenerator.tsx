@@ -153,7 +153,7 @@ const MovieGenerator = () => {
         // création de l'addresse des meta donnée
         if (ipfsResponse) {
             const tokenURI = 'ipfs://' + ipfsResponse.cid;
-            await mintMovie(tokenURI);
+            await mintMovie(tokenURI, newFilm.TokenIdDirector);
         }
         setMitting(false);
     }
@@ -162,13 +162,13 @@ const MovieGenerator = () => {
      * Fonction qui appel le smart contract afin de minter le token uri dans la blockchain
      * @param tokenURI
      */
-    async function mintMovie(tokenURI: string){
+    async function mintMovie(tokenURI: string, tokenIdDirector: number){
         setMitting(true);
         const signer = await provider?.getSigner();
 
         // création de l'appel du mint
         const contract = new ethers.Contract(contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, signer );
-        const transaction = await contract.mint(tokenURI);
+        const transaction = await contract.mint(tokenURI, tokenIdDirector);
 
         // récupération de l'id du token minté
         await contract.on('*', (event) => {
