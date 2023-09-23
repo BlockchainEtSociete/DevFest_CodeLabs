@@ -1,8 +1,8 @@
 import { AlertColor } from "@mui/material";
 import { useEffect, useState } from "react";
-import { fetchJury, listenToNewJury } from "../../services/JuryService.service";
-import contractsInterface from "../../contracts/contracts";
-import { provider } from "../../provider/providers";
+import { fetchJury, listenToNewJury } from "../../../services/JuryService.service";
+import contractsInterface from "../../../contracts/contracts";
+import { provider } from "../../../provider/providers";
 import { ethers } from "ethers";
 
 export interface CompetitionJuryFormProps {

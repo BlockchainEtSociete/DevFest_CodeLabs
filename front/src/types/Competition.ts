@@ -1,7 +1,8 @@
 export enum TypeCompetitions {
     Actor,
     Director,
-    Movie
+    Movie,
+    None
 }
 
 export enum VotingCompetitionStatus {

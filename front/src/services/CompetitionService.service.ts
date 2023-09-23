@@ -1,11 +1,14 @@
 import { provider } from "../provider/providers";
-import { ContractTransactionReceipt, ethers, EventLog } from "ethers";
+import { ContractTransactionReceipt, ContractTransactionResponse, ethers, EventLog } from "ethers";
 import contractsInterface from "../contracts/contracts";
 import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
+import ipfs from "../components/common/ipfs";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 import { fetchOnePeople } from "./PeopleService.service";
 import { fetchOneMovie } from "./MovieService.service";
 import { Competition, Nominee, TypeCompetitions, VotingCompetitionStatus, CompetitionAndVotingStatus } from "../types/Competition";
+import { AwardMetadata } from "../types/Metadata";
+import { dataUrlToFile } from "./IpfsService.service";
 
 /**
  * Récuperation des data et creation de l'objet movie
@@ -285,5 +288,96 @@ export async function voteOnCompetition(competition: Competition, nominee: Nomin
         return false
     } finally {
         setLoading(false)
+    }
+}
+
+/**
+ * Création d'une compétition
+ * @param title titre de la compétition
+ * @param typeCompetition type de la compétition
+ * @param startDate date de début de la compétition
+ * @param endDate date de fin de la compétition
+ * @param nameAward nom de la récompense de la compétition
+ * @param picture image de la compétition
+ * @returns 
+ */
+export async function createCompetition(title:string, typeCompetition:TypeCompetitions, startDate:number, endDate:number, nameAward:string, picture:string): Promise<number> {
+    // Upload de l'image sur ipfs
+    const pictureFile = await dataUrlToFile(`data:image/*;${picture}`, 'competition.jpg')
+    const ipfsPictureUploadResult = await ipfs.add(pictureFile, {pin: true});
+
+    // Création de l'uri - addresse de l'image uploadé
+    let tokenURI;
+    if (ipfsPictureUploadResult) {
+        tokenURI = await generateNFTMetadataAndUploadToIpfs(`ipfs://${ipfsPictureUploadResult.cid}`, nameAward);
+    } else {
+        throw "Aucune image uploadée sur IPFS"
+    }
+    
+    return await callAddCompetitionContract(title, typeCompetition, startDate, endDate, tokenURI);
+}
+
+/**
+ * Génération des meta données avec enregistrement sur IPFS
+ * @param pictureUri metadate uri vers l'image sur IPFS
+ * @param name metadate name
+ */
+const generateNFTMetadataAndUploadToIpfs = async (pictureUri: string, name: string) => {
+    const nftMetaData: AwardMetadata = {
+        "description": "Movie generated NFT metadata",
+        "external_url": "",
+        "image": pictureUri,
+        "name": "Movie DevFest",
+        "attributes": [
+            {
+                "trait_type": "Name",
+                "value": name
+            },
+            {
+                "trait_type": "Picture",
+                "value": pictureUri
+            }
+        ]
+    }
+    const metadataString = JSON.stringify(nftMetaData);
+
+    const ipfsResponse = await ipfs.add(metadataString, { pin: true });
+    if (ipfsResponse) {
+        return 'ipfs://' + ipfsResponse.cid;
+    } else {
+        throw "Erreur lors de l'écriture des méta données de la compétition sur IPFS"
+    }
+}
+
+
+/**
+ * Fonction qui appel le smart contract afin de créer la compétition
+ * @param tokenURI token IPFS
+ */
+const callAddCompetitionContract = async (title:string, typeCompetition:TypeCompetitions, startDate:number, endDate:number, tokenURI: string): Promise<number> => {
+    const signer = await provider?.getSigner();
+    const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer);
+
+    // création de la compétition
+    const transaction:ContractTransactionResponse = await contract.addCompetition(title, tokenURI, typeCompetition, startDate, endDate);
+
+    // vérification que la transaction c'est bien passé
+    const receipt = await transaction.wait();
+
+    if (receipt && receipt.status == 1) {
+
+        const competitionSessionRegistered = (receipt.logs as EventLog[]).find((log) => log.fragment && log.fragment.name === "CompetitionSessionRegistered")
+
+        if (!competitionSessionRegistered) {
+            console.log("receipt", receipt)
+            throw "Evenement de création attendu"
+        }
+
+        const competitionId = ethers.toNumber(competitionSessionRegistered.args[0]);
+        return competitionId;
+
+    } else {
+        console.log("receipt", receipt)
+        throw "Receipt status incorrect"
     }
 }

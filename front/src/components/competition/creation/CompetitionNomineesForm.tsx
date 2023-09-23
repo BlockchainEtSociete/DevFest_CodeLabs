@@ -1,17 +1,17 @@
-import CardCompetitionSelect from "./CardCompetitionSelect";
+import CardCompetitionSelect from "../CardCompetitionSelect";
 import { AlertColor } from "@mui/material";
-import { fetchPeople } from "../../services/PeopleService.service";
-import contractsInterface from "../../contracts/contracts";
-import { fetchMovie } from "../../services/MovieService.service";
+import { fetchPeople } from "../../../services/PeopleService.service";
+import contractsInterface from "../../../contracts/contracts";
+import { fetchMovie } from "../../../services/MovieService.service";
 import { useEffect, useState } from "react";
-import { provider } from "../../provider/providers";
+import { provider } from "../../../provider/providers";
 import { ethers } from "ethers";
-import { People } from "../../types/People";
+import { TypeCompetitions } from "../../../types/Competition";
 
 export interface CompetitionNomineesFormProps {
     reset: boolean,
     minting: boolean,
-    typeCompetition: number,
+    typeCompetition: TypeCompetitions,
     tokenId: number,
     setMinting: (minting: boolean) => void,
     setOpenNominees: (openNominee: boolean) => void,

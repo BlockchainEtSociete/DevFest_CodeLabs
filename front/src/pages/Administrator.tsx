@@ -1,7 +1,7 @@
 import {useState, useSyncExternalStore} from "react";
 import PeopleGenerator from "../components/peoples/PeopleGenerator.tsx";
 import MovieGenerator from "../components/movies/MovieGenerator.tsx";
-import CompetitionGenerator from "../components/competition/CompetitionGenerator.tsx";
+import CompetitionGenerator from "../components/competition/creation/CompetitionGenerator.tsx";
 import "../styles/account.css";
 import useConnectedUserContext from '../context/ConnectedUserContextHook.tsx';
 import JuryGenerator from "../components/jurys/JuryGenerator.tsx";
