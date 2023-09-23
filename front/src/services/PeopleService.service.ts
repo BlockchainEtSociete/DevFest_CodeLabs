@@ -15,10 +15,10 @@ export const getPeopleData = async (tokenId: number, tokenUri: string) => {
 
     return {
         id: tokenId,
-        Firstname: data.attributes[0].value,
-        Lastname: data.attributes[1].value,
-        Picture: ipfsGetUrl(data.attributes[2].value),
-        Address: data.attributes[3].value
+        firstname: data.attributes[0].value,
+        lastname: data.attributes[1].value,
+        picture: ipfsGetUrl(data.attributes[2].value),
+        address: data.attributes[3].value
     };
 }
 
