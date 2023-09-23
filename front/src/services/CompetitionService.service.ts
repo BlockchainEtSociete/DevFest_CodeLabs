@@ -381,3 +381,28 @@ const callAddCompetitionContract = async (title:string, typeCompetition:TypeComp
         throw "Receipt status incorrect"
     }
 }
+
+/**
+ * Permet de récupérer le nom d'une compétition et l'image de sa récompense
+ * @param competitionId
+ * @returns 
+ */
+export const getCompetitionImageAndAwardName = async (competitionId: number): Promise<{image:Uint8Array, awardName:string}> => {
+    const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider);
+    const competition: Competition = await contract.getCompetition(competitionId);
+
+    if (competition) {
+        const metadataString = await ipfsGetContent(competition.tokenURI)
+
+        const metadata = JSON.parse(uint8ArrayToString(metadataString, 'utf8'))
+        const awardName = metadata.attributes[0].value
+        const image = await ipfsGetContent(metadata.attributes[1].value)
+        
+        return {
+            image,
+            awardName
+        }
+    } else {
+        throw `La compétition ${competitionId} n'existe pas`;
+    }
+}

@@ -31,6 +31,7 @@ const CompetitionGenerator = () => {
      */
     const resetForm = () => {
         setReset(true);
+        setCompetitionId(0)
         setOpenCompetitionCreationForm(true);
         setOpenNominees(false);
         setOpenJury(false);
@@ -87,9 +88,9 @@ const CompetitionGenerator = () => {
                     setSeverity={setSeverity} />
             </section>
 
-            <button className="btn-reset" onClick={resetForm}>Fin de la création de la compétition </button>
+            <button className="btn-reset" onClick={resetForm}>Fin de la création de la compétition</button>
 
-            {competitionId !== 0 && <CompetitionPreview competitionId={competitionId} />}
+            {competitionId !== 0 && <CompetitionPreview competitionId={competitionId} setOpen={setOpen} setMessage={setMessage} setSeverity={setSeverity} />}
             
             <SnackbarAlert open={open} setOpen={setOpen} message={message} severity={severity} />
         </div>
