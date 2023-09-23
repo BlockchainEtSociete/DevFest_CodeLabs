@@ -2,22 +2,24 @@ import PeopleCard from "../components/peoples/PeopleCard";
 import {useEffect, useState} from "react";
 import contractsInterface from "../contracts/contracts";
 import {fetchPeople, listenToNewPeople} from "../services/PeopleService.service";
+import { People } from "../types/People";
 
 const Director = () => {
     const [directors, setDirectors]: any = useState({});
-    const [isLoading, setLoading] = useState(false);
+    const [isLoading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
-        const addToDirectors = async (people: any) => {
+        const addToDirectors = async (people: People) => {
             if (!directors[people.id]) {
                 directors[people.id] = people;
                 setDirectors(directors);
             }
         }
 
-        (async () => {
+       (async () => {
             setLoading(true)
-            await fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors);
+            const listDirectors = await fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi);
+            listDirectors?.forEach((actor: People) => addToDirectors(actor));
             await listenToNewPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors);
             setLoading(false)
         })();
@@ -30,9 +32,9 @@ const Director = () => {
                 {!isLoading && directors && Object.keys(directors).length > 0 && Object.keys(directors).map((director: any) => (
                     <PeopleCard
                         key={directors[director].id}
-                        Firstname={directors[director].Firstname}
-                        Lastname={directors[director].Lastname}
-                        Picture={directors[director].Picture}
+                        firstname={directors[director].firstname}
+                        lastname={directors[director].lastname}
+                        picture={directors[director].picture}
                     />
                 ))}
             </section>

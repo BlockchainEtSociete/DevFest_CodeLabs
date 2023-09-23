@@ -39,7 +39,7 @@ function CardListCompetition({idCompetition, title, nameAward, picture, startDat
                     { nominees.map((nominee: any) => {
                         let info = ''
                         if (typeCompetition == TypeCompetitions.Actor || typeCompetition == TypeCompetitions.Director) {
-                            info = `${nominee.nominee.Firstname} ${nominee.nominee.Lastname}`
+                            info = `${nominee.nominee.firstname} ${nominee.nominee.lastname}`
                         }
                         else {
                             info = nominee.nominee.title
@@ -48,8 +48,8 @@ function CardListCompetition({idCompetition, title, nameAward, picture, startDat
                         return (
                             <div key={nominee.nominee.id}>
                                 <CardCompetitionSelect
-                                    Info={info}
-                                    Picture={nominee.nominee.Picture}
+                                    info={info}
+                                    picture={nominee.nominee.picture}
                                 />
                             </div>
                         )})

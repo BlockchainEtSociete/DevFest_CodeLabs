@@ -2,17 +2,17 @@ import { provider } from "../provider/providers.ts";
 import { ethers, EventLog } from "ethers";
 import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs.ts";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
+import { People } from "../types/People";
 
 /**
  * Récuperation des data et creation de l'objet people
  * @param tokenId
  * @param tokenUri
  */
-export const getPeopleData = async (tokenId: number, tokenUri: string) => {
+export const getPeopleData = async (tokenId: number, tokenUri: string): Promise<People> => {
     // parse des données récupérées en object
     const metadataString = await ipfsGetContent(tokenUri);
     const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'));
-
     return {
         id: tokenId,
         firstname: data.attributes[0].value,
@@ -30,7 +30,7 @@ export const getPeopleData = async (tokenId: number, tokenUri: string) => {
  * @param setLoading
  * @param addToPeopleList
  */
-export const fetchPeople = async (eventType: string, contractAddress: string, contractAbi: any, addToPeopleList: Function) => {
+export const fetchPeople = async (eventType: string, contractAddress: string, contractAbi: any): Promise<People[] | undefined> => {
     if (provider) {
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
@@ -38,6 +38,7 @@ export const fetchPeople = async (eventType: string, contractAddress: string, co
         const filter = contract.filters[eventType];
         // récupération des evenements en fonction du filtre
         const events = await contract.queryFilter(filter, 0);
+        let listActor: People[] = [];
         try {
             for (const event of events) {
                 let tokenUri: string = '';
@@ -47,13 +48,14 @@ export const fetchPeople = async (eventType: string, contractAddress: string, co
                 tokenUri = await contract.tokenURI(id);
 
                 if (tokenUri) {
-                    await addToPeopleList(await getPeopleData(id, tokenUri));
+                     listActor.push(await getPeopleData(id, tokenUri));
                 }
             }
         } catch (err) {
             console.log(err);
-            return false;
+            return undefined;
         }
+        return listActor;
     }
 }
 
@@ -70,16 +72,13 @@ export const listenToNewPeople = async (eventType: string, contractAddress: stri
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
 
         await contract.on(eventType, async (event: any) => {
-            let tokenUri: string = '';
-            const id = ethers.toNumber(event.args[0]);
+            const id = ethers.toNumber(event);
             // récupération du tokenURI, url des metadonnée du token
-            tokenUri = await contract.tokenURI(id);
-
+            const tokenUri = await contract.tokenURI(id);
             if (tokenUri) {
-                await addToPeopleList(await getPeopleData(id, tokenUri));
+                addToPeopleList(await getPeopleData(id, tokenUri));
             }
         });
-
     }
 }
 
@@ -88,23 +87,21 @@ export const listenToNewPeople = async (eventType: string, contractAddress: stri
  * @param contractAddress
  * @param contractAbi
  * @param tokenId
- * @param setLoading
  */
-export const fetchOnePeople = async (contractAddress: string, contractAbi: any, tokenId: number) => {
+export const fetchOnePeople = async (contractAddress: string, contractAbi: any, tokenId: number): Promise<People | undefined> => {
     if (provider) {
-        let people;
+        let people: People | undefined;
         // initialisation du contract
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
-
         try {
             // récupération du tokenURI, url des metadonnée du token
             const tokenUri = await contract.tokenURI(tokenId);
-
             if (tokenUri) {
                 people = await getPeopleData(tokenId, tokenUri)
             }
         } catch (err) {
             console.log(err);
+            return undefined;
         }
         return people;
     }

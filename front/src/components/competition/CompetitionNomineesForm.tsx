@@ -6,6 +6,7 @@ import { fetchMovie } from "../../services/MovieService.service";
 import { useEffect, useState } from "react";
 import { provider } from "../../provider/providers";
 import { ethers } from "ethers";
+import { People } from "../../types/People";
 
 export interface CompetitionNomineesFormProps {
     reset: boolean,
@@ -65,9 +66,11 @@ export const CompetitionNomineesForm = ({reset, minting, typeCompetition, tokenI
         setMovies({});
 
         if (type == 0) {
-            await fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, addToActors);
+            const listActors = await fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi);
+            listActors?.forEach((actor: People) => addToActors(actor));
         } else if (type == 1) {
-            await fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors);
+            const listDirectors = await fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi);
+            listDirectors?.forEach((actor: People) => addToDirectors(actor));
         } else {
             await fetchMovie("MovieMinted", contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, addToMovies);
         }
@@ -171,8 +174,8 @@ export const CompetitionNomineesForm = ({reset, minting, typeCompetition, tokenI
                     <div key={actors[actorId].id}
                          onClick={() => addTokenIdNominee(actors[actorId].id)}>
                         <CardCompetitionSelect
-                            Info={actors[actorId].Firstname + " " + actors[actorId].Lastname}
-                            Picture={actors[actorId].Picture}
+                            info={actors[actorId].firstname + " " + actors[actorId].lastname}
+                            picture={actors[actorId].picture}
                         />
                     </div>
                 ))}
@@ -180,8 +183,8 @@ export const CompetitionNomineesForm = ({reset, minting, typeCompetition, tokenI
                     <div key={directors[directorId].id}
                          onClick={() => addTokenIdNominee(directors[directorId].id)}>
                         <CardCompetitionSelect
-                            Info={directors[directorId].Firstname + " " + directors[directorId].Lastname}
-                            Picture={directors[directorId].Picture}
+                            info={directors[directorId].firstname + " " + directors[directorId].lastname}
+                            picture={directors[directorId].picture}
                         />
                     </div>
                 ))}
@@ -189,8 +192,8 @@ export const CompetitionNomineesForm = ({reset, minting, typeCompetition, tokenI
                     <div key={movies[movieId].id}
                          onClick={() => addTokenIdNominee(movies[movieId].id)}>
                         <CardCompetitionSelect
-                            Info={movies[movieId].Title}
-                            Picture={movies[movieId].Picture}
+                            info={movies[movieId].Title}
+                            picture={movies[movieId].Picture}
                         />
                     </div>
                 ))}

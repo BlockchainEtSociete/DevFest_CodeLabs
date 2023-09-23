@@ -11,19 +11,18 @@ import SnackbarAlert from "../common/SnackbarAlert";
 
 const PeopleGenerator = () => {
     const [mitting, setMitting] = useState(false);
-
     const [open, setOpen] = useState(false)
     const [message, setMessage] = useState('')
     const [severity, setSeverity] = useState<AlertColor | undefined>('success')
 
     const [type, setType]: any = useState(1);
-    const [Lastname, setLastname]: any = useState('');
-    const [Firstname, setFirstname]: any = useState('');
-    const [Picture, setPicture]: any = useState('');
+    const [lastname, setLastname] = useState('');
+    const [firstname, setFirstname] = useState('');
+    const [picture, setPicture] = useState('');
     const [, setFile] = useState(null);
-    const [Address, setAddress]: any = useState('');
+    const [address, setAddress] = useState('');
 
-    const [tokenId, setTokenId]: any = useState(0);
+    const [tokenId, setTokenId] = useState(0);
 
     /**
      * fonction qui Mint le token uri dans la blockchain
@@ -45,7 +44,7 @@ const PeopleGenerator = () => {
         }
 
         // récuperation de l'id du token minté
-        await contract.on('*', (event) => {
+        await contract.on('*', (event: any) => {
             if(event.eventName === 'ActorMinted' || event.eventName === 'DirectorMinted'){
                 const id = ethers.toNumber(event.args[0]);
                 setTokenId(id);
@@ -92,28 +91,28 @@ const PeopleGenerator = () => {
      * */
     const verifyForm = async () => {
         // Controle des champs
-        if (!Firstname || Firstname.length === 0) {
+        if (!firstname || firstname.length === 0) {
             setMitting(false);
             setMessage(`Invalide Firstname`)
             setSeverity('error')
             setOpen(true)
             return false
         }
-        if (!Lastname || Lastname.length === 0) {
+        if (!lastname || lastname.length === 0) {
             setMitting(false);
             setMessage(`Invalide Lastname`)
             setSeverity('error')
             setOpen(true)
             return false;
         }
-        if (!Picture) {
+        if (!picture) {
             setMitting(false);
             setMessage(`Invalide Picture`)
             setSeverity('error')
             setOpen(true)
             return false;
         }
-        if (!Address || Address.length === 0 || !ethers.isAddress(Address)) {
+        if (!address || address.length === 0 || !ethers.isAddress(address)) {
             setMitting(false);
             setMessage(`Invalide Address wallet`)
             setSeverity('error')
@@ -123,14 +122,14 @@ const PeopleGenerator = () => {
 
         // Création de l'acteur
         const newActorInfo = {
-            Firstname,
-            Lastname,
-            Picture,
-            Address
+            firstname,
+            lastname,
+            picture,
+            address
         }
 
         // Upload de l'image sur ipfs
-        const PictureFile = await dataUrlToFile(`data:image/*;${newActorInfo.Picture}`)
+        const PictureFile = await dataUrlToFile(`data:image/*;${newActorInfo.picture}`)
         const ipfsPictureUploadResult = await ipfs.add(PictureFile, {pin: true}).catch((err: Error) => {
             setMessage(`IPFS: ${err.message}`)
             setSeverity('error')
@@ -159,11 +158,11 @@ const PeopleGenerator = () => {
             "attributes": [
                 {
                     "trait_type": "Firstname",
-                    "value": newActorInfo.Firstname
+                    "value": newActorInfo.firstname
                 },
                 {
                     "trait_type": "Lastname",
-                    "value": newActorInfo.Lastname
+                    "value": newActorInfo.lastname
                 },
                 {
                     "trait_type": "Picture",
@@ -171,7 +170,7 @@ const PeopleGenerator = () => {
                 },
                 {
                     "trait_type": "Address",
-                    "value": newActorInfo.Address
+                    "value": newActorInfo.address
                 }
             ]
         }
@@ -245,20 +244,20 @@ const PeopleGenerator = () => {
                 <div className="form-ligne">
                     <label>
                         Prénom :
-                        <input name="Firstname" onChange={updateFirstname} value={Firstname}/>
+                        <input name="Firstname" onChange={updateFirstname} value={firstname}/>
                     </label>
                 </div>
                 <div className="form-ligne">
                     <label>
                         Nom :
-                        <input name="Lastname" onChange={updateLastname} value={Lastname}/>
+                        <input name="Lastname" onChange={updateLastname} value={lastname}/>
                     </label>
                 </div>
                 <div className="form-ligne">
                     <label>
                         Photo :
                         <div>
-                            <img src={Picture} style={{width: '200px'}}/>
+                            <img src={picture} style={{width: '200px'}}/>
                         </div>
                         <input name="Picture" type="file" onChange={selectedPhoto}/>
                     </label>
@@ -267,7 +266,7 @@ const PeopleGenerator = () => {
                     <label>
                         Addresse wallet :
                         <input name="Address" onChange={updateAddress}
-                               value={Address}/>
+                               value={address}/>
                     </label>
                 </div>
                 <div className="form-ligne">

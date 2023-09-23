@@ -112,7 +112,7 @@ export const listenToNewCompetition = async (eventType: string, contractAddress:
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
 
         await contract.on(eventType, async (event: any) => {
-            const id = ethers.toNumber(event.args[0]);
+            const id = ethers.toNumber(event);
 
             await addToCompetitions(await getCompetitionData(id, contract));
         });
