@@ -1,8 +1,9 @@
 import { provider } from "../provider/providers.ts";
 import { ethers, EventLog } from "ethers";
+import contractsInterface from "../contracts/contracts";
 import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs.ts";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
-import { People } from "../types/People";
+import { Actor, Director, People } from "../types/People.ts";
 
 /**
  * Récuperation des data et creation de l'objet people
@@ -105,4 +106,68 @@ export const fetchOnePeople = async (contractAddress: string, contractAbi: any, 
         }
         return people;
     }
+}
+
+enum PeopleType {
+    Actor,
+    Director
+}
+
+/**
+ * TODO refacto avec fetchPeople
+ * Récupère la liste des acteurs ou réalisateurs mintés
+ * @returns liste de people
+ */
+const fetchAllPeople = async (peopleType: PeopleType): Promise<People[]> => {
+    const actors:People[] = [];
+    if (provider) {
+        let contract, filter;
+        // Récupération des acteurs par événement
+        if (peopleType === PeopleType.Actor) {
+            contract = new ethers.Contract(contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, provider);
+            filter = contract.filters.ActorMinted;
+        } else if (peopleType === PeopleType.Director) {
+            contract = new ethers.Contract(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, provider);
+            filter = contract.filters.DirectorMinted;
+        } else {
+            throw "PeopleType non géré"
+        }
+
+        const events = await contract?.queryFilter(filter, 0) as EventLog[];
+
+        try {
+            for (const event of events) {
+                // récupération de l'id du token parsé car initialement on le recoit en bigNumber
+                const id = ethers.toNumber((event as EventLog).args[0]);
+                // récupération du tokenURI, url des metadonnée du token
+                const tokenUri = await contract?.tokenURI(id);
+
+                if (tokenUri) {
+                    actors.push(await getPeopleData(id, tokenUri));
+                }
+            }
+        } catch (err) {
+            const msg = "Erreur lors de la récupération des acteurs";
+            console.log(msg, err);
+            throw msg;
+        }
+    }
+
+    return actors;
+}
+
+/**
+ * Récupère la liste des acteurs mintés
+ * @returns la liste de tous les acteurs
+ */
+export const fetchActors = async (): Promise<Actor[]> => {
+    return await fetchAllPeople(PeopleType.Actor);
+}
+
+/**
+ * Récupère la liste des réalisateurs mintés
+ * @returns la liste de tous les réalisateurs
+ */
+export const fetchDirectors = async (): Promise<Director[]> => {
+    return await fetchAllPeople(PeopleType.Director);
 }

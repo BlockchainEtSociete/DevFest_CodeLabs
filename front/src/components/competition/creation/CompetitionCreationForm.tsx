@@ -86,6 +86,10 @@ export const CompetitionCreationForm = ({ setOpen, setMessage, setSeverity, onCo
             setMessage("Minting success");
             setSeverity("success");
             setOpen(true);
+            setTimeout(
+                function () {
+                    setOpen(false)
+                }, 5000);
         } catch (e) {
             const msg = "Erreur lors de la création de la compétition";
             console.log(msg, e);

@@ -4,8 +4,8 @@ import contractsInterface from "../contracts/contracts";
 import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import ipfs from "../components/common/ipfs";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
-import { fetchOnePeople } from "./PeopleService.service";
-import { fetchOneMovie } from "./MovieService.service";
+import { fetchActors, fetchDirectors, fetchOnePeople } from "./PeopleService.service";
+import { fetchAllMovies, fetchOneMovie } from "./MovieService.service";
 import { Competition, Nominee, TypeCompetitions, VotingCompetitionStatus, CompetitionAndVotingStatus } from "../types/Competition";
 import { AwardMetadata } from "../types/Metadata";
 import { dataUrlToFile } from "./IpfsService.service";
@@ -405,4 +405,72 @@ export const getCompetitionImageAndAwardName = async (competitionId: number): Pr
     } else {
         throw `La compétition ${competitionId} n'existe pas`;
     }
+}
+
+/**
+ * Rajoute les infos des nominés éligibles à l'ajout sur une compétition
+ * @param typeCompetition type de compétition
+ */
+export const fetchEligibleNomineesByTypeCompetition = async (typeCompetition: TypeCompetitions): Promise<Nominee[]> => {
+    const nominees: Nominee[] = []
+    
+    try {
+        if (typeCompetition === TypeCompetitions.Actor) {
+            const actors = await fetchActors();
+            for (const { id, Firstname, Lastname, Picture } of actors) {
+                const title = `${Firstname} ${Lastname}`;
+                const pictureUrl = Picture || '';
+
+                nominees.push({ tokenId: id, title, pictureUrl, id: -1 });
+            }
+        } else if (typeCompetition === TypeCompetitions.Director) {
+            const directors = await fetchDirectors();
+            for (const { id, Firstname, Lastname, Picture } of directors) {
+                const title = `${Firstname} ${Lastname}`;
+                const pictureUrl = Picture || '';
+
+                nominees.push({ tokenId: id, title, pictureUrl, id: -1 });
+            }
+        } else {
+            // Movie
+            const movies = await fetchAllMovies()
+            for (const { id, Title, Picture } of movies) {
+                const title = Title;
+                const pictureUrl = Picture || '';
+
+                nominees.push({ tokenId: id, title, pictureUrl, id: -1 });
+            }
+        }
+    } catch (e) {
+        const msg = "Erreur lors de la récupération des nominés";
+        console.log("Erreur lors de la récupération des nominés", e)
+        throw msg
+    }
+    return nominees;
+}
+
+/**
+ * Permet d'ajouter les nominés à une compétitions
+ * @param competitionId id de la compétition
+ * @param nomineesTokenIds token id des nominés
+ * @returns 
+ */
+export const addNomineesToCompetition = async (competitionId: number, nomineesTokenIds: number[]): Promise<undefined> => {
+    const signer = await provider?.getSigner();
+    const competitionsContract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer);
+    
+    for (const nomineeTokenId of nomineesTokenIds) {        
+        try {
+            const receipt:ContractTransactionReceipt = await (await competitionsContract.addNomineeCompetition(competitionId, nomineeTokenId)).wait();
+            if (receipt.status !== 1) {
+                throw `Mauvais status de transaction [${receipt.status}]`
+            }
+        } catch (e) {
+            const msg = `Erreur lors de la l'ajout du nominé [${nomineeTokenId}] à la compétition [${competitionId}]`;
+            console.log(msg, e);
+            throw msg;
+        }
+    }
+
+    return;
 }

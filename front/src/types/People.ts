@@ -5,3 +5,7 @@ export interface People {
     picture: string;
     address: string;
 }
+
+export interface Actor extends People {}
+
+export interface Director extends People {}

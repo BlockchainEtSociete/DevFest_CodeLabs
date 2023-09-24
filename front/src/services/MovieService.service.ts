@@ -3,13 +3,14 @@ import { ethers, EventLog } from "ethers";
 import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs.ts";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 import contractsInterface from "../contracts/contracts.ts";
+import { Movie } from "../types/Movie.ts";
 
 /**
  * Récuperation des data et creation de l'objet movie
  * @param tokenId
  * @param tokenUri
  */
-export const getMovieData = async (tokenId: number, tokenUri: string) => {
+export const getMovieData = async (tokenId: number, tokenUri: string): Promise<Movie> => {
     // parse des données récupérées en object
     const metadataString = await ipfsGetContent(tokenUri);
     const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'));
@@ -34,6 +35,7 @@ export const getMovieData = async (tokenId: number, tokenUri: string) => {
         }
     }
 }
+
 /**
  * récuperation de tout les films
  * @param eventType
@@ -120,4 +122,35 @@ export const listenToNewMovie = async (eventType: string, contractAddress: strin
             }
         });
     }
+}
+
+/**
+ * TODO refacto avec fetchMovie
+ * Récupère la liste des acteurs pi d mintés
+ * @returns la liste de tous les acteurs
+ */
+export const fetchAllMovies = async (): Promise<Movie[]> => {
+    const movies:Movie[] = [];
+    if (provider) {
+        // Récupération des films par événement
+        const contract = new ethers.Contract(contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, provider);
+        const filter = contract.filters.MovieMinted;
+        const events = await contract.queryFilter(filter, 0) as EventLog[];
+
+        try {
+            for (const event of events) {
+                // récupération de l'id du token parsé car initialement on le recoit en bigNumber
+                const id = ethers.toNumber((event as EventLog).args[0]);
+                // récupération du tokenURI, url des metadonnée du token
+                const tokenUri = await contract.tokenURI(id);
+
+                if (tokenUri) {
+                    movies.push(await getMovieData(id, tokenUri));
+                }
+            }
+        } catch (err) {
+            console.log(err);
+        }
+    }
+    return movies;
 }

@@ -12,7 +12,7 @@ import { TypeCompetitions } from "../../../types/Competition";
  * @returns 
  */
 const CompetitionGenerator = () => {
-    const [minting, setMinting] = useState(false);
+    const [, setMinting] = useState(false);
     const [competitionId, setCompetitionId] = useState(0);
     const [typeCompetition, setTypeCompetition] = useState(TypeCompetitions.None);
     const [openCompetitionCreationForm, setOpenCompetitionCreationForm] = useState(true);
@@ -40,7 +40,7 @@ const CompetitionGenerator = () => {
     }
 
     /**
-     * Evenement de compétition créée
+     * Evenement compétition créée
      */
     const onCompetitionCreated = (createdCompetitionId: number, typeCompetition: TypeCompetitions) => {
         setCompetitionId(createdCompetitionId);
@@ -48,6 +48,15 @@ const CompetitionGenerator = () => {
         setOpenCompetitionCreationForm(false)
         setOpenNominees(true)
     }
+
+    /**
+     * Evenement nominées ajoutés
+     */
+    const onNomineesAdded = () => {
+        setOpenNominees(false)
+        setOpenJury(true)
+    }
+    
     return (
         <div>
             {isLoading && <CircularProgress />}
@@ -64,19 +73,19 @@ const CompetitionGenerator = () => {
                 </section>
             }
 
-            <section className={(!openNominees ? 'openBlockCompetition' : '')} >
-                <CompetitionNomineesForm
-                    reset={reset}
-                    minting={minting}
-                    typeCompetition={typeCompetition}
-                    tokenId={competitionId}
-                    setMinting={setMinting}
-                    setOpenNominees={setOpenNominees}
-                    setOpenJury={setOpenJury}
-                    setOpen={setOpen}
-                    setMessage={setMessage}
-                    setSeverity={setSeverity} />
-            </section>
+            {openNominees &&
+                <section>
+                    <CompetitionNomineesForm
+                        typeCompetition={typeCompetition}
+                        competitionId={competitionId}
+                        setOpen={setOpen}
+                        setMessage={setMessage}
+                        setSeverity={setSeverity}
+                        setIsLoading={setIsLoading}
+                        isLoading={isLoading}
+                        onNomineesAdded={onNomineesAdded} />
+                </section>
+            }
 
             <section className={(!openJury ? 'openBlockCompetition' : '')}>
                 <CompetitionJuryForm
