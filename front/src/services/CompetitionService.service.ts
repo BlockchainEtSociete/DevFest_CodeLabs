@@ -474,3 +474,30 @@ export const addNomineesToCompetition = async (competitionId: number, nomineesTo
 
     return;
 }
+
+
+/**
+ * Permet d'ajouter les nominés à une compétitions
+ * @param competitionId id de la compétition
+ * @param jurysTokenIds token id des nominés
+ * @returns 
+ */
+export const addJurysToCompetition = async (competitionId: number, jurysTokenIds: number[]): Promise<undefined> => {
+    const signer = await provider?.getSigner();
+    const competitionsContract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer);
+    
+    for (const juryTokenId of jurysTokenIds) {        
+        try {
+            const receipt:ContractTransactionReceipt = await (await competitionsContract.addJuryToCompetition(competitionId, juryTokenId)).wait();
+            if (receipt.status !== 1) {
+                throw `Mauvais status de transaction [${receipt.status}]`
+            }
+        } catch (e) {
+            const msg = `Erreur lors de la l'ajout du jury [${juryTokenId}] à la compétition [${competitionId}]`;
+            console.log(msg, e);
+            throw msg;
+        }
+    }
+
+    return;
+}

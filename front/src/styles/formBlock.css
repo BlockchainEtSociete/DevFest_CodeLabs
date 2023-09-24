@@ -38,12 +38,6 @@ button{
 textarea{
     margin: auto;
 }
-.openBlockCompetition{
-    display: none;
-}
-.blockCompetition{
-    display: flex;
-}
 
 /* MODAL */
 .modal {

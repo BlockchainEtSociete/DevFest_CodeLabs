@@ -1,15 +1,16 @@
 import {ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import {toString as uint8ArrayToString} from "uint8arrays/to-string";
 import {provider} from "../provider/providers";
+import contractsInterface from "../contracts/contracts";
 import {ethers, EventLog} from "ethers";
+import { Jury } from "../types/Jury";
 
 /**
- * Récuperation des data et creation de l'objet jury
+ * Récuperation des données Jury dans IPFS
  * @param tokenId
  * @param tokenUri
  */
-export const getJuryData = async (tokenId: number, tokenUri: string) => {
-    // parse des données récupérées en object
+export const getJuryData = async (tokenId: number, tokenUri: string): Promise<Jury> => {
     const metadataString = await ipfsGetContent(tokenUri);
     const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'));
 
@@ -60,20 +61,48 @@ export const fetchJury = async (eventType: string, contractAddress: string, cont
  * @param eventType
  * @param contractAddress
  * @param contractAbi
- * @param addToJurys
+ * @param onNewJury
  */
-export const listenToNewJury = async (eventType: string, contractAddress: string, contractAbi: any, addToJurys: Function) => {
+export const listenToNewJury = async (onNewJury: (Jury:Jury) => void) => {
+
     if (provider) {
         // initialisation du contract
-        const contract = new ethers.Contract(contractAddress, contractAbi, provider);
+        const contract = new ethers.Contract(contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, provider);
 
-        await contract.on(eventType, async (event: any) => {
+        // TODO gestion stop écoute évènement
+        contract.on("JuryMinted", async (event: EventLog) => {
             const tokenUri: string = event.args[2];
             const id = ethers.toNumber(event.args[1]);
-
-            if (tokenUri) {
-                await addToJurys(await getJuryData(id, tokenUri));
-            }
+            onNewJury(await getJuryData(id, tokenUri));
         });
     }
+}
+
+
+/**
+ * TODO refacto avec fetchJury
+ * 
+ */
+export const fetchAllJuries = async (): Promise<Jury[]> => {
+    const juries:Jury[] = [];
+    if (provider) {
+        const contract = new ethers.Contract(contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, provider);
+        const filter = contract.filters.JuryMinted;
+        const events = await contract.queryFilter(filter, 0) as EventLog[];
+
+        try {
+            for (const event of events) {
+                const id = ethers.toNumber((event as EventLog).args[1]);
+                const tokenUri: string = (event as EventLog).args[2];
+                
+                juries.push(await getJuryData(id, tokenUri));
+            }
+        } catch (err) {
+            const message = "Erreur de lors récupération des jurys";
+            console.log(message, err);
+            throw message;
+        }
+    }
+
+    return juries;
 }

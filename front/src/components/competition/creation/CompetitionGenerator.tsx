@@ -9,34 +9,28 @@ import { TypeCompetitions } from "../../../types/Competition";
 
 /**
  * Composant principal pour la création des compétitions
- * @returns 
+ * @returns JSX
  */
 const CompetitionGenerator = () => {
-    const [, setMinting] = useState(false);
     const [competitionId, setCompetitionId] = useState(0);
     const [typeCompetition, setTypeCompetition] = useState(TypeCompetitions.None);
     const [openCompetitionCreationForm, setOpenCompetitionCreationForm] = useState(true);
-    const [openNominees, setOpenNominees] = useState(false);
-    const [openJury, setOpenJury] = useState(false);
+    const [openNomineesSelection, setOpenNomineesSelection] = useState(false);
+    const [openJurySelection, setOpenJurySelection] = useState(false);
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [open, setOpen] = useState(false)
     const [message, setMessage] = useState('')
     const [severity, setSeverity] = useState<AlertColor | undefined>('success')
 
-    const [reset, setReset] = useState(false);
-
     /**
      * Reset all variables of form
      */
-    const resetForm = () => {
-        setReset(true);
+    const onEndCompetitionCreation = () => {
         setCompetitionId(0)
         setOpenCompetitionCreationForm(true);
-        setOpenNominees(false);
-        setOpenJury(false);
-        setMinting(false);
-        setReset(false);
+        setOpenNomineesSelection(false);
+        setOpenJurySelection(false);
     }
 
     /**
@@ -46,15 +40,22 @@ const CompetitionGenerator = () => {
         setCompetitionId(createdCompetitionId);
         setTypeCompetition(typeCompetition);
         setOpenCompetitionCreationForm(false)
-        setOpenNominees(true)
+        setOpenNomineesSelection(true)
     }
 
     /**
      * Evenement nominées ajoutés
      */
     const onNomineesAdded = () => {
-        setOpenNominees(false)
-        setOpenJury(true)
+        setOpenNomineesSelection(false)
+        setOpenJurySelection(true)
+    }
+
+    /**
+     * Evenement jurys ajoutés
+     */
+    const onJuriesAdded = () => {
+        setOpenJurySelection(false)
     }
     
     return (
@@ -73,7 +74,7 @@ const CompetitionGenerator = () => {
                 </section>
             }
 
-            {openNominees &&
+            {openNomineesSelection &&
                 <section>
                     <CompetitionNomineesForm
                         typeCompetition={typeCompetition}
@@ -87,19 +88,26 @@ const CompetitionGenerator = () => {
                 </section>
             }
 
-            <section className={(!openJury ? 'openBlockCompetition' : '')}>
-                <CompetitionJuryForm
-                    reset={reset}
-                    tokenId={competitionId}
-                    setMinting={setMinting}
-                    setOpen={setOpen}
-                    setMessage={setMessage}
-                    setSeverity={setSeverity} />
-            </section>
+            {openJurySelection &&
+                <section>
+                    <CompetitionJuryForm
+                        competitionId={competitionId}
+                        setOpen={setOpen}
+                        setMessage={setMessage}
+                        setSeverity={setSeverity}
+                        setIsLoading={setIsLoading}
+                        isLoading={isLoading}
+                        onJuriesAdded={onJuriesAdded} />
+                </section>
+            }
 
-            <button className="btn-reset" onClick={resetForm}>Fin de la création de la compétition</button>
+            {!openCompetitionCreationForm && !openNomineesSelection && !openJurySelection &&
+                <button className="btn-reset" onClick={onEndCompetitionCreation}>Fin de la création de la compétition</button>
+            }
 
-            {competitionId !== 0 && <CompetitionPreview competitionId={competitionId} setOpen={setOpen} setMessage={setMessage} setSeverity={setSeverity} />}
+            {competitionId !== 0 &&
+                <CompetitionPreview competitionId={competitionId} setOpen={setOpen} setMessage={setMessage} setSeverity={setSeverity} />
+            }
             
             <SnackbarAlert open={open} setOpen={setOpen} message={message} severity={severity} />
         </div>
