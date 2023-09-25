@@ -58,8 +58,6 @@ export const CompetitionJuryForm = ({competitionId, setOpen, setMessage, setSeve
             await addJurysToCompetition(competitionId, selectedIdsJury);
 
             onJuriesAddedToCompetition()
-            console.log(stopListenNewJuryFunction)
-            stopListenNewJuryFunction()
             setMessage("Minting success")
             setSeverity("success")
             setOpen(true)

@@ -1,5 +1,4 @@
-import { common } from "@mui/material/colors";
-import { TypeCompetitions } from "../../types/Competition";
+import { Nominee, TypeCompetitions } from "../../types/Competition";
 import AwardOfCompetition from "../Award/AwardOfCompetition";
 import CardCompetitionSelect from "./CardCompetitionSelect";
 
@@ -10,15 +9,13 @@ export interface CardListCompetitionProps{
     picture: string,
     startDate: number,
     endDate: number,
-    nominees: any[],
+    nominees: Nominee[],
     typeCompetition: TypeCompetitions
 }
 
 function CardListCompetition({idCompetition, title, nameAward, picture, startDate, endDate, nominees, typeCompetition}: CardListCompetitionProps) {
     const dateDebutCompetition = new Date(startDate * 1000);
     const dateFinCompetition = new Date(endDate * 1000);
-
-    console.log(idCompetition, nominees)
 
     return (
         <div style={{border: '1px solid black', width: '50%', margin: '2rem auto'}}>
@@ -40,24 +37,14 @@ function CardListCompetition({idCompetition, title, nameAward, picture, startDat
                     <h4>Les nominés :</h4>
                     {nominees.length === 0 && <p>Pas de nominés pour cette compétitions !</p>}
 
-                    { nominees.map((nominee: any) => {
-                        let info = ''
-                        if (typeCompetition == TypeCompetitions.Actor || typeCompetition == TypeCompetitions.Director) {
-                            info = `${nominee.nominee.firstname} ${nominee.nominee.lastname}`
-                        }
-                        else {
-                            info = nominee.nominee.title
-                        }
-
-                        return (
-                            <div key={nominee.nominee.id}>
-                                <CardCompetitionSelect
-                                    info={info}
-                                    picture={nominee.nominee.picture}
-                                />
-                            </div>
-                        )})
-                    }
+                    {nominees.map((nominee) => 
+                        <div key={nominee.tokenId}>
+                            <CardCompetitionSelect
+                                info={nominee.title || ''}
+                                picture={nominee.pictureUrl || ''}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

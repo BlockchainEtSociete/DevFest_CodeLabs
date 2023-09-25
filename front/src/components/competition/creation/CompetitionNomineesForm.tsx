@@ -96,7 +96,7 @@ export const CompetitionNomineesForm = ({ typeCompetition, competitionId, setOpe
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }} key={forceRenderedKey}>
                 {
                     nominees.map(({ nominee: { tokenId, pictureUrl, title }, isSelected }) => (
-                        <div key={`${tokenId}`} title={`${isSelected}`} onClick={() => toggleNomineeSelection(tokenId)} style={{ border: '1px solid black', margin: '5px' }}>
+                        <div key={`${tokenId}`} onClick={() => toggleNomineeSelection(tokenId)} style={{ border: '1px solid black', margin: '5px' }}>
                             {isSelected && <CheckCircleOutlineIcon color="info" />}
                             {!isSelected && <HelpOutlineIcon color="warning" />}
                             <CardCompetitionSelect

@@ -8,7 +8,8 @@ export enum TypeCompetitions {
 export enum VotingCompetitionStatus {
     Pending,
     InProgress,
-    Ended
+    Ended,
+    Unknown
 }
 
 export interface Nominee {
@@ -30,6 +31,7 @@ export interface Competition {
     endTime: number;
     nominees: Nominee[];
     winnerCompetition: number;
+    nameAward: string;
 }
 
 export interface CompetitionAndVotingStatus {

@@ -1,5 +1,5 @@
 import { provider } from "../provider/providers";
-import { ContractTransactionReceipt, ContractTransactionResponse, ethers, EventLog } from "ethers";
+import { Contract, ContractTransactionReceipt, ContractTransactionResponse, ethers, EventLog } from "ethers";
 import contractsInterface from "../contracts/contracts";
 import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import ipfs from "../components/common/ipfs";
@@ -11,68 +11,76 @@ import { AwardMetadata } from "../types/Metadata";
 import { dataUrlToFile } from "./IpfsService.service";
 
 /**
- * Récuperation des data et creation de l'objet movie
- * @param tokenId
+ * Récuperation de toutes les données d'une compétition
+ * @param competitionId
  * @param contract
  */
-export const getCompetitionData = async (tokenId: number, contract: any) => {
-    // récupération de la compétition
-    const competition = await contract.getCompetition(tokenId);
+export const getCompetitionData = async (competitionId: number, contract: Contract): Promise<Competition> => {
+    // Récupération de la compétition
+    const competition:Competition = await contract.getCompetition(competitionId);
+    const nominees: Nominee[] = [];
+    const typeCompetitions = ethers.toNumber(competition.typeCompetitions);
 
-    const tokenUri = competition.tokenURI;
+    if (competition.nominees.length > 0) {
+        if (typeCompetitions === TypeCompetitions.Actor) {
+            //actor
+            for (const nominee of competition.nominees) {
+                const actor = await fetchOnePeople(contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, ethers.toNumber(nominee.tokenId));
 
-    // parse des listes
-    const nominees = competition.nominees ? [...competition.nominees] : [];
-    if (tokenUri) {
-        let listNominees: any[] = [];
-
-        if (nominees.length > 0) {
-            if (ethers.toNumber(competition.typeCompetitions) == 0) {
-                //actor
-                for (const nominee of nominees) {
-                    const people = await fetchOnePeople(contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, ethers.toNumber(nominee.tokenId));
-
-                    listNominees.push({
-                        nominee: people,
-                        voteCount: ethers.toNumber(nominee.voteCount)
-                    })
+                if (actor) {
+                    const { id: tokenId, firstname, lastname, picture} = actor;
+                    const title = `${firstname} ${lastname}`;
+                    const pictureUrl = picture || '';
+        
+                    nominees.push({ id: -1, tokenId, voteCount: ethers.toNumber(nominee.voteCount || 0), pictureUrl, title });
                 }
-            } else if (ethers.toNumber(competition.typeCompetitions) == 1) {
-                //director
-                for (const nominee of nominees) {
-                    const people = await fetchOnePeople(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, ethers.toNumber(nominee.tokenId))
-                    listNominees.push({
-                        nominee: people,
-                        voteCount: ethers.toNumber(nominee.voteCount)
-                    })
+            }
+        } else if (typeCompetitions === TypeCompetitions.Director) {
+            //director
+            for (const nominee of competition.nominees) {
+                const director = await fetchOnePeople(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, ethers.toNumber(nominee.tokenId));
+
+                if (director) {
+                    const { id: tokenId, firstname, lastname, picture} = director;
+                    const title = `${firstname} ${lastname}`;
+                    const pictureUrl = picture || '';
+        
+                    nominees.push({ id: -1, tokenId, voteCount: ethers.toNumber(nominee.voteCount || 0), pictureUrl, title });
                 }
-            } else {
-                //movie
-                for (const nominee of nominees) {
-                    const movie = await fetchOneMovie(contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, ethers.toNumber(nominee.tokenId));
-                    listNominees.push({
-                        nominee: movie,
-                        voteCount: ethers.toNumber(nominee.voteCount)
-                    })
+            }
+        } else {
+            //movie
+            for (const nominee of competition.nominees) {
+                const movie = await fetchOneMovie(contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, ethers.toNumber(nominee.tokenId));
+
+                if (movie) {
+                    const { id: tokenId, title, picture} = movie;
+                    const pictureUrl = picture || '';
+        
+                    nominees.push({ id: -1, tokenId, voteCount: ethers.toNumber(nominee.voteCount || 0), pictureUrl, title });
                 }
             }
         }
-
-        // parse des données récupérées en object
-        const metadataString = await ipfsGetContent(tokenUri)
-        const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'))
-
-        return {
-            id: tokenId,
-            title: competition.title,
-            NameAward: data.attributes[0].value,
-            Picture: ipfsGetUrl(data.attributes[1].value),
-            typeCompetition: ethers.toNumber(competition.typeCompetitions),
-            startDate: ethers.toNumber(competition.startTime),
-            endDate: ethers.toNumber(competition.endTime),
-            nominees: listNominees
-        };
     }
+
+    // parse des données récupérées en object
+    const { tokenURI } = competition;
+    const metadataString = await ipfsGetContent(tokenURI)
+    const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'))
+
+    return {
+        id: competitionId,
+        tokenURI,
+        status: VotingCompetitionStatus.Unknown,
+        title: competition.title,
+        nameAward: data.attributes[0].value,
+        pictureUrl: ipfsGetUrl(data.attributes[1].value),
+        typeCompetitions,
+        startTime: ethers.toNumber(competition.startTime),
+        endTime: ethers.toNumber(competition.endTime),
+        nominees,
+        winnerCompetition: ethers.toNumber(competition.winnerCompetition),
+    };
 }
 
 /**
@@ -82,25 +90,25 @@ export const getCompetitionData = async (tokenId: number, contract: any) => {
  * @param contractAbi
  * @param setCompetitions
  */
-export const fetchCompetitions = async (eventType: string, contractAddress: string, contractAbi: any, addToCompetitions: Function) => {
+export const fetchCompetitions = async (): Promise<Competition[]> => {
+    const competitions: Competition[] = [];
     if (provider) {
-        const contract = new ethers.Contract(contractAddress, contractAbi, provider);
-        // création du filtre
-        const filter = contract.filters[eventType];
-        const events = await contract.queryFilter(filter, 0);
+        const competitionsContract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider);
+        const filter = competitionsContract.filters.CompetitionSessionRegistered;
+        const events = await competitionsContract.queryFilter(filter, 0);
 
-        try {
-            for (const event of events) {
-                // récupération de l'id du token parsé car initialement on le recoit en bigNumber
-                const id = ethers.toNumber((event as EventLog).args[0]);
+        for (const event of events) {
+            const competitionId = ethers.toNumber((event as EventLog).args[0]);
+            const competition = await getCompetitionData(competitionId, competitionsContract);
 
-                await addToCompetitions(await getCompetitionData(id, contract));
+            if (competition) {
+                competitions.push(competition);
+            } else {
+                console.log(`Pas de compétition trouvée pour [${competitionId}]`);
             }
-        } catch (err) {
-            console.log(err);
-            return false;
         }
     }
+    return competitions;
 }
 
 /**
@@ -110,16 +118,13 @@ export const fetchCompetitions = async (eventType: string, contractAddress: stri
  * @param contractAbi
  * @param addToCompetitions
  */
-export const listenToNewCompetition = async (eventType: string, contractAddress: string, contractAbi: any, addToCompetitions: Function) => {
-    if (provider) {       // initialisation du contract
-        const contract = new ethers.Contract(contractAddress, contractAbi, provider);
+export const listenToNewCompetition = async (addToCompetitions: Function) => {
+    const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider);
 
-        await contract.on(eventType, async (event: any) => {
-            const id = ethers.toNumber(event);
-
-            await addToCompetitions(await getCompetitionData(id, contract));
-        });
-    }
+    contract.on("CompetitionSessionRegistered", async (event: number) => {
+        const id = ethers.toNumber(event);
+        addToCompetitions(await getCompetitionData(id, contract));
+    });
 }
 
 /**
