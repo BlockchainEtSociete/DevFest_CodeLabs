@@ -33,7 +33,6 @@ contract Movies is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         directorMovie[tokenId] = _tokenDirector;
 
         emit MovieMinted(tokenId);
-        _approve(owner(), tokenId);
     }
 
     /// @notice Get tokenIdDirector.

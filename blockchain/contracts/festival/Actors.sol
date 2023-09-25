@@ -28,8 +28,6 @@ contract Actors is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         _setTokenURI(tokenId, _tokenURI);
 
         emit ActorMinted(tokenId);
-
-        _approve(owner(), tokenId);
     }
 
     // The following functions are overrides required by Solidity.

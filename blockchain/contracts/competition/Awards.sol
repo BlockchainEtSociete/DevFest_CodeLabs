@@ -31,8 +31,6 @@ contract Awards is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
         emit AwardSendWinner(_tokenURI, tokenId, _recipient);
 
-        _approve(owner(), tokenId);
-
         return tokenId;
     }
 

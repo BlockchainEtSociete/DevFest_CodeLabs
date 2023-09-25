@@ -20,7 +20,7 @@ contract Directors is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     /// @notice Mint a new director.
     /// @dev event DirectorMinted when director is minted.
     /// @param _tokenURI The token URI.
-    function mint(string memory _tokenURI) external onlyOwner{
+    function mint(string calldata _tokenURI) external onlyOwner{
         uint tokenId = totalSupply() +1;
         _safeMint(owner(), tokenId);
 
@@ -28,8 +28,6 @@ contract Directors is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         _setTokenURI(tokenId, _tokenURI);
 
         emit DirectorMinted(tokenId);
-
-        _approve(owner(), tokenId);
     }
 
     // The following functions are overrides required by Solidity.
