@@ -2,8 +2,8 @@ import { Director } from './People'
 
 export interface Movie {
     id: number
-    Title: string
-    Description: string
-    Picture: string
-    Director: Director
+    title: string
+    description: string
+    picture: string
+    director: Director
 }

@@ -231,8 +231,8 @@ export async function fetchNomineesOfCompetition(competition: Competition, setLo
                 const nomineeTokenId = ethers.toNumber(nomineeEvent.args[2])
 
                 const actor = await fetchOnePeople(contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, ethers.toNumber(nomineeTokenId));
-                const title = `${actor?.Firstname} ${actor?.Lastname}`;
-                const pictureUrl = actor?.Picture || '';
+                const title = `${actor?.firstname} ${actor?.lastname}`;
+                const pictureUrl = actor?.picture || '';
                 nominees.push({ tokenId: nomineeTokenId, title, pictureUrl, id: nomineeId });
             }
         } else if (competition.typeCompetitions === TypeCompetitions.Director) {
@@ -241,8 +241,8 @@ export async function fetchNomineesOfCompetition(competition: Competition, setLo
                 const nomineeTokenId = ethers.toNumber(nomineeEvent.args[2])
 
                 const director = await fetchOnePeople(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, ethers.toNumber(nomineeTokenId));
-                const title = `${director?.Firstname} ${director?.Lastname}`;
-                const pictureUrl = director?.Picture || '';
+                const title = `${director?.firstname} ${director?.lastname}`;
+                const pictureUrl = director?.picture || '';
                 nominees.push({ tokenId: nomineeTokenId, title, pictureUrl, id: nomineeId });
             }
         } else {
@@ -252,8 +252,8 @@ export async function fetchNomineesOfCompetition(competition: Competition, setLo
                 const nomineeTokenId = ethers.toNumber(nomineeEvent.args[2])
 
                 const movie = await fetchOneMovie(contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, ethers.toNumber(nomineeTokenId));
-                const title = movie?.Title;
-                const pictureUrl = movie?.Picture || '';
+                const title = movie?.title;
+                const pictureUrl = movie?.picture || '';
                 nominees.push({ tokenId: nomineeTokenId, title, pictureUrl, id: nomineeId });
             }
         }
@@ -417,7 +417,7 @@ export const fetchEligibleNomineesByTypeCompetition = async (typeCompetition: Ty
     try {
         if (typeCompetition === TypeCompetitions.Actor) {
             const actors = await fetchActors();
-            for (const { id, Firstname, Lastname, Picture } of actors) {
+            for (const { id, firstname: Firstname, lastname: Lastname, picture: Picture } of actors) {
                 const title = `${Firstname} ${Lastname}`;
                 const pictureUrl = Picture || '';
 
@@ -425,7 +425,7 @@ export const fetchEligibleNomineesByTypeCompetition = async (typeCompetition: Ty
             }
         } else if (typeCompetition === TypeCompetitions.Director) {
             const directors = await fetchDirectors();
-            for (const { id, Firstname, Lastname, Picture } of directors) {
+            for (const { id, firstname: Firstname, lastname: Lastname, picture: Picture } of directors) {
                 const title = `${Firstname} ${Lastname}`;
                 const pictureUrl = Picture || '';
 
@@ -434,7 +434,7 @@ export const fetchEligibleNomineesByTypeCompetition = async (typeCompetition: Ty
         } else {
             // Movie
             const movies = await fetchAllMovies()
-            for (const { id, Title, Picture } of movies) {
+            for (const { id, title: Title, picture: Picture } of movies) {
                 const title = Title;
                 const pictureUrl = Picture || '';
 
