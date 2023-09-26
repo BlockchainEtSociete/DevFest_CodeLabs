@@ -11,6 +11,13 @@ import { AwardMetadata } from "../types/Metadata";
 import { dataUrlToFile } from "./IpfsService.service";
 
 /**
+ * Evenements émits par le contrat Competition
+ */
+const CompetitionContractEvents = {
+    NEW_COMPETITION : "CompetitionSessionRegistered"
+}
+
+/**
  * Récuperation de toutes les données d'une compétition
  * @param competitionId
  * @param contract
@@ -94,7 +101,7 @@ export const fetchCompetitions = async (): Promise<Competition[]> => {
     const competitions: Competition[] = [];
     if (provider) {
         const competitionsContract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider);
-        const filter = competitionsContract.filters.CompetitionSessionRegistered;
+        const filter = competitionsContract.filters[CompetitionContractEvents.NEW_COMPETITION];
         const events = await competitionsContract.queryFilter(filter, 0);
 
         for (const event of events) {
@@ -113,18 +120,24 @@ export const fetchCompetitions = async (): Promise<Competition[]> => {
 
 /**
  * Fonction qui ecoute les nouvelles compétitions
- * @param eventType
- * @param contractAddress
- * @param contractAbi
- * @param addToCompetitions
+ * @param newCompetitionCallback callback appelé lorsqu'une nouvelle compétition est créée
  */
-export const listenToNewCompetition = async (addToCompetitions: Function) => {
+export const listenToNewCompetition = async (newCompetitionCallback: (competition: Competition) => void) => {
     const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider);
 
-    contract.on("CompetitionSessionRegistered", async (event: number) => {
-        const id = ethers.toNumber(event);
-        addToCompetitions(await getCompetitionData(id, contract));
+    contract.on(CompetitionContractEvents.NEW_COMPETITION, async (event: number) => {
+        console.log(CompetitionContractEvents.NEW_COMPETITION, event)
+        const competitionId = ethers.toNumber(event);
+        newCompetitionCallback(await getCompetitionData(competitionId, contract));
     });
+}
+
+/**
+ * Fonction stoppe l'écoute des nouvelles compétitions
+ */
+export const stopListenToNewCompetition = () => {
+    const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider);
+    contract.removeAllListeners(CompetitionContractEvents.NEW_COMPETITION);
 }
 
 /**
@@ -197,6 +210,7 @@ export async function fetchCompetitionsOfOneJury(juryId: number, status: VotingC
                         endTime: ethers.toNumber(competition.endTime),
                         nominees: competition.nominees,
                         winnerCompetition: ethers.toNumber(competition.winnerCompetition),
+                        nameAward: ""
                     });
                 } else {
                     console.log(`La compétition ${competitionId} n'est pas encore ouverte`)
@@ -371,7 +385,7 @@ const callAddCompetitionContract = async (title:string, typeCompetition:TypeComp
 
     if (receipt && receipt.status == 1) {
 
-        const competitionSessionRegistered = (receipt.logs as EventLog[]).find((log) => log.fragment && log.fragment.name === "CompetitionSessionRegistered")
+        const competitionSessionRegistered = (receipt.logs as EventLog[]).find((log) => log.fragment && log.fragment.name === CompetitionContractEvents.NEW_COMPETITION)
 
         if (!competitionSessionRegistered) {
             console.log("receipt", receipt)

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchCompetitions, listenToNewCompetition } from "../services/CompetitionService.service";
+import { fetchCompetitions, listenToNewCompetition, stopListenToNewCompetition } from "../services/CompetitionService.service";
 import CardListCompetition from "../components/competition/CardListCompetition";
 import { Competition as CompetitionType } from "../types/Competition";
 import { CircularProgress } from "@mui/material";
@@ -8,24 +8,22 @@ const Competition = () => {
     const [competitions, setCompetitions] = useState<CompetitionType[]>([]);
     const [isLoading, setLoading] = useState(false);
 
-    const addToCompetitions = (competition: CompetitionType) => {
-        competitions.push(competition);
-        setCompetitions([...competitions]);
-    };
+    useEffect(() => {
+        stopListenToNewCompetition()
+        listenToNewCompetition((competition) => setCompetitions([...competitions, competition]));
+        return stopListenToNewCompetition;
+    }, [competitions]);
 
     useEffect(() => {
-
         (async () => {
             setLoading(true)
             try {
                 setCompetitions(await fetchCompetitions());
             } catch (e) {
-                console.log("Erreur lors de la récupération des compétitions", e)
+                console.log("Erreur lors de la récupération des compétitions", e);
             } finally {
                 setLoading(false)
             }
-
-            listenToNewCompetition(addToCompetitions);
         })();
     }, []);
 
