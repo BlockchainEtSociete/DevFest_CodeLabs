@@ -10,7 +10,7 @@ const Competition = () => {
 
     const addToCompetitions = (competition: CompetitionType) => {
         competitions.push(competition);
-        setCompetitions(competitions);
+        setCompetitions([...competitions]);
     };
 
     useEffect(() => {

@@ -28,7 +28,7 @@ export const CompetitionJuryForm = ({competitionId, setOpen, setMessage, setSeve
             // TODO gestion stop écoute évènement
             await listenToNewJury((jury:Jury) => {
                 jurys.push(jury);
-                setJurys(jurys);
+                setJurys([...jurys]);
             });
         })();
     }, []);

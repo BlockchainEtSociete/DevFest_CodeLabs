@@ -23,7 +23,6 @@ export interface CompetitionNomineesFormProps {
 }
 export const CompetitionNomineesForm = ({ typeCompetition, competitionId, setOpen, setMessage, setSeverity, isLoading, setIsLoading, onNomineesAdded }: CompetitionNomineesFormProps) => {
     const [nominees, setNominees] = useState<NomineeSelection[]>([]);
-    const [forceRenderedKey, setForceRenderedKey] = useState<number>(new Date().getTime());
     
     useEffect(() => {
         (async () => {
@@ -48,8 +47,7 @@ export const CompetitionNomineesForm = ({ typeCompetition, competitionId, setOpe
         const indexOfNominee = nominees.findIndex(({ nominee: { tokenId } }) => nomineeTokenId === tokenId);
         nominees[indexOfNominee].isSelected = !nominees[indexOfNominee].isSelected
         
-        setNominees(nominees)
-        setForceRenderedKey(new Date().getTime()) // TODO revoir ça
+        setNominees([...nominees])
     }
 
     /**
@@ -93,7 +91,7 @@ export const CompetitionNomineesForm = ({ typeCompetition, competitionId, setOpe
 
     return (
         <div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }} key={forceRenderedKey}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
                 {
                     nominees.map(({ nominee: { tokenId, pictureUrl, title }, isSelected }) => (
                         <div key={`${tokenId}`} onClick={() => toggleNomineeSelection(tokenId)} style={{ border: '1px solid black', margin: '5px' }}>
