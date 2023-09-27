@@ -22,7 +22,7 @@ contract Awards is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     /// @param _recipient Recipient address.
     /// @param _tokenURI The token URI.
     /// @return the tokenId
-    function mint(address _recipient, string memory _tokenURI) public returns(uint){
+    function mint(address _recipient, string calldata _tokenURI) public returns(uint){
         uint tokenId = totalSupply() + 1;
         _safeMint(_recipient, tokenId);
 

@@ -104,7 +104,7 @@ contract Competitions is Ownable {
     /// @param _typeCompetitions Defines the type of options.
     /// @param _startDate Voting session start date.
     /// @param _endDate End date of voting session.
-    function addCompetition(string memory _title, string memory _tokenURI, TypeCompetitions _typeCompetitions, uint _startDate, uint _endDate) external onlyOwner {
+    function addCompetition(string calldata _title, string calldata _tokenURI, TypeCompetitions _typeCompetitions, uint _startDate, uint _endDate) external onlyOwner {
         require(_startDate > block.timestamp, "Your competition can't be in the past");
         require(_startDate < _endDate, "Your competition end date can't be before the start date");
         require(keccak256(abi.encode(_typeCompetitions)) != keccak256(abi.encode("")), "Your competition must contain type of competition");

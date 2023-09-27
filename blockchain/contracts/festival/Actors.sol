@@ -20,7 +20,7 @@ contract Actors is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     /// @notice Mint a new actor.
     /// @dev event ActorMinted when actor is minted.
     /// @param _tokenURI The token URI.
-    function mint(string memory _tokenURI) external onlyOwner{
+    function mint(string calldata _tokenURI) external onlyOwner{
         uint tokenId = totalSupply() +1;
         _safeMint(owner(), tokenId);
 
