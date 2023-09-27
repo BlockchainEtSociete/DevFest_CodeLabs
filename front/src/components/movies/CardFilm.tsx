@@ -1,29 +1,29 @@
-interface CardFilmProps{
-    Title: string,
-    Description: string,
-    Picture: string,
-    Director: {
-        Firstname: string,
-        Lastname: string
+interface CardFilmProps {
+    title: string,
+    description: string,
+    picture: string,
+    director: {
+        firstname: string,
+        lastname: string
     },
 }
-function CardFilm({Title, Description, Picture, Director}: CardFilmProps){
 
+function CardFilm( { title, description, picture, director }: CardFilmProps ) {
+    const fullname = `${ director.firstname } ${ director.lastname }`;
     return (
-        <div style={{ display: 'flex', padding: 15, justifyContent: 'space-around'}}>
+        <div style={ { display: 'flex', padding: 15, justifyContent: 'space-around' } }>
             <div>
-                <img src={Picture} alt="card" height='400' width='400'/>
+                <img src={ picture } alt={ fullname } height='400' width='400'/>
             </div>
-            <div style={{ width:'40%', textAlign: 'justify'}}>
-                <h4>{Title}</h4>
-                <p>{Description}</p>
-                <div style={{display: 'flex'}}>
-                    <p style={{fontWeight: 'bold', marginRight: '5px'}}>Réalisateur :</p>
-                    <p>{Director.Firstname} {Director.Lastname}</p>
+            <div style={ { width: '40%', textAlign: 'justify' } }>
+                <h4>{ title }</h4>
+                <p>{ description }</p>
+                <div style={ { display: 'flex' } }>
+                    <p style={ { fontWeight: 'bold', marginRight: '5px' } }>Réalisateur :</p>
+                    <p> { fullname }</p>
                 </div>
             </div>
         </div>
     )
 }
-
-export default CardFilm
+export default CardFilm;

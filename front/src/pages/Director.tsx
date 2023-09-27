@@ -1,44 +1,49 @@
 import PeopleCard from "../components/peoples/PeopleCard";
-import {useEffect, useState} from "react";
-import contractsInterface from "../contracts/contracts";
-import {fetchPeople, listenToNewPeople} from "../services/PeopleService.service";
-import { People } from "../types/People";
+import { useEffect, useState } from "react";
+import { fetchDirectors, listenToNewDirector, stopListenToNewDirector } from "../services/PeopleService.service";
+import { Director as DirectorType } from "../types/People";
+import { CircularProgress } from "@mui/material";
 
 const Director = () => {
-    const [directors, setDirectors]: any = useState({});
-    const [isLoading, setLoading] = useState<boolean>(false);
+    const [ directors, setDirectors ] = useState<DirectorType[]>( [] );
+    const [ isLoading, setLoading ] = useState<boolean>( false );
 
-    useEffect(() => {
-        const addToDirectors = async (people: People) => {
-            if (!directors[people.id]) {
-                directors[people.id] = people;
-                setDirectors(directors);
+    useEffect( () => {
+        ( async () => {
+            await stopListenToNewDirector();
+            await listenToNewDirector( ( director ) => setDirectors( [ ...directors, director ] ) );
+        } )();
+    }, [ directors ] )
+
+    useEffect( () => {
+        ( async () => {
+            setLoading( true )
+            try {
+                setDirectors( await fetchDirectors() );
+            } catch ( e ) {
+                console.log( "Erreur lors de la récupération des acteurs", e );
+            } finally {
+                setLoading( false )
             }
-        }
-
-       (async () => {
-            setLoading(true)
-            const listDirectors = await fetchPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi);
-            listDirectors?.forEach((actor: People) => addToDirectors(actor));
-            await listenToNewPeople("DirectorMinted", contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, addToDirectors);
-            setLoading(false)
-        })();
-    }, [directors, setDirectors]);
+            setLoading( false )
+        } )();
+    }, [] );
 
     return (
-        <article>
+        <div>
+            { isLoading && <CircularProgress/> }
             <h2>Les Réalisateurs en compétition du devfest 2023</h2>
-            <section style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap'}}>
-                {!isLoading && directors && Object.keys(directors).length > 0 && Object.keys(directors).map((director: any) => (
+            <section style={ { display: 'flex', justifyContent: 'center', flexWrap: 'wrap' } }>
+                { !isLoading && directors && directors.length > 0 && directors.map( ( director: DirectorType ) => (
                     <PeopleCard
-                        key={directors[director].id}
-                        firstname={directors[director].firstname}
-                        lastname={directors[director].lastname}
-                        picture={directors[director].picture}
+                        key={ director.id }
+                        firstname={ director.firstname }
+                        lastname={ director.lastname }
+                        picture={ director.picture }
                     />
-                ))}
+                ) ) }
             </section>
-        </article>
+        </div>
     )
 }
 export default Director;

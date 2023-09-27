@@ -1,44 +1,49 @@
 import PeopleCard from "../components/peoples/PeopleCard";
-import {useEffect, useState} from "react";
-import contractsInterface from "../contracts/contracts";
-import {fetchPeople, listenToNewPeople} from "../services/PeopleService.service";
-import { People } from "../types/People";
+import { useEffect, useState } from "react";
+import { fetchActors, listenToNewActor, stopListenToNewActor } from "../services/PeopleService.service";
+import { Actor as ActorType } from "../types/People";
+import { CircularProgress } from "@mui/material";
 
 const Actor = () => {
-    const [actors, setActors]: any = useState({});
-    const [isLoading, setLoading] = useState<boolean>(false);
+    const [ actors, setActors ] = useState<ActorType[]>( [] );
+    const [ isLoading, setLoading ] = useState<boolean>( false );
 
-    useEffect(() => {
-        const addToActors = async (people: People) => {
-            if (!actors[people.id]) {
-                actors[people.id] = people;
-                setActors(actors);
+    useEffect( () => {
+        ( async () => {
+            await stopListenToNewActor();
+            await listenToNewActor( ( actor ) => setActors( [ ...actors, actor ] ) );
+        } )();
+    }, [ actors ] )
+
+    useEffect( () => {
+        ( async () => {
+            setLoading( true )
+            try {
+                setActors( await fetchActors() );
+            } catch ( e ) {
+                console.log( "Erreur lors de la récupération des acteurs", e );
+            } finally {
+                setLoading( false )
             }
-        }
-
-        (async () => {
-            setLoading(true)
-            const listActors = await fetchPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi);
-            listActors?.forEach((actor: People) => addToActors(actor));
-            await listenToNewPeople("ActorMinted", contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, addToActors);
-            setLoading(false)
-        })();
-    }, [actors, setActors]);
+            setLoading( false )
+        } )();
+    }, [] );
 
     return (
-        <article>
+        <div>
+            { isLoading && <CircularProgress/> }
             <h2>Les Acteurs en compétition du devfest 2023</h2>
-            <section style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap'}}>
-                {!isLoading && actors && Object.keys(actors).length > 0 && Object.keys(actors).map((actor: any) => (
+            <section style={ { display: 'flex', justifyContent: 'center', flexWrap: 'wrap' } }>
+                { !isLoading && actors && actors.length > 0 && actors.map( ( actor: ActorType ) => (
                     <PeopleCard
-                        key={actors[actor].id}
-                        firstname={actors[actor].firstname}
-                        lastname={actors[actor].lastname}
-                        picture={actors[actor].picture}
+                        key={ actor.id }
+                        firstname={ actor.firstname }
+                        lastname={ actor.lastname }
+                        picture={ actor.picture }
                     />
-                ))}
+                ) ) }
             </section>
-        </article>
+        </div>
     )
 }
 export default Actor;

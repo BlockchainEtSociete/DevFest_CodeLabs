@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Directors is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
     /// @notice Event when token generated
-    event DirectorMinted(uint tokenId);
+    event DirectorMinted(uint tokenId, string tokenUri);
 
     constructor(string memory name, string memory symbol) ERC721(name, symbol){
     }
@@ -27,7 +27,7 @@ contract Directors is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         require(_exists(tokenId), "Director: token generation failed");
         _setTokenURI(tokenId, _tokenURI);
 
-        emit DirectorMinted(tokenId);
+        emit DirectorMinted(tokenId, _tokenURI);
     }
 
     // The following functions are overrides required by Solidity.

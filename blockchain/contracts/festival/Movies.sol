@@ -15,7 +15,7 @@ contract Movies is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     mapping(uint => uint) public directorMovie;
 
     /// @notice Event when token generated
-    event MovieMinted(uint tokenId);
+    event MovieMinted(uint tokenId, string tokenUri);
 
     constructor(string memory name, string memory symbol) ERC721(name, symbol){
     }
@@ -32,7 +32,7 @@ contract Movies is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
         directorMovie[tokenId] = _tokenDirector;
 
-        emit MovieMinted(tokenId);
+        emit MovieMinted(tokenId, _tokenURI);
     }
 
     /// @notice Get tokenIdDirector.

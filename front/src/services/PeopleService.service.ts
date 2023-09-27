@@ -1,86 +1,93 @@
-import { provider } from "../provider/providers.ts";
+import { provider } from "../provider/providers";
 import { ethers, EventLog } from "ethers";
 import contractsInterface from "../contracts/contracts";
-import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs.ts";
+import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
-import { Actor, Director, People } from "../types/People.ts";
+import { Actor, Director, People } from "../types/People";
+
+const actorContract = new ethers.Contract( contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, provider );
+const directorContract = new ethers.Contract( contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, provider );
+const eventActorMinted = 'ActorMinted';
+const eventDirectorMinted = 'DirectorMinted';
+
+enum PeopleType {
+    Actor,
+    Director
+}
+
+/**
+ * Récupère la liste des acteurs mintés
+ * @returns la liste de tous les acteurs
+ */
+export const fetchActors = async (): Promise<Actor[]> => {
+    return await fetchPeoples( PeopleType.Actor );
+}
+
+/**
+ * Récupère la liste des réalisateurs mintés
+ * @returns la liste de tous les réalisateurs
+ */
+export const fetchDirectors = async (): Promise<Director[]> => {
+    return await fetchPeoples( PeopleType.Director );
+}
 
 /**
  * Récuperation des data et creation de l'objet people
  * @param tokenId
  * @param tokenUri
  */
-export const getPeopleData = async (tokenId: number, tokenUri: string): Promise<People> => {
+export const getPeopleData = async ( tokenId: number, tokenUri: string ): Promise<People> => {
     // parse des données récupérées en object
-    const metadataString = await ipfsGetContent(tokenUri);
-    const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'));
+    const metadataString = await ipfsGetContent( tokenUri );
+    const data = JSON.parse( uint8ArrayToString( metadataString, 'utf8' ) );
     return {
         id: tokenId,
         firstname: data.attributes[0].value,
         lastname: data.attributes[1].value,
-        picture: ipfsGetUrl(data.attributes[2].value),
+        picture: ipfsGetUrl( data.attributes[2].value ),
         address: data.attributes[3].value
     };
 }
 
 /**
- * Fonction de récupération des données des acteurs et réalisateurs par event
- * @param eventType
- * @param contractAddress
- * @param contractAbi
- * @param setLoading
- * @param addToPeopleList
+ * Fonction de récupération des données des acteurs et réalisateurs minté par event
+ * @param peopleType
+ * @returns liste de people
  */
-export const fetchPeople = async (eventType: string, contractAddress: string, contractAbi: any): Promise<People[] | undefined> => {
-    if (provider) {
-        // initialisation du contract
-        const contract = new ethers.Contract(contractAddress, contractAbi, provider);
-        // création du filtre
-        const filter = contract.filters[eventType];
-        // récupération des evenements en fonction du filtre
-        const events = await contract.queryFilter(filter, 0);
-        let listActor: People[] = [];
-        try {
-            for (const event of events) {
-                let tokenUri: string = '';
-                // récupération de l'id du token parsé car initialement on le recoit en bigNumber
-                const id = ethers.toNumber((event as EventLog).args[0]);
-                // récupération du tokenURI, url des metadonnée du token
-                tokenUri = await contract.tokenURI(id);
+export const fetchPeoples = async ( peopleType: PeopleType ): Promise<People[]> => {
+    let filter, contract;
 
-                if (tokenUri) {
-                     listActor.push(await getPeopleData(id, tokenUri));
-                }
-            }
-        } catch (err) {
-            console.log(err);
-            return undefined;
-        }
-        return listActor;
+    // initialisation du contract
+    // création du filtre en fonction du type
+    if ( peopleType === PeopleType.Actor ) {
+        contract = actorContract;
+        filter = contract.filters[eventActorMinted];
+    } else if ( peopleType === PeopleType.Director ) {
+        contract = directorContract
+        filter = contract.filters[eventDirectorMinted];
+    } else {
+        throw "PeopleType non géré"
     }
-}
 
-/**
- * Fonction qui ecoute les nouveaux peoples
- * @param eventType
- * @param contractAddress
- * @param contractAbi
- * @param addToPeopleList
- */
-export const listenToNewPeople = async (eventType: string, contractAddress: string, contractAbi: any, addToPeopleList: Function) => {
-    if (provider) {
-        // initialisation du contract
-        const contract = new ethers.Contract(contractAddress, contractAbi, provider);
+    // récupération des evenements en fonction du filtre
+    const events = await contract?.queryFilter( filter, 0 ) as EventLog[];
+    const peoples: People[] = [];
 
-        await contract.on(eventType, async (event: any) => {
-            const id = ethers.toNumber(event);
+    try {
+        for ( const event of events ) {
+            // récupération de l'id du token parsé car initialement on le recoit en bigNumber
+            const id = ethers.toNumber( event.args[0] );
             // récupération du tokenURI, url des metadonnée du token
-            const tokenUri = await contract.tokenURI(id);
-            if (tokenUri) {
-                addToPeopleList(await getPeopleData(id, tokenUri));
-            }
-        });
+            const tokenUri = event.args[1];
+
+            peoples.push( await getPeopleData( id, tokenUri ) );
+        }
+    } catch ( err ) {
+        const msg = "Erreur lors de la récupération des peoples";
+        console.log( msg, err );
+        throw msg;
     }
+    return peoples;
 }
 
 /**
@@ -89,85 +96,58 @@ export const listenToNewPeople = async (eventType: string, contractAddress: stri
  * @param contractAbi
  * @param tokenId
  */
-export const fetchOnePeople = async (contractAddress: string, contractAbi: any, tokenId: number): Promise<People | undefined> => {
-    if (provider) {
-        let people: People | undefined;
+export const fetchOnePeople = async ( contractAddress: string, contractAbi: any, tokenId: number ): Promise<People | undefined> => {
+    if ( provider ) {
         // initialisation du contract
-        const contract = new ethers.Contract(contractAddress, contractAbi, provider);
+        const contract = new ethers.Contract( contractAddress, contractAbi, provider );
+        let people: People | undefined;
         try {
             // récupération du tokenURI, url des metadonnée du token
-            const tokenUri = await contract.tokenURI(tokenId);
-            if (tokenUri) {
-                people = await getPeopleData(tokenId, tokenUri)
+            const tokenUri = await contract.tokenURI( tokenId );
+            if ( tokenUri ) {
+                people = await getPeopleData( tokenId, tokenUri )
             }
-        } catch (err) {
-            console.log(err);
-            return undefined;
+        } catch ( err ) {
+            const msg = "Erreur lors de la récupération du people";
+            console.log( msg, err );
+            throw msg;
         }
         return people;
     }
 }
 
-enum PeopleType {
-    Actor,
-    Director
+/**
+ * Fonction qui ecoute les nouveaux acteurs
+ * @param onNewActor
+ */
+export const listenToNewActor = async ( onNewActor: ( Actor: Actor ) => void ) => {
+    await actorContract.on( eventActorMinted, async ( ...args: Array<unknown> ) => {
+        const [ tokenId, tokenUri ] = args;
+        onNewActor( await getPeopleData( ethers.toNumber( tokenId as number ), tokenUri as string ) )
+    } )
 }
 
 /**
- * TODO refacto avec fetchPeople
- * Récupère la liste des acteurs ou réalisateurs mintés
- * @returns liste de people
+ * Fonction qui ecoute les nouveaux réalisateurs
+ * @param onNewDirector
  */
-const fetchAllPeople = async (peopleType: PeopleType): Promise<People[]> => {
-    const actors:People[] = [];
-    if (provider) {
-        let contract, filter;
-        // Récupération des acteurs par événement
-        if (peopleType === PeopleType.Actor) {
-            contract = new ethers.Contract(contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, provider);
-            filter = contract.filters.ActorMinted;
-        } else if (peopleType === PeopleType.Director) {
-            contract = new ethers.Contract(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, provider);
-            filter = contract.filters.DirectorMinted;
-        } else {
-            throw "PeopleType non géré"
-        }
-
-        const events = await contract?.queryFilter(filter, 0) as EventLog[];
-
-        try {
-            for (const event of events) {
-                // récupération de l'id du token parsé car initialement on le recoit en bigNumber
-                const id = ethers.toNumber((event as EventLog).args[0]);
-                // récupération du tokenURI, url des metadonnée du token
-                const tokenUri = await contract?.tokenURI(id);
-
-                if (tokenUri) {
-                    actors.push(await getPeopleData(id, tokenUri));
-                }
-            }
-        } catch (err) {
-            const msg = "Erreur lors de la récupération des acteurs";
-            console.log(msg, err);
-            throw msg;
-        }
-    }
-
-    return actors;
+export const listenToNewDirector = async ( onNewDirector: ( Director: Director ) => void ) => {
+    await directorContract.on( eventDirectorMinted, async ( ...args: Array<unknown> ) => {
+        const [ tokenId, tokenUri ] = args;
+        onNewDirector( await getPeopleData( ethers.toNumber( tokenId as number ), tokenUri as string ) )
+    } );
 }
 
 /**
- * Récupère la liste des acteurs mintés
- * @returns la liste de tous les acteurs
+ * Stop l'ecoute des nouveaux acteurs
  */
-export const fetchActors = async (): Promise<Actor[]> => {
-    return await fetchAllPeople(PeopleType.Actor);
+export const stopListenToNewActor = async () => {
+    await actorContract.removeAllListeners( eventActorMinted );
 }
 
 /**
- * Récupère la liste des réalisateurs mintés
- * @returns la liste de tous les réalisateurs
+ * Stop l'écoute des nouveaux réalisateurs
  */
-export const fetchDirectors = async (): Promise<Director[]> => {
-    return await fetchAllPeople(PeopleType.Director);
+export const stopListenToNewDirector = async () => {
+    await directorContract.removeAllListeners( eventDirectorMinted );
 }

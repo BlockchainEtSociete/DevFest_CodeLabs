@@ -5,8 +5,14 @@ import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import ipfs from "../components/common/ipfs";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 import { fetchActors, fetchDirectors, fetchOnePeople } from "./PeopleService.service";
-import { fetchAllMovies, fetchOneMovie } from "./MovieService.service";
-import { Competition, Nominee, TypeCompetitions, VotingCompetitionStatus, CompetitionAndVotingStatus } from "../types/Competition";
+import { fetchMovies, fetchOneMovie } from "./MovieService.service";
+import {
+    Competition,
+    Nominee,
+    TypeCompetitions,
+    VotingCompetitionStatus,
+    CompetitionAndVotingStatus
+} from "../types/Competition";
 import { AwardMetadata } from "../types/Metadata";
 import { dataUrlToFile } from "./IpfsService.service";
 
@@ -14,7 +20,7 @@ import { dataUrlToFile } from "./IpfsService.service";
  * Evenements émits par le contrat Competition
  */
 const CompetitionContractEvents = {
-    NEW_COMPETITION : "CompetitionSessionRegistered"
+    NEW_COMPETITION: "CompetitionSessionRegistered"
 }
 
 /**
@@ -22,49 +28,67 @@ const CompetitionContractEvents = {
  * @param competitionId
  * @param contract
  */
-export const getCompetitionData = async (competitionId: number, contract: Contract): Promise<Competition> => {
+export const getCompetitionData = async ( competitionId: number, contract: Contract ): Promise<Competition> => {
     // Récupération de la compétition
-    const competition:Competition = await contract.getCompetition(competitionId);
+    const competition: Competition = await contract.getCompetition( competitionId );
     const nominees: Nominee[] = [];
-    const typeCompetitions = ethers.toNumber(competition.typeCompetitions);
+    const typeCompetitions = ethers.toNumber( competition.typeCompetitions );
 
-    if (competition.nominees.length > 0) {
-        if (typeCompetitions === TypeCompetitions.Actor) {
+    if ( competition.nominees.length > 0 ) {
+        if ( typeCompetitions === TypeCompetitions.Actor ) {
             //actor
-            for (const nominee of competition.nominees) {
-                const actor = await fetchOnePeople(contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, ethers.toNumber(nominee.tokenId));
+            for ( const nominee of competition.nominees ) {
+                const actor = await fetchOnePeople( contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, ethers.toNumber( nominee.tokenId ) );
 
-                if (actor) {
-                    const { id: tokenId, firstname, lastname, picture} = actor;
-                    const title = `${firstname} ${lastname}`;
+                if ( actor ) {
+                    const { id: tokenId, firstname, lastname, picture } = actor;
+                    const title = `${ firstname } ${ lastname }`;
                     const pictureUrl = picture || '';
-        
-                    nominees.push({ id: -1, tokenId, voteCount: ethers.toNumber(nominee.voteCount || 0), pictureUrl, title });
+
+                    nominees.push( {
+                        id: -1,
+                        tokenId,
+                        voteCount: ethers.toNumber( nominee.voteCount || 0 ),
+                        pictureUrl,
+                        title
+                    } );
                 }
             }
-        } else if (typeCompetitions === TypeCompetitions.Director) {
+        } else if ( typeCompetitions === TypeCompetitions.Director ) {
             //director
-            for (const nominee of competition.nominees) {
-                const director = await fetchOnePeople(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, ethers.toNumber(nominee.tokenId));
+            for ( const nominee of competition.nominees ) {
+                const director = await fetchOnePeople( contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, ethers.toNumber( nominee.tokenId ) );
 
-                if (director) {
-                    const { id: tokenId, firstname, lastname, picture} = director;
-                    const title = `${firstname} ${lastname}`;
+                if ( director ) {
+                    const { id: tokenId, firstname, lastname, picture } = director;
+                    const title = `${ firstname } ${ lastname }`;
                     const pictureUrl = picture || '';
-        
-                    nominees.push({ id: -1, tokenId, voteCount: ethers.toNumber(nominee.voteCount || 0), pictureUrl, title });
+
+                    nominees.push( {
+                        id: -1,
+                        tokenId,
+                        voteCount: ethers.toNumber( nominee.voteCount || 0 ),
+                        pictureUrl,
+                        title
+                    } );
                 }
             }
         } else {
             //movie
-            for (const nominee of competition.nominees) {
-                const movie = await fetchOneMovie(contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, ethers.toNumber(nominee.tokenId));
+            for ( const nominee of competition.nominees ) {
+                const movie = await fetchOneMovie( ethers.toNumber( nominee.tokenId ) );
 
-                if (movie) {
-                    const { id: tokenId, title, picture} = movie;
+                if ( movie ) {
+                    const { id: tokenId, title, picture } = movie;
                     const pictureUrl = picture || '';
-        
-                    nominees.push({ id: -1, tokenId, voteCount: ethers.toNumber(nominee.voteCount || 0), pictureUrl, title });
+
+                    nominees.push( {
+                        id: -1,
+                        tokenId,
+                        voteCount: ethers.toNumber( nominee.voteCount || 0 ),
+                        pictureUrl,
+                        title
+                    } );
                 }
             }
         }
@@ -72,8 +96,8 @@ export const getCompetitionData = async (competitionId: number, contract: Contra
 
     // parse des données récupérées en object
     const { tokenURI } = competition;
-    const metadataString = await ipfsGetContent(tokenURI)
-    const data = JSON.parse(uint8ArrayToString(metadataString, 'utf8'))
+    const metadataString = await ipfsGetContent( tokenURI )
+    const data = JSON.parse( uint8ArrayToString( metadataString, 'utf8' ) )
 
     return {
         id: competitionId,
@@ -81,12 +105,12 @@ export const getCompetitionData = async (competitionId: number, contract: Contra
         status: VotingCompetitionStatus.Unknown,
         title: competition.title,
         nameAward: data.attributes[0].value,
-        pictureUrl: ipfsGetUrl(data.attributes[1].value),
+        pictureUrl: ipfsGetUrl( data.attributes[1].value ),
         typeCompetitions,
-        startTime: ethers.toNumber(competition.startTime),
-        endTime: ethers.toNumber(competition.endTime),
+        startTime: ethers.toNumber( competition.startTime ),
+        endTime: ethers.toNumber( competition.endTime ),
         nominees,
-        winnerCompetition: ethers.toNumber(competition.winnerCompetition),
+        winnerCompetition: ethers.toNumber( competition.winnerCompetition ),
     };
 }
 
@@ -99,19 +123,19 @@ export const getCompetitionData = async (competitionId: number, contract: Contra
  */
 export const fetchCompetitions = async (): Promise<Competition[]> => {
     const competitions: Competition[] = [];
-    if (provider) {
-        const competitionsContract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider);
+    if ( provider ) {
+        const competitionsContract = new ethers.Contract( contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider );
         const filter = competitionsContract.filters[CompetitionContractEvents.NEW_COMPETITION];
-        const events = await competitionsContract.queryFilter(filter, 0);
+        const events = await competitionsContract.queryFilter( filter, 0 );
 
-        for (const event of events) {
-            const competitionId = ethers.toNumber((event as EventLog).args[0]);
-            const competition = await getCompetitionData(competitionId, competitionsContract);
+        for ( const event of events ) {
+            const competitionId = ethers.toNumber( ( event as EventLog ).args[0] );
+            const competition = await getCompetitionData( competitionId, competitionsContract );
 
-            if (competition) {
-                competitions.push(competition);
+            if ( competition ) {
+                competitions.push( competition );
             } else {
-                console.log(`Pas de compétition trouvée pour [${competitionId}]`);
+                console.log( `Pas de compétition trouvée pour [${ competitionId }]` );
             }
         }
     }
@@ -122,21 +146,21 @@ export const fetchCompetitions = async (): Promise<Competition[]> => {
  * Fonction qui ecoute les nouvelles compétitions
  * @param newCompetitionCallback callback appelé lorsqu'une nouvelle compétition est créée
  */
-export const listenToNewCompetition = async (newCompetitionCallback: (competition: Competition) => void) => {
-    const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider);
+export const listenToNewCompetition = async ( newCompetitionCallback: ( competition: Competition ) => void ) => {
+    const contract = new ethers.Contract( contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider );
 
-    contract.on(CompetitionContractEvents.NEW_COMPETITION, async (event: number) => {
-        const competitionId = ethers.toNumber(event);
-        newCompetitionCallback(await getCompetitionData(competitionId, contract));
-    });
+    contract.on( CompetitionContractEvents.NEW_COMPETITION, async ( event: number ) => {
+        const competitionId = ethers.toNumber( event );
+        newCompetitionCallback( await getCompetitionData( competitionId, contract ) );
+    } );
 }
 
 /**
  * Fonction stoppe l'écoute des nouvelles compétitions
  */
 export const stopListenToNewCompetition = () => {
-    const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider);
-    contract.removeAllListeners(CompetitionContractEvents.NEW_COMPETITION);
+    const contract = new ethers.Contract( contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider );
+    contract.removeAllListeners( CompetitionContractEvents.NEW_COMPETITION );
 }
 
 /**
@@ -148,25 +172,25 @@ export const stopListenToNewCompetition = () => {
  * @param setIdsCompetition
  * @param setIdsJurys
  */
-export const fetchIdsByFilter = async (competitionId: number | null, juryId: number | null, contractAddress: string, contractAbi: any, setIdsCompetition: Function, setIdsJurys: Function) => {
-    if (provider) {
-        const contract = new ethers.Contract(contractAddress, contractAbi, provider);
-        const filter = contract.filters.JuryAddedToCompetition(competitionId, juryId);
+export const fetchIdsByFilter = async ( competitionId: number | null, juryId: number | null, contractAddress: string, contractAbi: any, setIdsCompetition: Function, setIdsJurys: Function ) => {
+    if ( provider ) {
+        const contract = new ethers.Contract( contractAddress, contractAbi, provider );
+        const filter = contract.filters.JuryAddedToCompetition( competitionId, juryId );
 
         try {
-            const events = await contract.queryFilter(filter, 0);
+            const events = await contract.queryFilter( filter, 0 );
             const idsCompetition: any[] = []
             const idsJurys: any[] = [];
 
-            for (const event of events) {
-                !idsCompetition.includes(ethers.toNumber((event as EventLog).args[0])) ? idsCompetition.push(ethers.toNumber((event as EventLog).args[0])) : '';
-                !idsJurys.includes(ethers.toNumber((event as EventLog).args[1])) ? idsJurys.push(ethers.toNumber((event as EventLog).args[1])) : '';
+            for ( const event of events ) {
+                !idsCompetition.includes( ethers.toNumber( ( event as EventLog ).args[0] ) ) ? idsCompetition.push( ethers.toNumber( ( event as EventLog ).args[0] ) ) : '';
+                !idsJurys.includes( ethers.toNumber( ( event as EventLog ).args[1] ) ) ? idsJurys.push( ethers.toNumber( ( event as EventLog ).args[1] ) ) : '';
             }
 
-            setIdsCompetition(idsCompetition);
-            setIdsJurys(idsJurys);
-        } catch (err) {
-            console.log(err);
+            setIdsCompetition( idsCompetition );
+            setIdsJurys( idsJurys );
+        } catch ( err ) {
+            console.log( err );
             return false;
         }
     }
@@ -179,51 +203,54 @@ export const fetchIdsByFilter = async (competitionId: number | null, juryId: num
  * @param setLoading setter loading state
  * @param setCompetitions setter competitions state
  */
-export async function fetchCompetitionsOfOneJury(juryId: number, status: VotingCompetitionStatus, setLoading: (loading: boolean) => void, setCompetitions: (competitions: Competition[]) => void) {
-    setLoading(true);
+export async function fetchCompetitionsOfOneJury( juryId: number, status: VotingCompetitionStatus, setLoading: ( loading: boolean ) => void, setCompetitions: ( competitions: Competition[] ) => void ) {
+    setLoading( true );
     try {
         const signer = await provider?.getSigner()
-        const competitionsContract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer);
+        const competitionsContract = new ethers.Contract( contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
 
-        const filter = competitionsContract.filters.JuryAddedToCompetition(null, juryId);
-        const eventsOfJury: EventLog[] = await competitionsContract.queryFilter(filter, 0) as EventLog[];
+        const filter = competitionsContract.filters.JuryAddedToCompetition( null, juryId );
+        const eventsOfJury: EventLog[] = await competitionsContract.queryFilter( filter, 0 ) as EventLog[];
 
         const competitions: Competition[] = []
-        for (const eventJury of eventsOfJury) {
+        for ( const eventJury of eventsOfJury ) {
             const [ competitionId ] = eventJury.args
             try {
-                const { competition, votingStatus }: CompetitionAndVotingStatus = await competitionsContract.getUnvotedCompetitionOfJury(competitionId)
+                const {
+                    competition,
+                    votingStatus
+                }: CompetitionAndVotingStatus = await competitionsContract.getUnvotedCompetitionOfJury( competitionId )
 
-                if (ethers.toNumber(votingStatus) === status) {
-                    const metadataString = JSON.parse(uint8ArrayToString(await ipfsGetContent(competition.tokenURI), 'utf8'))
-                    const pictureUrl = ipfsGetUrl(metadataString.attributes[1].value)
+                if ( ethers.toNumber( votingStatus ) === status ) {
+                    const metadataString = JSON.parse( uint8ArrayToString( await ipfsGetContent( competition.tokenURI ), 'utf8' ) )
+                    const pictureUrl = ipfsGetUrl( metadataString.attributes[1].value )
 
-                    competitions.push({
-                        id: ethers.toNumber(competitionId),
+                    competitions.push( {
+                        id: ethers.toNumber( competitionId ),
                         tokenURI: competition.tokenURI,
                         title: competition.title,
                         pictureUrl,
-                        typeCompetitions: ethers.toNumber(competition.typeCompetitions),
-                        status: ethers.toNumber(votingStatus),
-                        startTime: ethers.toNumber(competition.startTime),
-                        endTime: ethers.toNumber(competition.endTime),
+                        typeCompetitions: ethers.toNumber( competition.typeCompetitions ),
+                        status: ethers.toNumber( votingStatus ),
+                        startTime: ethers.toNumber( competition.startTime ),
+                        endTime: ethers.toNumber( competition.endTime ),
                         nominees: competition.nominees,
-                        winnerCompetition: ethers.toNumber(competition.winnerCompetition),
+                        winnerCompetition: ethers.toNumber( competition.winnerCompetition ),
                         nameAward: ""
-                    });
+                    } );
                 } else {
-                    console.log(`La compétition ${competitionId} n'est pas encore ouverte`)
+                    console.log( `La compétition ${ competitionId } n'est pas encore ouverte` )
                 }
-            } catch (err) {
-                console.log(`Erreur lors de la récupération de la compétition ${competitionId}`, err)
+            } catch ( err ) {
+                console.log( `Erreur lors de la récupération de la compétition ${ competitionId }`, err )
             }
         }
 
-        setCompetitions(competitions)
-    } catch (e) {
-        console.log("Erreur lors de la récupération des compétitions", e);
+        setCompetitions( competitions )
+    } catch ( e ) {
+        console.log( "Erreur lors de la récupération des compétitions", e );
     } finally {
-        setLoading(false)
+        setLoading( false )
     }
 }
 
@@ -232,53 +259,53 @@ export async function fetchCompetitionsOfOneJury(juryId: number, status: VotingC
  * @param competition compétition
  * @param setLoading setter loading state
  */
-export async function fetchNomineesOfCompetition(competition: Competition, setLoading: (loading: boolean) => void): Promise<Nominee[]> {
+export async function fetchNomineesOfCompetition( competition: Competition, setLoading: ( loading: boolean ) => void ): Promise<Nominee[]> {
     const nominees: Nominee[] = []
-    setLoading(true)
+    setLoading( true )
 
     const signer = await provider?.getSigner()
-    const competitionsContract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer);
+    const competitionsContract = new ethers.Contract( contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
 
-    const filter = competitionsContract.filters.NomineeCompetitionsRegistered(competition.id, null, null);
-    const eventsOfNominees: EventLog[] = await competitionsContract.queryFilter(filter, 0) as EventLog[];
-    
+    const filter = competitionsContract.filters.NomineeCompetitionsRegistered( competition.id, null, null );
+    const eventsOfNominees: EventLog[] = await competitionsContract.queryFilter( filter, 0 ) as EventLog[];
+
     try {
-        if (competition.typeCompetitions === TypeCompetitions.Actor) {
-            for (const nomineeEvent of eventsOfNominees) {
-                const nomineeId = ethers.toNumber(nomineeEvent.args[1])
-                const nomineeTokenId = ethers.toNumber(nomineeEvent.args[2])
+        if ( competition.typeCompetitions === TypeCompetitions.Actor ) {
+            for ( const nomineeEvent of eventsOfNominees ) {
+                const nomineeId = ethers.toNumber( nomineeEvent.args[1] )
+                const nomineeTokenId = ethers.toNumber( nomineeEvent.args[2] )
 
-                const actor = await fetchOnePeople(contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, ethers.toNumber(nomineeTokenId));
-                const title = `${actor?.firstname} ${actor?.lastname}`;
+                const actor = await fetchOnePeople( contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, ethers.toNumber( nomineeTokenId ) );
+                const title = `${ actor?.firstname } ${ actor?.lastname }`;
                 const pictureUrl = actor?.picture || '';
-                nominees.push({ tokenId: nomineeTokenId, title, pictureUrl, id: nomineeId });
+                nominees.push( { tokenId: nomineeTokenId, title, pictureUrl, id: nomineeId } );
             }
-        } else if (competition.typeCompetitions === TypeCompetitions.Director) {
-            for (const nomineeEvent of eventsOfNominees) {
-                const nomineeId = ethers.toNumber(nomineeEvent.args[1])
-                const nomineeTokenId = ethers.toNumber(nomineeEvent.args[2])
+        } else if ( competition.typeCompetitions === TypeCompetitions.Director ) {
+            for ( const nomineeEvent of eventsOfNominees ) {
+                const nomineeId = ethers.toNumber( nomineeEvent.args[1] )
+                const nomineeTokenId = ethers.toNumber( nomineeEvent.args[2] )
 
-                const director = await fetchOnePeople(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, ethers.toNumber(nomineeTokenId));
-                const title = `${director?.firstname} ${director?.lastname}`;
+                const director = await fetchOnePeople( contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, ethers.toNumber( nomineeTokenId ) );
+                const title = `${ director?.firstname } ${ director?.lastname }`;
                 const pictureUrl = director?.picture || '';
-                nominees.push({ tokenId: nomineeTokenId, title, pictureUrl, id: nomineeId });
+                nominees.push( { tokenId: nomineeTokenId, title, pictureUrl, id: nomineeId } );
             }
         } else {
             // Movie
-            for (const nomineeEvent of eventsOfNominees) {
-                const nomineeId = ethers.toNumber(nomineeEvent.args[1])
-                const nomineeTokenId = ethers.toNumber(nomineeEvent.args[2])
+            for ( const nomineeEvent of eventsOfNominees ) {
+                const nomineeId = ethers.toNumber( nomineeEvent.args[1] )
+                const nomineeTokenId = ethers.toNumber( nomineeEvent.args[2] )
 
-                const movie = await fetchOneMovie(contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, ethers.toNumber(nomineeTokenId));
+                const movie = await fetchOneMovie( ethers.toNumber( nomineeTokenId ) );
                 const title = movie?.title;
                 const pictureUrl = movie?.picture || '';
-                nominees.push({ tokenId: nomineeTokenId, title, pictureUrl, id: nomineeId });
+                nominees.push( { tokenId: nomineeTokenId, title, pictureUrl, id: nomineeId } );
             }
         }
-    } catch (e) {
-        console.log("Erreur lors de la récupération des nominés", e)
+    } catch ( e ) {
+        console.log( "Erreur lors de la récupération des nominés", e )
     } finally {
-        setLoading(false)
+        setLoading( false )
     }
     return nominees;
 }
@@ -290,22 +317,22 @@ export async function fetchNomineesOfCompetition(competition: Competition, setLo
  * @param setLoading setter loading state
  * @returns vrai si le vote s'est bien passé
  */
-export async function voteOnCompetition(competition: Competition, nominee: Nominee, setLoading: (loading: boolean) => void): Promise<boolean> {
-    setLoading(true)
+export async function voteOnCompetition( competition: Competition, nominee: Nominee, setLoading: ( loading: boolean ) => void ): Promise<boolean> {
+    setLoading( true )
     try {
         const signer = await provider?.getSigner()
-        const competitionsContract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer);
-        const receipt:ContractTransactionReceipt = await (await competitionsContract.voteOnCompetition(competition.id, nominee.id)).wait()
+        const competitionsContract = new ethers.Contract( contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
+        const receipt: ContractTransactionReceipt = await ( await competitionsContract.voteOnCompetition( competition.id, nominee.id ) ).wait()
 
-        if (receipt.status == 1) {
+        if ( receipt.status == 1 ) {
             return true
         }
         return false
-    } catch (e) {
-        console.log("Erreur lors du vote sur une compétition", e)
+    } catch ( e ) {
+        console.log( "Erreur lors du vote sur une compétition", e )
         return false
     } finally {
-        setLoading(false)
+        setLoading( false )
     }
 }
 
@@ -317,22 +344,22 @@ export async function voteOnCompetition(competition: Competition, nominee: Nomin
  * @param endDate date de fin de la compétition
  * @param nameAward nom de la récompense de la compétition
  * @param picture image de la compétition
- * @returns 
+ * @returns
  */
-export async function createCompetition(title:string, typeCompetition:TypeCompetitions, startDate:number, endDate:number, nameAward:string, picture:string): Promise<number> {
+export async function createCompetition( title: string, typeCompetition: TypeCompetitions, startDate: number, endDate: number, nameAward: string, picture: string ): Promise<number> {
     // Upload de l'image sur ipfs
-    const pictureFile = await dataUrlToFile(`data:image/*;${picture}`, 'competition.jpg')
-    const ipfsPictureUploadResult = await ipfs.add(pictureFile, {pin: true});
+    const pictureFile = await dataUrlToFile( `data:image/*;${ picture }`, 'competition.jpg' )
+    const ipfsPictureUploadResult = await ipfs.add( pictureFile, { pin: true } );
 
     // Création de l'uri - addresse de l'image uploadé
     let tokenURI;
-    if (ipfsPictureUploadResult) {
-        tokenURI = await generateNFTMetadataAndUploadToIpfs(`ipfs://${ipfsPictureUploadResult.cid}`, nameAward);
+    if ( ipfsPictureUploadResult ) {
+        tokenURI = await generateNFTMetadataAndUploadToIpfs( `ipfs://${ ipfsPictureUploadResult.cid }`, nameAward );
     } else {
         throw "Aucune image uploadée sur IPFS"
     }
-    
-    return await callAddCompetitionContract(title, typeCompetition, startDate, endDate, tokenURI);
+
+    return await callAddCompetitionContract( title, typeCompetition, startDate, endDate, tokenURI );
 }
 
 /**
@@ -340,7 +367,7 @@ export async function createCompetition(title:string, typeCompetition:TypeCompet
  * @param pictureUri metadate uri vers l'image sur IPFS
  * @param name metadate name
  */
-const generateNFTMetadataAndUploadToIpfs = async (pictureUri: string, name: string) => {
+const generateNFTMetadataAndUploadToIpfs = async ( pictureUri: string, name: string ) => {
     const nftMetaData: AwardMetadata = {
         "description": "Movie generated NFT metadata",
         "external_url": "",
@@ -357,10 +384,10 @@ const generateNFTMetadataAndUploadToIpfs = async (pictureUri: string, name: stri
             }
         ]
     }
-    const metadataString = JSON.stringify(nftMetaData);
+    const metadataString = JSON.stringify( nftMetaData );
 
-    const ipfsResponse = await ipfs.add(metadataString, { pin: true });
-    if (ipfsResponse) {
+    const ipfsResponse = await ipfs.add( metadataString, { pin: true } );
+    if ( ipfsResponse ) {
         return 'ipfs://' + ipfsResponse.cid;
     } else {
         throw "Erreur lors de l'écriture des méta données de la compétition sur IPFS"
@@ -372,30 +399,30 @@ const generateNFTMetadataAndUploadToIpfs = async (pictureUri: string, name: stri
  * Fonction qui appel le smart contract afin de créer la compétition
  * @param tokenURI token IPFS
  */
-const callAddCompetitionContract = async (title:string, typeCompetition:TypeCompetitions, startDate:number, endDate:number, tokenURI: string): Promise<number> => {
+const callAddCompetitionContract = async ( title: string, typeCompetition: TypeCompetitions, startDate: number, endDate: number, tokenURI: string ): Promise<number> => {
     const signer = await provider?.getSigner();
-    const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer);
+    const contract = new ethers.Contract( contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
 
     // création de la compétition
-    const transaction:ContractTransactionResponse = await contract.addCompetition(title, tokenURI, typeCompetition, startDate, endDate);
+    const transaction: ContractTransactionResponse = await contract.addCompetition( title, tokenURI, typeCompetition, startDate, endDate );
 
     // vérification que la transaction c'est bien passé
     const receipt = await transaction.wait();
 
-    if (receipt && receipt.status == 1) {
+    if ( receipt && receipt.status == 1 ) {
 
-        const competitionSessionRegistered = (receipt.logs as EventLog[]).find((log) => log.fragment && log.fragment.name === CompetitionContractEvents.NEW_COMPETITION)
+        const competitionSessionRegistered = ( receipt.logs as EventLog[] ).find( ( log ) => log.fragment && log.fragment.name === CompetitionContractEvents.NEW_COMPETITION )
 
-        if (!competitionSessionRegistered) {
-            console.log("receipt", receipt)
+        if ( !competitionSessionRegistered ) {
+            console.log( "receipt", receipt )
             throw "Evenement de création attendu"
         }
 
-        const competitionId = ethers.toNumber(competitionSessionRegistered.args[0]);
+        const competitionId = ethers.toNumber( competitionSessionRegistered.args[0] );
         return competitionId;
 
     } else {
-        console.log("receipt", receipt)
+        console.log( "receipt", receipt )
         throw "Receipt status incorrect"
     }
 }
@@ -403,25 +430,28 @@ const callAddCompetitionContract = async (title:string, typeCompetition:TypeComp
 /**
  * Permet de récupérer le nom d'une compétition et l'image de sa récompense
  * @param competitionId
- * @returns 
+ * @returns
  */
-export const getCompetitionImageAndAwardName = async (competitionId: number): Promise<{image:Uint8Array, awardName:string}> => {
-    const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider);
-    const competition: Competition = await contract.getCompetition(competitionId);
+export const getCompetitionImageAndAwardName = async ( competitionId: number ): Promise<{
+    image: Uint8Array,
+    awardName: string
+}> => {
+    const contract = new ethers.Contract( contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider );
+    const competition: Competition = await contract.getCompetition( competitionId );
 
-    if (competition) {
-        const metadataString = await ipfsGetContent(competition.tokenURI)
+    if ( competition ) {
+        const metadataString = await ipfsGetContent( competition.tokenURI )
 
-        const metadata = JSON.parse(uint8ArrayToString(metadataString, 'utf8'))
+        const metadata = JSON.parse( uint8ArrayToString( metadataString, 'utf8' ) )
         const awardName = metadata.attributes[0].value
-        const image = await ipfsGetContent(metadata.attributes[1].value)
-        
+        const image = await ipfsGetContent( metadata.attributes[1].value )
+
         return {
             image,
             awardName
         }
     } else {
-        throw `La compétition ${competitionId} n'existe pas`;
+        throw `La compétition ${ competitionId } n'existe pas`;
     }
 }
 
@@ -429,39 +459,39 @@ export const getCompetitionImageAndAwardName = async (competitionId: number): Pr
  * Rajoute les infos des nominés éligibles à l'ajout sur une compétition
  * @param typeCompetition type de compétition
  */
-export const fetchEligibleNomineesByTypeCompetition = async (typeCompetition: TypeCompetitions): Promise<Nominee[]> => {
+export const fetchEligibleNomineesByTypeCompetition = async ( typeCompetition: TypeCompetitions ): Promise<Nominee[]> => {
     const nominees: Nominee[] = []
-    
+
     try {
-        if (typeCompetition === TypeCompetitions.Actor) {
+        if ( typeCompetition === TypeCompetitions.Actor ) {
             const actors = await fetchActors();
-            for (const { id, firstname: Firstname, lastname: Lastname, picture: Picture } of actors) {
-                const title = `${Firstname} ${Lastname}`;
+            for ( const { id, firstname: Firstname, lastname: Lastname, picture: Picture } of actors ) {
+                const title = `${ Firstname } ${ Lastname }`;
                 const pictureUrl = Picture || '';
 
-                nominees.push({ tokenId: id, title, pictureUrl, id: -1 });
+                nominees.push( { tokenId: id, title, pictureUrl, id: -1 } );
             }
-        } else if (typeCompetition === TypeCompetitions.Director) {
+        } else if ( typeCompetition === TypeCompetitions.Director ) {
             const directors = await fetchDirectors();
-            for (const { id, firstname: Firstname, lastname: Lastname, picture: Picture } of directors) {
-                const title = `${Firstname} ${Lastname}`;
+            for ( const { id, firstname: Firstname, lastname: Lastname, picture: Picture } of directors ) {
+                const title = `${ Firstname } ${ Lastname }`;
                 const pictureUrl = Picture || '';
 
-                nominees.push({ tokenId: id, title, pictureUrl, id: -1 });
+                nominees.push( { tokenId: id, title, pictureUrl, id: -1 } );
             }
         } else {
             // Movie
-            const movies = await fetchAllMovies()
-            for (const { id, title: Title, picture: Picture } of movies) {
+            const movies = await fetchMovies()
+            for ( const { id, title: Title, picture: Picture } of movies ) {
                 const title = Title;
                 const pictureUrl = Picture || '';
 
-                nominees.push({ tokenId: id, title, pictureUrl, id: -1 });
+                nominees.push( { tokenId: id, title, pictureUrl, id: -1 } );
             }
         }
-    } catch (e) {
+    } catch ( e ) {
         const msg = "Erreur lors de la récupération des nominés";
-        console.log("Erreur lors de la récupération des nominés", e)
+        console.log( "Erreur lors de la récupération des nominés", e )
         throw msg
     }
     return nominees;
@@ -471,21 +501,21 @@ export const fetchEligibleNomineesByTypeCompetition = async (typeCompetition: Ty
  * Permet d'ajouter les nominés à une compétitions
  * @param competitionId id de la compétition
  * @param nomineesTokenIds token id des nominés
- * @returns 
+ * @returns
  */
-export const addNomineesToCompetition = async (competitionId: number, nomineesTokenIds: number[]): Promise<undefined> => {
+export const addNomineesToCompetition = async ( competitionId: number, nomineesTokenIds: number[] ): Promise<undefined> => {
     const signer = await provider?.getSigner();
-    const competitionsContract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer);
-    
-    for (const nomineeTokenId of nomineesTokenIds) {        
+    const competitionsContract = new ethers.Contract( contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
+
+    for ( const nomineeTokenId of nomineesTokenIds ) {
         try {
-            const receipt:ContractTransactionReceipt = await (await competitionsContract.addNomineeCompetition(competitionId, nomineeTokenId)).wait();
-            if (receipt.status !== 1) {
-                throw `Mauvais status de transaction [${receipt.status}]`
+            const receipt: ContractTransactionReceipt = await ( await competitionsContract.addNomineeCompetition( competitionId, nomineeTokenId ) ).wait();
+            if ( receipt.status !== 1 ) {
+                throw `Mauvais status de transaction [${ receipt.status }]`
             }
-        } catch (e) {
-            const msg = `Erreur lors de la l'ajout du nominé [${nomineeTokenId}] à la compétition [${competitionId}]`;
-            console.log(msg, e);
+        } catch ( e ) {
+            const msg = `Erreur lors de la l'ajout du nominé [${ nomineeTokenId }] à la compétition [${ competitionId }]`;
+            console.log( msg, e );
             throw msg;
         }
     }
@@ -498,21 +528,21 @@ export const addNomineesToCompetition = async (competitionId: number, nomineesTo
  * Permet d'ajouter les nominés à une compétitions
  * @param competitionId id de la compétition
  * @param jurysTokenIds token id des nominés
- * @returns 
+ * @returns
  */
-export const addJurysToCompetition = async (competitionId: number, jurysTokenIds: number[]): Promise<undefined> => {
+export const addJurysToCompetition = async ( competitionId: number, jurysTokenIds: number[] ): Promise<undefined> => {
     const signer = await provider?.getSigner();
-    const competitionsContract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer);
-    
-    for (const juryTokenId of jurysTokenIds) {        
+    const competitionsContract = new ethers.Contract( contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
+
+    for ( const juryTokenId of jurysTokenIds ) {
         try {
-            const receipt:ContractTransactionReceipt = await (await competitionsContract.addJuryToCompetition(competitionId, juryTokenId)).wait();
-            if (receipt.status !== 1) {
-                throw `Mauvais status de transaction [${receipt.status}]`
+            const receipt: ContractTransactionReceipt = await ( await competitionsContract.addJuryToCompetition( competitionId, juryTokenId ) ).wait();
+            if ( receipt.status !== 1 ) {
+                throw `Mauvais status de transaction [${ receipt.status }]`
             }
-        } catch (e) {
-            const msg = `Erreur lors de la l'ajout du jury [${juryTokenId}] à la compétition [${competitionId}]`;
-            console.log(msg, e);
+        } catch ( e ) {
+            const msg = `Erreur lors de la l'ajout du jury [${ juryTokenId }] à la compétition [${ competitionId }]`;
+            console.log( msg, e );
             throw msg;
         }
     }
