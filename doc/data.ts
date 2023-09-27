@@ -416,3 +416,23 @@
            ]
        }
    ];*/
+/*[
+    {
+        id: 1,
+        title: 'Les Films en compétition pour l\'accolade d\'or',
+        type: 'Film',
+        url: 'https://imgsrc.cineserie.com/2017/02/Filmandclapboard.jpg?ver=1'
+    },
+    {
+        id: 2,
+        title: 'Les Acteurs en compétition pour le chevrons d\'argent',
+        type: 'Acteur',
+        url: 'https://img-0.journaldunet.com/VMdAj3ruYZOCE70PjSNf30TEusw=/1500x/smart/cd49f961c3054ac39038002d7644449d/ccmcms-jdn/10694673.jpg'
+    },
+    {
+        id: 3,
+        title: 'Les Réalisateurs en compétition pour la parenthèse de cristal',
+        type: 'Realisateur',
+        url: 'https://devenir-realisateur.com/wp-content/uploads/2017/03/chaise-realisateur.jpg'
+    }
+];*/
