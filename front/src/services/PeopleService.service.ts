@@ -1,9 +1,11 @@
 import { provider } from "../provider/providers";
 import { ethers, EventLog } from "ethers";
 import contractsInterface from "../contracts/contracts";
-import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
+import ipfs, { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 import { Actor, Director, People } from "../types/People";
+import { PeopleMetadata } from "../types/Metadata";
+import { ContractTransactionResponse } from "../../node_modules/ethers/lib.commonjs/ethers";
 
 const actorContract = new ethers.Contract( contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, provider );
 const directorContract = new ethers.Contract( contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, provider );
@@ -150,4 +152,83 @@ export const stopListenToNewActor = async () => {
  */
 export const stopListenToNewDirector = async () => {
     await directorContract.removeAllListeners( eventDirectorMinted );
+}
+
+/**
+ * Génération des meta données du nft avec enregistrement sur ipfs
+ * @param PictureUri
+ * @param newActorInfo
+ */
+export const generateNFTMetadataAndUploadToIpfs = async ( PictureUri: string, newPeople: People ): Promise<string> => {
+    const NFTMetaData: PeopleMetadata = {
+        "description": "People generated NFT metadata",
+        "external_url": "",
+        "image": PictureUri,
+        "name": "People DevFest",
+        "attributes": [
+            {
+                "trait_type": "Firstname",
+                "value": newPeople.firstname
+            },
+            {
+                "trait_type": "Lastname",
+                "value": newPeople.lastname
+            },
+            {
+                "trait_type": "Picture",
+                "value": PictureUri
+            },
+            {
+                "trait_type": "Address",
+                "value": newPeople.address
+            }
+        ]
+    }
+
+    const metadataString = JSON.stringify( NFTMetaData );
+
+    try {
+        // enregistrement des meta donné sur ipfs
+        const ipfsResponse = await ipfs.add( metadataString, { pin: true } );
+        // création de l'addresse des meta donnée
+        return 'ipfs://' + ipfsResponse.cid;
+    } catch ( e ) {
+        throw `Erreur lors de l'écriture des méta données de la compétition sur IPFS`;
+    }
+}
+
+/**
+ * Fonction qui va appeler le smart contract pour minter le people
+ * @param tokenUri
+ * @param typePeople
+ */
+export const mintPeople = async ( tokenUri: string, typePeople: number ): Promise<number> => {
+    const signer = await provider?.getSigner();
+    let transaction: ContractTransactionResponse;
+    let contract;
+
+    // création de l'appel du mint
+    if ( typePeople == 1 ) {
+        contract = new ethers.Contract( contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, signer );
+        transaction = await contract.mint( tokenUri );
+    } else {
+        contract = new ethers.Contract( contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, signer );
+        transaction = await contract.mint( tokenUri );
+    }
+    // vérification que la transaction c'est bien passé
+    const receipt = await transaction.wait();
+
+    if ( receipt && receipt.status == 1 ) {
+        const peopleMinted = ( receipt.logs as EventLog[] ).find( ( log ) => log.fragment && log.fragment.name === eventDirectorMinted || log.fragment.name === eventActorMinted );
+
+        if ( !peopleMinted ) {
+            console.log( "receipt", receipt )
+            throw "Evenement de création attendu"
+        }
+
+        return ethers.toNumber( peopleMinted.args[0] );
+    } else {
+        console.log( "receipt", receipt )
+        throw "Une erreur c'est produit durant la transaction"
+    }
 }

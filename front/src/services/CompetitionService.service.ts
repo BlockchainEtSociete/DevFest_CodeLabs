@@ -363,7 +363,7 @@ export async function createCompetition( title: string, typeCompetition: TypeCom
 }
 
 /**
- * Génération des meta données avec enregistrement sur IPFS
+ * Génération des meta données avec enregistrement sur IPFS du trophé du gagant
  * @param pictureUri metadate uri vers l'image sur IPFS
  * @param name metadate name
  */
