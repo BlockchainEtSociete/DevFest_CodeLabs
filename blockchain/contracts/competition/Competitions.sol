@@ -83,7 +83,7 @@ contract Competitions is Ownable {
         _;
     }
 
-    modifier competitionExists(uint _competitionId) {
+    modifier onlyExistingCompetition(uint _competitionId) {
         uint competitionIndex = _competitionId - 1;
         require(competitionIndex < votingCompetitions.length, string.concat("Voting competition ", string.concat(Strings.toString(_competitionId), " doesn't exist")));
         _;
@@ -124,7 +124,7 @@ contract Competitions is Ownable {
     /// @notice Adds nominee to a competition.
     /// @param _competitionId id of competition
     /// @param _nomineeTokenId token id of the nominee
-    function addNomineeCompetition(uint _competitionId, uint _nomineeTokenId) external competitionExists(_competitionId) onlyOwner {
+    function addNomineeCompetition(uint _competitionId, uint _nomineeTokenId) external onlyExistingCompetition(_competitionId) onlyOwner {
         uint competitionIndex = _competitionId - 1;
 
         votingCompetitions[competitionIndex].nominees.push(Nominee(_nomineeTokenId, 0));
@@ -136,7 +136,7 @@ contract Competitions is Ownable {
     /// @notice Adds jury to a competition.
     /// @param _competitionId The voting competition number.
     /// @param _juryId The jury id.
-    function addJuryToCompetition(uint _competitionId, uint _juryId) external competitionExists(_competitionId) onlyOwner {
+    function addJuryToCompetition(uint _competitionId, uint _juryId) external onlyExistingCompetition(_competitionId) onlyOwner {
         require(juryContract.isTokenValid(_juryId), "Jury is invalid");
 
         uint competitionIndex = _competitionId - 1; // see addCompetition
@@ -148,7 +148,7 @@ contract Competitions is Ownable {
     /// @notice Allows you to vote for an option in a competition during a voting session.
     /// @param _competitionId The voting competition id on which the voter wants to vote
     /// @param _nomineeId Index of the nominee in the array of nominees in the competition
-    function voteOnCompetition(uint _competitionId, uint _nomineeId) external competitionExists(_competitionId) onlyJuryOfCompetition(_competitionId) {
+    function voteOnCompetition(uint _competitionId, uint _nomineeId) external onlyExistingCompetition(_competitionId) onlyJuryOfCompetition(_competitionId) {
         CompetitionVotingSession memory competition = getCompetition(_competitionId);
         uint competitionIndex = _competitionId - 1; // see addCompetition
         uint nomineeIndex = _nomineeId - 1; // see addNomineeCompetition
@@ -179,7 +179,7 @@ contract Competitions is Ownable {
     /// @notice get One competition
     /// @param _competitionId the id of the competition
     /// @return the competition
-    function getCompetition(uint _competitionId) public view competitionExists(_competitionId) returns(CompetitionVotingSession memory) {
+    function getCompetition(uint _competitionId) public view onlyExistingCompetition(_competitionId) returns(CompetitionVotingSession memory) {
         uint competitionIndex = _competitionId - 1; // see addCompetition        
         return votingCompetitions[competitionIndex];
     }
@@ -187,7 +187,7 @@ contract Competitions is Ownable {
     /// @notice Gets the voting competition status according to the current timestamp.
     /// @param _competitionId The voting competition number.
     /// @return The voting competition status.
-    function getVotingCompetitionStatus(uint _competitionId) public view competitionExists(_competitionId) returns(VotingCompetitionStatus) {
+    function getVotingCompetitionStatus(uint _competitionId) public view onlyExistingCompetition(_competitionId) returns(VotingCompetitionStatus) {
         CompetitionVotingSession memory competition = getCompetition(_competitionId);
 
         if (competition.startTime > block.timestamp) {
@@ -203,7 +203,7 @@ contract Competitions is Ownable {
     /// @notice get a competition of a jury if it has not already voted on this competition
     /// @param _competitionId id of competition
     /// @return the competition
-    function getUnvotedCompetitionOfJury(uint _competitionId) external view competitionExists(_competitionId) onlyJuryOfCompetition(_competitionId) returns(CompetitionAndVotingStatus memory) {
+    function getUnvotedCompetitionOfJury(uint _competitionId) external view onlyExistingCompetition(_competitionId) onlyJuryOfCompetition(_competitionId) returns(CompetitionAndVotingStatus memory) {
         CompetitionVotingSession memory competition = getCompetition(_competitionId);
         uint competitionIndex = _competitionId - 1; // see addCompetition
 
@@ -218,7 +218,7 @@ contract Competitions is Ownable {
 
     /// @notice search en send award the winner of competition
     /// @param _competitionId the id competition
-    function designateWinner(uint _competitionId) external competitionExists(_competitionId) onlyOwner {
+    function designateWinner(uint _competitionId) external onlyExistingCompetition(_competitionId) onlyOwner {
         CompetitionVotingSession memory competition = getCompetition(_competitionId);
         require(competition.endTime < block.timestamp, "Voting competition isn't closed yet");
         require(competition.winnerCompetition > 0, "No one has voted for this competition");
