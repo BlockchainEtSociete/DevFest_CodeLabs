@@ -126,7 +126,6 @@ export const listenToNewCompetition = async (newCompetitionCallback: (competitio
     const contract = new ethers.Contract(contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider);
 
     contract.on(CompetitionContractEvents.NEW_COMPETITION, async (event: number) => {
-        console.log(CompetitionContractEvents.NEW_COMPETITION, event)
         const competitionId = ethers.toNumber(event);
         newCompetitionCallback(await getCompetitionData(competitionId, contract));
     });

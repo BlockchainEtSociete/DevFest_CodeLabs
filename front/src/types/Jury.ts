@@ -1,7 +1,7 @@
 export interface Jury {
     id: number
-    Firstname: string
-    Lastname: string
-    Picture: string
+    firstname: string
+    lastname: string
+    picture: string
     Address: string
 }

@@ -5,6 +5,15 @@ import contractsInterface from "../contracts/contracts";
 import {ethers, EventLog} from "ethers";
 import { Jury } from "../types/Jury";
 
+const juryContract = new ethers.Contract(contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, provider);
+
+/**
+ * Evenements émits par le contrat Competition
+ */
+const JuryContractEvents = {
+    NEW_JURY : "JuryMinted"
+}
+
 /**
  * Récuperation des données Jury dans IPFS
  * @param tokenId
@@ -16,93 +25,57 @@ export const getJuryData = async (tokenId: number, tokenUri: string): Promise<Ju
 
     return {
         id: tokenId,
-        Firstname: data.attributes[0].value,
-        Lastname: data.attributes[1].value,
-        Picture: ipfsGetUrl(data.image),
+        firstname: data.attributes[0].value,
+        lastname: data.attributes[1].value,
+        picture: ipfsGetUrl(data.image),
         Address: data.attributes[3].value
     };
 }
 
+
 /**
- * Fonction de récupération des données des jurys
- * @param eventType
- * @param contractAddress
- * @param contractAbi
- * @param setLoading
- * @param addToJurys
+ * Récupération de la liste de tous les jurys
+ * @returns tableau de Jurys
  */
-export const fetchJury = async (eventType: string, contractAddress: string, contractAbi: any, addToJurys: Function) => {
-    if (provider) {
-        // initialisation du contract
-        const contract = new ethers.Contract(contractAddress, contractAbi, provider);
-        // création du filtre
-        const filter = contract.filters[eventType];
-        // récupération des evenements en fonction du filtre
-        const events = await contract.queryFilter(filter, 0);
+export const fetchAllJuries = async (): Promise<Jury[]> => {
+    const juries:Jury[] = [];
 
-        try {
-            for (const event of events) {
-                const id = ethers.toNumber((event as EventLog).args[1]);
-                const tokenUri: string = (event as EventLog).args[2];
+    const filter = juryContract.filters[JuryContractEvents.NEW_JURY];
+    const events = await juryContract.queryFilter(filter, 0) as EventLog[];
 
-                if(tokenUri) {
-                    await addToJurys(await getJuryData(id, tokenUri));
-                }
-            }
-        } catch (err) {
-            console.log(err);
-            return false;
+    try {
+        for (const event of events) {
+            const id = ethers.toNumber((event as EventLog).args[1]);
+            const tokenUri: string = (event as EventLog).args[2];
+            
+            juries.push(await getJuryData(id, tokenUri));
         }
+    } catch (err) {
+        const message = "Erreur de lors récupération des jurys";
+        console.log(message, err);
+        throw message;
     }
+
+    return juries;
 }
 
 /**
- * Fonction qui ecoute les nouveaux jurys
+ * Ecoute les nouveaux jurys
  * @param eventType
  * @param contractAddress
  * @param contractAbi
  * @param onNewJury
  */
 export const listenToNewJury = async (onNewJury: (Jury:Jury) => void) => {
-
-    if (provider) {
-        // initialisation du contract
-        const contract = new ethers.Contract(contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, provider);
-
-        // TODO gestion stop écoute évènement
-        contract.on("JuryMinted", async (event: EventLog) => {
-            const tokenUri: string = event.args[2];
-            const id = ethers.toNumber(event.args[1]);
-            onNewJury(await getJuryData(id, tokenUri));
-        });
-    }
+    await juryContract.on(JuryContractEvents.NEW_JURY, async (...args: Array<unknown>) => {
+        const [_, tokenId, tokenUri] = args;
+        onNewJury(await getJuryData(ethers.toNumber(tokenId as number), tokenUri as string));
+    });
 }
 
-
 /**
- * TODO refacto avec fetchJury
- * 
+ * Stoppe l'ecoute les nouveaux jurys
  */
-export const fetchAllJuries = async (): Promise<Jury[]> => {
-    const juries:Jury[] = [];
-    if (provider) {
-        const contract = new ethers.Contract(contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, provider);
-        const filter = contract.filters.JuryMinted;
-        const events = await contract.queryFilter(filter, 0) as EventLog[];
-
-        try {
-            for (const event of events) {
-                const id = ethers.toNumber((event as EventLog).args[1]);
-                const tokenUri: string = (event as EventLog).args[2];
-                
-                juries.push(await getJuryData(id, tokenUri));
-            }
-        } catch (err) {
-            const message = "Erreur de lors récupération des jurys";
-            console.log(message, err);
-            throw message;
-        }
-    }
-
-    return juries;
+export const stopListenToNewJury = async () => {
+    await juryContract.removeAllListeners(JuryContractEvents.NEW_JURY);
 }

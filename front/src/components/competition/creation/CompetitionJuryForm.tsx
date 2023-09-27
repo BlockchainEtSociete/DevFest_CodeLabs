@@ -1,9 +1,6 @@
 import { AlertColor } from "@mui/material";
 import { useEffect, useState } from "react";
-import { fetchAllJuries, fetchJury, listenToNewJury } from "../../../services/JuryService.service";
-import contractsInterface from "../../../contracts/contracts";
-import { provider } from "../../../provider/providers";
-import { ethers } from "ethers";
+import { fetchAllJuries, listenToNewJury, stopListenToNewJury } from "../../../services/JuryService.service";
 import { Jury } from "../../../types/Jury";
 import { addJurysToCompetition } from "../../../services/CompetitionService.service";
 
@@ -23,15 +20,25 @@ export const CompetitionJuryForm = ({competitionId, setOpen, setMessage, setSeve
 
     useEffect(() => {
         (async () => {
-            setJurys(await fetchAllJuries());
-
-            // TODO gestion stop écoute évènement
-            await listenToNewJury((jury:Jury) => {
-                jurys.push(jury);
-                setJurys([...jurys]);
-            });
+            await stopListenToNewJury()
+            await listenToNewJury((jury) => setJurys([...jurys, jury]));
         })();
-    }, []);
+    }, [jurys]);
+
+    useEffect(() => {
+
+        (async () => {
+            setIsLoading(true)
+            try {
+                setJurys(await fetchAllJuries());
+            } catch (e) {
+                console.log("Erreur lors de la récupération des jurys", e);
+            } finally {
+                setIsLoading(false)
+            }
+            setIsLoading(false)
+        })();
+    }, [])
     
 
     const updateSelectedJurysCompetition = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,22 +87,9 @@ export const CompetitionJuryForm = ({competitionId, setOpen, setMessage, setSeve
         <div  className="form-ligne">
             <h5>Les Jurys : </h5>
             <div style={{display: 'flex', justifyContent: 'center', flexDirection: 'column'}}>
-                {/* {
-                    jurys && Object.keys(jurys).length > 0 && Object.keys(jurys).map((juryIndex: number) => {
-                            const fullName = jurys[juryIndex].Lastname + " " + jurys[juryIndex].Firstname;
-                            return (
-                                <label key={jurys[juryIndex].id}> {fullName} :
-                                    <input name="jury" type="checkbox" onChange={updateSelectedJurysCompetition}
-                                        value={jurys[juryIndex].id} />
-                                </label>
-                            )
-                        }
-                    )
-                } */}
-                
                 {
                     jurys.map((jury: Jury) => (
-                            <label key={jury.id}> {jury.Lastname} {jury.Firstname} :
+                            <label key={jury.id}> {jury.lastname} {jury.firstname} :
                                 <input name="jury" type="checkbox" onChange={updateSelectedJurysCompetition}
                                     value={jury.id} />
                             </label>)
