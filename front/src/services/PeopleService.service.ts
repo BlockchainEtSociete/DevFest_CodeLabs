@@ -1,5 +1,5 @@
 import { provider } from "../provider/providers";
-import { ethers, EventLog } from "ethers";
+import { ethers, EventLog, InterfaceAbi } from "ethers";
 import contractsInterface from "../contracts/contracts";
 import ipfs, { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
@@ -97,7 +97,7 @@ export const fetchPeoples = async ( peopleType: PeopleType ): Promise<People[]> 
  * @param contractAbi
  * @param tokenId
  */
-export const fetchOnePeople = async ( contractAddress: string, contractAbi: any, tokenId: number ): Promise<People | undefined> => {
+const fetchOnePeople = async ( contractAddress: string, contractAbi: InterfaceAbi, tokenId: number ): Promise<People | undefined> => {
     if ( provider ) {
         // initialisation du contract
         const contract = new ethers.Contract( contractAddress, contractAbi, provider );
@@ -115,6 +115,14 @@ export const fetchOnePeople = async ( contractAddress: string, contractAbi: any,
         }
         return people;
     }
+}
+
+export const fetchOneActor = (actorTokenId: number): Promise<Actor | undefined> => {
+    return fetchOnePeople(contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, actorTokenId);
+}
+
+export const fetchOneDirector = (directorIdNominee: number): Promise<Director | undefined> => {
+    return fetchOnePeople(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, directorIdNominee);
 }
 
 /**

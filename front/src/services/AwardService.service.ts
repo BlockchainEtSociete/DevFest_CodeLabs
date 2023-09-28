@@ -1,9 +1,9 @@
 import { provider } from "../provider/providers";
 import { ContractTransactionResponse, ethers, EventLog } from "ethers";
 import contractsInterface from "../contracts/contracts";
-import { fetchOnePeople } from "./PeopleService.service";
+import { fetchOneActor, fetchOneDirector } from "./PeopleService.service";
 import { fetchOneMovie } from "./MovieService.service";
-import { TypeCompetitions } from "../types/Competition";
+import { TypeCompetitions, WinnerOfCompetition } from "../types/Competition";
 
 /**
  * Désignation du gagnant et envoie de la récompense
@@ -11,7 +11,7 @@ import { TypeCompetitions } from "../types/Competition";
  * @param setMessage
  * @param setSeverity
  */
-export const designateWinner = async ( competitionId: number ) => {
+export const designateWinner = async ( competitionId: number ): Promise<WinnerOfCompetition | undefined> => {
     if ( provider ) {
         const signer = await provider?.getSigner();
 
@@ -44,7 +44,7 @@ export const designateWinner = async ( competitionId: number ) => {
             console.log( "Erreur lors de la désigation du gagnant", e )
         }
     }
-    return null
+    return;
 }
 
 /**
@@ -54,7 +54,7 @@ export const designateWinner = async ( competitionId: number ) => {
  * @returns le gagnant et un bouléen indiquant s'il y a eu au moins un vote sur la compétition
  */
 export const fetchWinner = async ( competitionId: number, typeCompetition: TypeCompetitions ): Promise<{
-    winner: unknown,
+    winner?: WinnerOfCompetition,
     atLeastOneVote: boolean
 }> => {
     if ( provider ) {
@@ -87,18 +87,32 @@ export const fetchWinner = async ( competitionId: number, typeCompetition: TypeC
     return { winner: undefined, atLeastOneVote: false }
 }
 
-const getWinner = async ( tokenIdNominee: number, typeCompetition: TypeCompetitions ) => {
-    let winner;
+const getWinner = async ( tokenIdNominee: number, typeCompetition: TypeCompetitions ): Promise<WinnerOfCompetition | undefined> => {
+    let winner: WinnerOfCompetition | undefined;
 
     if ( typeCompetition === TypeCompetitions.Actor ) {
-        //actor
-        winner = await fetchOnePeople( contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, tokenIdNominee );
+        const actor = await fetchOneActor( tokenIdNominee );
+        if (actor) {
+            const { firstname, lastname } = actor;
+            const title = `${ firstname } ${ lastname }`;
+            winner = { title };
+        }
     } else if ( typeCompetition === TypeCompetitions.Director ) {
         //director
-        winner = await fetchOnePeople( contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, tokenIdNominee )
+        const director = await fetchOneDirector( tokenIdNominee );
+        if (director) {
+            const { firstname, lastname } = director;
+            const title = `${ firstname } ${ lastname }`;
+            winner = { title };
+        }
     } else {
         //movie
-        winner = await fetchOneMovie( tokenIdNominee );
+        const movie = await fetchOneMovie( tokenIdNominee );
+        if (movie) {
+            const { title } = movie;
+            winner = { title };
+        }
     }
+
     return winner;
 }

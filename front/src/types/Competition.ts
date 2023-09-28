@@ -34,6 +34,10 @@ export interface Competition {
     nameAward: string;
 }
 
+export interface WinnerOfCompetition {
+    title: string;
+}
+
 export interface CompetitionAndVotingStatus {
     competition: Competition;
     votingStatus: VotingCompetitionStatus;

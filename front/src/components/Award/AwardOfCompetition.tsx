@@ -5,7 +5,7 @@ import { designateWinner, fetchWinner } from '../../services/AwardService.servic
 import SnackbarAlert from '../common/SnackbarAlert';
 import { isUserAdmin } from "../../types/ConnectedUser";
 import useConnectedUserContext from "../../context/ConnectedUserContextHook";
-import { TypeCompetitions } from '../../types/Competition';
+import { TypeCompetitions, WinnerOfCompetition } from '../../types/Competition';
 
 export interface AwardProps {
     idCompetition: number
@@ -25,7 +25,7 @@ const AwardOfCompetition = ({ idCompetition, typeCompetition, dateFinCompetition
     const [message, setMessage] = useState('')
     const [severity, setSeverity] = useState<AlertColor | undefined>('success')
 
-    const [winner, setWinner]: any = useState();
+    const [winner, setWinner] = useState<WinnerOfCompetition | undefined>();
     const [atLeastOneVote, setAtLeastOneVote] = useState(false);
 
     const {state: { connectedUser }} = useConnectedUserContext()
@@ -71,17 +71,8 @@ const AwardOfCompetition = ({ idCompetition, typeCompetition, dateFinCompetition
             }
             {
                 isUserAdmin(connectedUser) && dateFinCompetition < today && !winner ?
-                    atLeastOneVote ?
-                    <button className="btn-winner" onClick={onDesignateWinnerCompetition}>Désigner le gagant</button>
-                    : ''
-                :   dateFinCompetition < today && winner ?
-                            typeCompetition === TypeCompetitions.Actor || typeCompetition === TypeCompetitions.Director ?
-                            <p>🎉 Le gagnant est : {winner?.firstname} {winner?.lastname} 🎉</p>
-                            :
-                            typeCompetition == TypeCompetitions.Movie ?
-                                    <p>🎉 Le gagnant est : {winner?.title} 🎉</p>
-                                : ''
-                    : ''
+                    atLeastOneVote ? <button className="btn-winner" onClick={onDesignateWinnerCompetition}>Désigner le gagant</button> : ''
+                    : dateFinCompetition < today && winner ? <p>🎉 Le gagnant est : {winner?.title} 🎉</p> : ''
             }
             {winner &&
                 <Popup open={openDesignatedWinnerConfirmation} closeOnDocumentClick  onClose={onCloseDesignatedWinnerConfirmation}>
@@ -89,12 +80,7 @@ const AwardOfCompetition = ({ idCompetition, typeCompetition, dateFinCompetition
                         <button className="close" onClick={onCloseDesignatedWinnerConfirmation}>x</button>
                         <h2 className="header"> The winner is </h2>
                         <div className="content">
-                            { typeCompetition === TypeCompetitions.Actor || typeCompetition === TypeCompetitions.Director ?
-                                <p>🎉{winner.firstname + " " + winner.lastname}🎉</p>
-                            :  TypeCompetitions.Movie ?
-                                <p>🎉{winner.title}🎉</p>
-                                : ''
-                            }
+                        <p>🎉{winner.title}🎉</p>
                         </div>
                         <div className="actions">
                             <button className="btn-reset" onClick={onCloseDesignatedWinnerConfirmation}> Retour </button>

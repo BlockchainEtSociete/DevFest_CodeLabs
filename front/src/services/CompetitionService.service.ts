@@ -4,7 +4,7 @@ import contractsInterface from "../contracts/contracts";
 import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import ipfs from "../components/common/ipfs";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
-import { fetchActors, fetchDirectors, fetchOnePeople, listenToNewActor, listenToNewDirector, stopListenToNewActor, stopListenToNewDirector } from "./PeopleService.service";
+import { fetchActors, fetchDirectors, fetchOneActor, fetchOneDirector, listenToNewActor, listenToNewDirector, stopListenToNewActor, stopListenToNewDirector } from "./PeopleService.service";
 import { fetchMovies, fetchOneMovie, listenToNewMovie, stopListenToNewMovie } from "./MovieService.service";
 import {
     Competition,
@@ -38,7 +38,7 @@ export const getCompetitionData = async ( competitionId: number, contract: Contr
         if ( typeCompetitions === TypeCompetitions.Actor ) {
             //actor
             for ( const nominee of competition.nominees ) {
-                const actor = await fetchOnePeople( contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, ethers.toNumber( nominee.tokenId ) );
+                const actor = await fetchOneActor( ethers.toNumber( nominee.tokenId ) );
 
                 if ( actor ) {
                     const { id: tokenId, firstname, lastname, picture } = actor;
@@ -57,7 +57,7 @@ export const getCompetitionData = async ( competitionId: number, contract: Contr
         } else if ( typeCompetitions === TypeCompetitions.Director ) {
             //director
             for ( const nominee of competition.nominees ) {
-                const director = await fetchOnePeople( contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, ethers.toNumber( nominee.tokenId ) );
+                const director = await fetchOneDirector( ethers.toNumber( nominee.tokenId ) );
 
                 if ( director ) {
                     const { id: tokenId, firstname, lastname, picture } = director;
@@ -242,7 +242,7 @@ export async function fetchNomineesOfCompetition( competition: Competition, setL
                 const nomineeId = ethers.toNumber( nomineeEvent.args[1] )
                 const nomineeTokenId = ethers.toNumber( nomineeEvent.args[2] )
 
-                const actor = await fetchOnePeople( contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, ethers.toNumber( nomineeTokenId ) );
+                const actor = await fetchOneActor( ethers.toNumber( nomineeTokenId ) );
                 const title = `${ actor?.firstname } ${ actor?.lastname }`;
                 const pictureUrl = actor?.picture || '';
                 nominees.push( { tokenId: nomineeTokenId, title, pictureUrl, id: nomineeId } );
@@ -252,7 +252,7 @@ export async function fetchNomineesOfCompetition( competition: Competition, setL
                 const nomineeId = ethers.toNumber( nomineeEvent.args[1] )
                 const nomineeTokenId = ethers.toNumber( nomineeEvent.args[2] )
 
-                const director = await fetchOnePeople( contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, ethers.toNumber( nomineeTokenId ) );
+                const director = await fetchOneDirector( ethers.toNumber( nomineeTokenId ) );
                 const title = `${ director?.firstname } ${ director?.lastname }`;
                 const pictureUrl = director?.picture || '';
                 nominees.push( { tokenId: nomineeTokenId, title, pictureUrl, id: nomineeId } );
