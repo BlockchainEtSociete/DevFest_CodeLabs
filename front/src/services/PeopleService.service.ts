@@ -5,12 +5,11 @@ import ipfs, { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 import { Actor, Director, People } from "../types/People";
 import { PeopleMetadata } from "../types/Metadata";
-import { ContractTransactionResponse } from "../../node_modules/ethers/lib.commonjs/ethers";
 
-const actorContract = new ethers.Contract( contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, provider );
-const directorContract = new ethers.Contract( contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, provider );
-const eventActorMinted = 'ActorMinted';
-const eventDirectorMinted = 'DirectorMinted';
+const ACTOR_CONTRACT = new ethers.Contract( contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, provider );
+const DIRECTOR_CONTRACT = new ethers.Contract( contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, provider );
+const EVENT_ACTOR_MINTED = 'ActorMinted';
+const EVENT_DIRECTOR_MINTED = 'DirectorMinted';
 
 enum PeopleType {
     Actor,
@@ -62,11 +61,11 @@ export const fetchPeoples = async ( peopleType: PeopleType ): Promise<People[]> 
     // initialisation du contract
     // création du filtre en fonction du type
     if ( peopleType === PeopleType.Actor ) {
-        contract = actorContract;
-        filter = contract.filters[eventActorMinted];
+        contract = ACTOR_CONTRACT;
+        filter = contract.filters[EVENT_ACTOR_MINTED];
     } else if ( peopleType === PeopleType.Director ) {
-        contract = directorContract
-        filter = contract.filters[eventDirectorMinted];
+        contract = DIRECTOR_CONTRACT
+        filter = contract.filters[EVENT_DIRECTOR_MINTED];
     } else {
         throw "PeopleType non géré"
     }
@@ -85,9 +84,9 @@ export const fetchPeoples = async ( peopleType: PeopleType ): Promise<People[]> 
             peoples.push( await getPeopleData( id, tokenUri ) );
         }
     } catch ( err ) {
-        const msg = "Erreur lors de la récupération des peoples";
-        console.log( msg, err );
-        throw msg;
+        const message = "Erreur lors de la récupération des peoples";
+        console.log( message, err );
+        throw message;
     }
     return peoples;
 }
@@ -110,9 +109,9 @@ export const fetchOnePeople = async ( contractAddress: string, contractAbi: any,
                 people = await getPeopleData( tokenId, tokenUri )
             }
         } catch ( err ) {
-            const msg = "Erreur lors de la récupération du people";
-            console.log( msg, err );
-            throw msg;
+            const message = "Erreur lors de la récupération du people";
+            console.log( message, err );
+            throw message;
         }
         return people;
     }
@@ -123,7 +122,7 @@ export const fetchOnePeople = async ( contractAddress: string, contractAbi: any,
  * @param onNewActor
  */
 export const listenToNewActor = async ( onNewActor: ( Actor: Actor ) => void ) => {
-    await actorContract.on( eventActorMinted, async ( ...args: Array<unknown> ) => {
+    await ACTOR_CONTRACT.on( EVENT_ACTOR_MINTED, async ( ...args: Array<unknown> ) => {
         const [ tokenId, tokenUri ] = args;
         onNewActor( await getPeopleData( ethers.toNumber( tokenId as number ), tokenUri as string ) )
     } )
@@ -134,7 +133,7 @@ export const listenToNewActor = async ( onNewActor: ( Actor: Actor ) => void ) =
  * @param onNewDirector
  */
 export const listenToNewDirector = async ( onNewDirector: ( Director: Director ) => void ) => {
-    await directorContract.on( eventDirectorMinted, async ( ...args: Array<unknown> ) => {
+    await DIRECTOR_CONTRACT.on( EVENT_DIRECTOR_MINTED, async ( ...args: Array<unknown> ) => {
         const [ tokenId, tokenUri ] = args;
         onNewDirector( await getPeopleData( ethers.toNumber( tokenId as number ), tokenUri as string ) )
     } );
@@ -144,14 +143,14 @@ export const listenToNewDirector = async ( onNewDirector: ( Director: Director )
  * Stop l'ecoute des nouveaux acteurs
  */
 export const stopListenToNewActor = async () => {
-    await actorContract.removeAllListeners( eventActorMinted );
+    await ACTOR_CONTRACT.removeAllListeners( EVENT_ACTOR_MINTED );
 }
 
 /**
  * Stop l'écoute des nouveaux réalisateurs
  */
 export const stopListenToNewDirector = async () => {
-    await directorContract.removeAllListeners( eventDirectorMinted );
+    await DIRECTOR_CONTRACT.removeAllListeners( EVENT_DIRECTOR_MINTED );
 }
 
 /**
@@ -159,11 +158,11 @@ export const stopListenToNewDirector = async () => {
  * @param PictureUri
  * @param newActorInfo
  */
-export const generateNFTMetadataAndUploadToIpfs = async ( PictureUri: string, newPeople: People ): Promise<string> => {
+export const generateNFTMetadataPeopleAndUploadToIpfs = async ( pictureUri: string, newPeople: People ): Promise<string> => {
     const NFTMetaData: PeopleMetadata = {
         "description": "People generated NFT metadata",
         "external_url": "",
-        "image": PictureUri,
+        "image": pictureUri,
         "name": "People DevFest",
         "attributes": [
             {
@@ -176,7 +175,7 @@ export const generateNFTMetadataAndUploadToIpfs = async ( PictureUri: string, ne
             },
             {
                 "trait_type": "Picture",
-                "value": PictureUri
+                "value": pictureUri
             },
             {
                 "trait_type": "Address",
@@ -204,22 +203,28 @@ export const generateNFTMetadataAndUploadToIpfs = async ( PictureUri: string, ne
  */
 export const mintPeople = async ( tokenUri: string, typePeople: number ): Promise<number> => {
     const signer = await provider?.getSigner();
-    let transaction: ContractTransactionResponse;
     let contract;
 
     // création de l'appel du mint
     if ( typePeople == 1 ) {
         contract = new ethers.Contract( contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, signer );
-        transaction = await contract.mint( tokenUri );
     } else {
         contract = new ethers.Contract( contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, signer );
-        transaction = await contract.mint( tokenUri );
     }
-    // vérification que la transaction c'est bien passé
-    const receipt = await transaction.wait();
+
+    let receipt;
+    try {
+        // vérification que la transaction c'est bien passé
+        const transaction = await contract.mint( tokenUri );
+        receipt = await transaction.wait();
+    } catch ( e ) {
+        const error = JSON.parse( JSON.stringify( e ) );
+        console.log( "Transaction", error );
+        throw `Transaction : ${ error.reason }`;
+    }
 
     if ( receipt && receipt.status == 1 ) {
-        const peopleMinted = ( receipt.logs as EventLog[] ).find( ( log ) => log.fragment && log.fragment.name === eventDirectorMinted || log.fragment.name === eventActorMinted );
+        const peopleMinted = ( receipt.logs as EventLog[] ).find( ( log ) => log.fragment && log.fragment.name === EVENT_DIRECTOR_MINTED || log.fragment.name === EVENT_ACTOR_MINTED );
 
         if ( !peopleMinted ) {
             console.log( "receipt", receipt )

@@ -3,5 +3,5 @@ export interface Jury {
     firstname: string
     lastname: string
     picture: string
-    Address: string
+    address: string
 }

@@ -1,14 +1,15 @@
 import { ChangeEvent, useEffect, useState } from "react";
-import { ethers } from "ethers";
-import contractsInterface from "../../contracts/contracts";
 import ipfs from "../common/ipfs";
-import { MovieMetadata } from "../../types/Metadata";
-import { provider } from "../../provider/providers";
-import MovieDisplay from "./MovieDisplay";
-import { Director as DirectorType } from "../../types/People";
+import { Director } from "../../types/People";
 import { fetchDirectors, listenToNewDirector, stopListenToNewDirector } from "../../services/PeopleService.service";
 import SnackbarAlert from "../common/SnackbarAlert";
 import { AlertColor } from "@mui/material";
+import { Movie } from "../../types/Movie";
+import {
+    generateNFTMetadataMovieAndUploadToIpfs,
+    getMovieData,
+    mintMovie
+} from "../../services/MovieService.service";
 
 const MovieGenerator = () => {
     const [ , setLoading ] = useState( false );
@@ -17,15 +18,15 @@ const MovieGenerator = () => {
     const [ open, setOpen ] = useState( false )
     const [ message, setMessage ] = useState( '' )
     const [ severity, setSeverity ] = useState<AlertColor | undefined>( 'success' )
-    const [ directors, setDirectors ] = useState<DirectorType[]>( [] );
+    const [ directors, setDirectors ] = useState<Director[]>( [] );
 
-    const [ Title, setTitle ] = useState( '' );
-    const [ Description, setDescription ] = useState( '' );
-    const [ Picture, setPicture ] = useState( '' );
-    const [ TokenIdDirector, setTokenIdDirector ] = useState( -1 );
+    const [ title, setTitle ] = useState( '' );
+    const [ description, setDescription ] = useState( '' );
+    const [ picture, setPicture ] = useState( '' );
+    const [ tokenIdDirector, setTokenIdDirector ] = useState( -1 );
     const [ , setFile ] = useState( null );
 
-    const [ tokenId, setTokenId ]: any = useState( 0 );
+    const [ movie, setMovie ] = useState<Movie>();
 
     useEffect( () => {
         ( async () => {
@@ -53,35 +54,35 @@ const MovieGenerator = () => {
      */
     const updateTitle = ( e: ChangeEvent<HTMLInputElement> ) => setTitle( e.target.value );
     const updateDescription = ( e: ChangeEvent<HTMLTextAreaElement> ) => setDescription( e.target.value );
-    const updateTokenIdDirector = ( e: ChangeEvent<HTMLSelectElement> ) => setTokenIdDirector( e.target.value );
+    const updateTokenIdDirector = ( e: ChangeEvent<HTMLSelectElement> ) => setTokenIdDirector( Number( e.target.value ) );
 
     /**
      * Verification du formulaire avant procédure du mint NFT
      * */
-    const verifyForm = async () => {
+    const onClickAddMovie = async () => {
         // controle des champs
-        if ( !Title || Title.length == 0 ) {
+        if ( !title || title.length == 0 ) {
             setMitting( false );
-            setMessage( `Invalide Title` )
+            setMessage( `Invalide title` )
             setSeverity( 'error' )
             setOpen( true )
             return false;
         }
-        if ( !Description || Description.length == 0 ) {
+        if ( !description || description.length == 0 ) {
             setMitting( false );
-            setMessage( `Invalid Description` )
+            setMessage( `Invalid description` )
             setSeverity( 'error' )
             setOpen( true )
             return false;
         }
-        if ( !Picture ) {
+        if ( !picture ) {
             setMitting( false );
-            setMessage( `invalid Picture` )
+            setMessage( `invalid picture` )
             setSeverity( 'error' )
             setOpen( true )
             return false;
         }
-        if ( !TokenIdDirector && TokenIdDirector == 0 ) {
+        if ( !tokenIdDirector && tokenIdDirector <= 0 ) {
             setMitting( false );
             setMessage( `Invalid token id director` )
             setSeverity( 'error' )
@@ -90,15 +91,22 @@ const MovieGenerator = () => {
         }
 
         // Creation du film
-        const newFilm = {
-            Title,
-            Description,
-            Picture,
-            TokenIdDirector
+        const newFilm: Movie = {
+            id: -1,
+            title,
+            description,
+            picture,
+            director: {
+                id: tokenIdDirector,
+                firstname: '',
+                lastname: '',
+                picture: '',
+                address: ''
+            }
         }
 
         // Upload de l'image sur ipfs
-        const PictureFile = await dataUrlToFile( `data:image/*;${ newFilm.Picture }` )
+        const PictureFile = await dataUrlToFile( `data:image/*;${ newFilm.picture }` )
         const ipfsPictureUploadResult = await ipfs.add( PictureFile, { pin: true } ).catch( ( err: Error ) => {
             setMessage( `IPFS: ${ err.message }` )
             setSeverity( 'error' )
@@ -108,111 +116,70 @@ const MovieGenerator = () => {
 
         // création de l'uri - addresse de l'image uploadé
         if ( ipfsPictureUploadResult ) {
-            const PictureUri = `ipfs://${ ipfsPictureUploadResult.cid }`
-            await generateNFTMetadataAndUploadToIpfs( PictureUri, newFilm );
-        }
-    }
-
-    /**
-     * Génération des meta données du nft avec enregistrement sur ipfs
-     * @param PictureUri
-     * @param newFilm
-     */
-    const generateNFTMetadataAndUploadToIpfs = async ( PictureUri: string, newFilm: any, ) => {
-        const NFTMetaData: MovieMetadata = {
-            "description": "Movie generated NFT metadata",
-            "external_url": "",
-            "image": PictureUri,
-            "name": "Movie DevFest",
-            "attributes": [
-                {
-                    "trait_type": "Title",
-                    "value": newFilm.Title
-                },
-                {
-                    "trait_type": "Description",
-                    "value": newFilm.Description
-                },
-                {
-                    "trait_type": "Picture",
-                    "value": PictureUri
-                },
-                {
-                    "trait_type": "TokenIdDirector",
-                    "value": newFilm.TokenIdDirector
-                }
-            ]
-        }
-
-        const metadataString = JSON.stringify( NFTMetaData );
-
-        // enregistrement des meta donné sur ipfs
-        const ipfsResponse = await ipfs.add( metadataString, { pin: true } ).catch( ( err: Error ) => {
-            setMessage( `IPFS: ${ err.message }` )
-            setSeverity( 'error' )
-            setOpen( true )
+            const pictureUri = `ipfs://${ ipfsPictureUploadResult.cid }`
+            let tokenURI;
+            try {
+                tokenURI = await generateNFTMetadataMovieAndUploadToIpfs( pictureUri, newFilm );
+            } catch ( e ) {
+                setMessage( `IPFS: ${ e }` )
+                setSeverity( 'error' )
+                setOpen( true )
+                setMitting( false );
+            }
+            if ( tokenURI ) {
+                await createMovie( tokenURI );
+            }
             setMitting( false );
-        } );
-        // création de l'addresse des meta donnée
-        if ( ipfsResponse ) {
-            const tokenURI = 'ipfs://' + ipfsResponse.cid;
-            await mintMovie( tokenURI, newFilm.TokenIdDirector );
         }
-        setMitting( false );
     }
 
     /**
      * Fonction qui appel le smart contract afin de minter le token uri dans la blockchain
-     * @param tokenURI
      */
-    async function mintMovie( tokenURI: string, tokenIdDirector: number ) {
+    const createMovie = async ( tokenURI: string ) => {
         setMitting( true );
-        const signer = await provider?.getSigner();
 
-        // création de l'appel du mint
-        const contract = new ethers.Contract( contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, signer );
-        const transaction = await contract.mint( tokenURI, tokenIdDirector );
+        try {
+            const idToken = await mintMovie( tokenURI, tokenIdDirector );
+            await displayMinted( idToken, tokenURI );
 
-        // récupération de l'id du token minté
-        await contract.on( '*', ( event ) => {
-            if ( event.eventName == 'MovieMinted' ) {
-                const id = ethers.toNumber( event.args[0] );
-                setTokenId( id );
-            }
-        } );
+            setTitle( '' );
+            setDescription( '' );
+            setPicture( '' );
+            setTokenIdDirector( -1 );
 
-        // vérification que la transaction c'est bien passé
-        await transaction.wait().then( async ( receipt: any ) => {
-            if ( receipt && receipt.status == 1 ) {
-                setTitle( '' );
-                setDescription( '' );
-                setPicture( '' );
-                setTokenIdDirector( -1 );
-                setMessage( `Minting in success` )
-                setSeverity( 'success' )
-                setOpen( true )
-                setTimeout(
-                    function () {
-                        setOpen( false )
-                    }, 5000 );
-            }
-        } ).catch( ( err: any ) => {
-            if ( err ) {
-                setMitting( false );
-                setMessage( `Minting in error` )
-                setSeverity( 'error' )
-                setOpen( true )
-                setTimeout(
-                    function () {
-                        setOpen( false )
-                    }, 5000 );
-            }
-        } )
+            setTimeout(
+                function () {
+                    setOpen( false )
+                }, 5000 );
 
-        setMessage( 'Minting finished ! :)' )
-        setSeverity( 'success' )
-        setOpen( true )
-        return true;
+            setMessage( 'Minting finished ! :)' )
+            setSeverity( 'success' )
+            setOpen( true )
+            return true;
+
+        } catch ( e ) {
+            setMitting( false );
+            setMessage( `Un probleme est surveneu pendant le mint : ` + e )
+            setSeverity( 'error' )
+            setOpen( true )
+            setTimeout(
+                function () {
+                    setOpen( false )
+                }, 5000 );
+        }
+    }
+
+    /**
+     * Affiche briévement le film minté
+     */
+    const displayMinted = async ( idToken: number, tokenURI: string ) => {
+        setMovie( await getMovieData( idToken, tokenURI ) );
+
+        setTimeout(
+            function () {
+                setMovie( undefined );
+            }, 5000 );
     }
 
     /**
@@ -263,21 +230,21 @@ const MovieGenerator = () => {
                 <div className="form-ligne">
                     <label>
                         Title :
-                        <input name="Title" onChange={ updateTitle } value={ Title }/>
+                        <input name="Title" onChange={ updateTitle } value={ title }/>
                     </label>
                 </div>
                 <div className="form-ligne form-description">
                     <label>
                         Description :
                     </label>
-                    <textarea name="Description" rows={ 5 } cols={ 25 } value={ Description }
+                    <textarea name="Description" rows={ 5 } cols={ 25 } value={ description }
                               onChange={ updateDescription }/>
                 </div>
                 <div className="form-ligne">
                     <label>
                         Photo :
                         <div>
-                            <img src={ Picture } style={ { width: '200px' } }/>
+                            <img src={ picture } style={ { width: '200px' } }/>
                         </div>
                         <input name="Picture" type="file" onChange={ selectedPhoto }/>
                     </label>
@@ -286,9 +253,9 @@ const MovieGenerator = () => {
                     <label>Réalisateur :
                         <select name="type" onChange={ updateTokenIdDirector }>
                             <option>Sélectionner un réalisateur</option>
-                            { directors && directors.length > 0 && directors.map( ( director: DirectorType ) => (
+                            { directors && directors.length > 0 && directors.map( ( director: Director ) => (
                                 <option key={ director.id }
-                                        value={ ethers.toNumber( director.id ) }>{ director.firstname } { director.lastname }</option>
+                                        value={ director.id }>{ director.firstname } { director.lastname }</option>
                             ) )
                             }
                         </select>
@@ -296,11 +263,19 @@ const MovieGenerator = () => {
                 </div>
             </div>
 
-            <button onClick={ verifyForm } disabled={ mitting }> Ajout d'un nouveau film</button>
+            <button onClick={ onClickAddMovie } disabled={ mitting }> Ajout d'un nouveau film</button>
 
             <div>
                 <SnackbarAlert open={ open } setOpen={ setOpen } message={ message } severity={ severity }/>
-                <MovieDisplay tokenId={ tokenId }/>
+            </div>
+            <div style={ { margin: 'auto', width: 200 } }>
+                { movie &&
+                    <div>
+                        <h3>Apercu :</h3>
+                        <img src={ movie.picture } alt={ movie.title } style={ { height: '200px' } }/>
+                        <p>{ movie.title }</p>
+                    </div>
+                }
             </div>
         </div>
     )

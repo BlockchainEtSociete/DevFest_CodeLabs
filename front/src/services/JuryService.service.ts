@@ -1,9 +1,11 @@
-import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
+import ipfs, { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 import { provider } from "../provider/providers";
 import contractsInterface from "../contracts/contracts";
 import { ethers, EventLog } from "ethers";
 import { Jury } from "../types/Jury";
+import { JuryMetadata } from "../types/Metadata";
+import { JuryInfos } from "../components/jurys/JuryImageGenerator";
 
 const juryContract = new ethers.Contract( contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, provider );
 
@@ -28,7 +30,7 @@ export const getJuryData = async ( tokenId: number, tokenUri: string ): Promise<
         firstname: data.attributes[0].value,
         lastname: data.attributes[1].value,
         picture: ipfsGetUrl( data.image ),
-        Address: data.attributes[3].value
+        address: data.attributes[3].value
     };
 }
 
@@ -78,4 +80,82 @@ export const listenToNewJury = async ( onNewJury: ( Jury: Jury ) => void ) => {
  */
 export const stopListenToNewJury = async () => {
     await juryContract.removeAllListeners( JuryContractEvents.NEW_JURY );
+}
+
+/**
+ * Génération des meta données du nft avec enregistrement sur ipfs
+ * @param imageUri
+ * @param pictureUri
+ * @param newJury
+ */
+export const generateNFTMetadataJuryAndUploadToIpfs = async ( imageUri: string, pictureUri: string, newJury: JuryInfos ) => {
+    const NFTMetaData: JuryMetadata = {
+        "description": "Jury generated NFT metadata",
+        "external_url": "",
+        "image": imageUri,
+        "name": "Jury DevFest",
+        "attributes": [
+            {
+                "trait_type": "Firstname",
+                "value": newJury.firstname
+            },
+            {
+                "trait_type": "Lastname",
+                "value": newJury.lastname
+            },
+            {
+                "trait_type": "Picture",
+                "value": pictureUri
+            },
+            {
+                "trait_type": "Address",
+                "value": newJury.address
+            }
+        ]
+    }
+
+    const metadataString = JSON.stringify( NFTMetaData );
+
+    try {
+        // enregistrement des meta donné sur ipfs
+        const ipfsResponse = await ipfs.add( metadataString, { pin: true } );
+        // création de l'addresse des meta donnée
+        return 'ipfs://' + ipfsResponse.cid;
+    } catch ( e ) {
+        throw `Erreur lors de l'écriture des méta données de la compétition sur IPFS`;
+    }
+}
+
+/**
+ * Fonction qui va appeler le smart contract pour minter le Jury
+ * @param address
+ * @param tokenURI
+ */
+export const mintJury = async ( address: any, tokenURI: string ) => {
+    const signer = await provider?.getSigner();
+    // création de l'appel du mint
+    const contract = new ethers.Contract( contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, signer );
+
+    let receipt;
+    try {
+        const transaction = await contract.mint( address, tokenURI );
+        receipt = await transaction.wait();
+    } catch ( e ) {
+        const error = JSON.parse( JSON.stringify( e ) );
+        console.log( "Transaction", error );
+        throw `Transaction : ${ error.reason }`;
+    }
+
+    if ( receipt && receipt.status == 1 ) {
+        const juryMinted = ( receipt.logs as EventLog[] ).find( ( log ) => log.fragment && log.fragment.name === JuryContractEvents.NEW_JURY );
+        if ( !juryMinted ) {
+            console.log( "receipt", receipt )
+            throw "Evenement de création attendu"
+        }
+
+        return ethers.toNumber( juryMinted.args[1] );
+    } else {
+        console.log( "receipt", receipt )
+        throw "Une erreur c'est produit durant la transaction"
+    }
 }

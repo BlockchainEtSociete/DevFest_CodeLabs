@@ -3,33 +3,33 @@ import { Landscape } from "@mui/icons-material";
 import html2pdf from "html2pdf.js";
 
 export interface JuryInfos {
-    Firstname: string;
-    Lastname: string;
-    Picture: string;
-    Address: string;
+    firstname: string;
+    lastname: string;
+    picture: string;
+    address: string;
 }
 
 export interface GenerateJuryImageProps {
     cardInfos: JuryInfos
 }
 
-export const GenerateJuryImage = async (cardInfos: JuryInfos) => {
-    if (cardInfos.Picture !== '') {
-        const element = document.getElementById('cardPdf');
-        if (element) {
+export const GenerateJuryImage = async ( cardInfos: JuryInfos ) => {
+    if ( cardInfos.picture !== '' ) {
+        const element = document.getElementById( 'cardPdf' );
+        if ( element ) {
             element.style.display = 'block';
 
             const html2pdfWorker = new html2pdf.Worker();
             const cardDataUrl = await html2pdfWorker
-                .set({
-                    margin:1,
+                .set( {
+                    margin: 1,
                     unit: 'px',
                     orientation: Landscape,
-                    jsPDF: {format: [125, 125]}
-                })
-                .from(element)
+                    jsPDF: { format: [ 125, 125 ] }
+                } )
+                .from( element )
                 .toImg()
-                .outputImg('dataurlstring');
+                .outputImg( 'dataurlstring' );
 
             element.style.display = 'none';
 
@@ -39,13 +39,13 @@ export const GenerateJuryImage = async (cardInfos: JuryInfos) => {
     return '';
 }
 
-export const GenerateJuryGenerator = ({cardInfos}: GenerateJuryImageProps) => {
+export const GenerateJuryGenerator = ( { cardInfos }: GenerateJuryImageProps ) => {
     return (
         <>
-            <div id="cardPdf" style={{display: 'none'}}>
+            <div id="cardPdf" style={ { display: 'none' } }>
                 <div className="logos">
                     <div className="companyLogo">
-                        <img src="/logo_devfest.png" alt="Logo" id="companyLogo" />
+                        <img src="/logo_devfest.png" alt="Logo" id="companyLogo"/>
                     </div>
                     <div className="pictureBrand">
                         DevFest Nantes
@@ -57,17 +57,20 @@ export const GenerateJuryGenerator = ({cardInfos}: GenerateJuryImageProps) => {
                 <div className="memberDetails">
                     <div className="memberPicture">
                         <div className="picture">
-                            <img src={`data:image/*;${cardInfos.Picture}`} alt="Member" id="memberPicture" />
+                            <img src={ `data:image/*;${ cardInfos.picture }` } alt="Member" id="memberPicture"/>
                         </div>
                     </div>
                     <div className="memberCardDetails">
-                        <div id="memberFirstname"><span className="label">Firstname:</span> {cardInfos.Firstname}</div>
-                        <div id="memberLastname"><span className="label">Lastname:</span> {cardInfos.Lastname}</div>
-                        <div id="memberStartdate"><span className="label">Address:</span> {cardInfos.Address.substring(0,5)}...{cardInfos.Address.substring(38,42)}</div>
+                        <div id="memberFirstname"><span className="label">Firstname:</span> { cardInfos.firstname }
+                        </div>
+                        <div id="memberLastname"><span className="label">Lastname:</span> { cardInfos.lastname }</div>
+                        <div id="memberStartdate"><span
+                            className="label">Address:</span> { cardInfos.address.substring( 0, 5 ) }...{ cardInfos.address.substring( 38, 42 ) }
+                        </div>
                     </div>
                 </div>
             </div>
-            <style>{`
+            <style>{ `
                 #cardPdf {
                     display: block;
                     height: 250px;
@@ -118,9 +121,8 @@ export const GenerateJuryGenerator = ({cardInfos}: GenerateJuryImageProps) => {
                 #cardPdf .memberCardDetails {
                     margin: 15px 0 0 30px;
                 }
-            `}</style>
+            ` }</style>
         </>
     )
 }
-
 export default GenerateJuryGenerator

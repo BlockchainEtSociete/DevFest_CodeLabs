@@ -2,10 +2,13 @@ import { ChangeEvent, useState } from "react";
 import { ethers } from "ethers";
 import "../../styles/formBlock.css";
 import ipfs from "../common/ipfs";
-import PeopleDisplay from "./PeopleDisplay";
 import { AlertColor } from "@mui/material";
 import SnackbarAlert from "../common/SnackbarAlert";
-import { generateNFTMetadataAndUploadToIpfs, mintPeople } from "../../services/PeopleService.service";
+import {
+    generateNFTMetadataPeopleAndUploadToIpfs,
+    getPeopleData,
+    mintPeople
+} from "../../services/PeopleService.service";
 import { People } from "../../types/People";
 
 const PeopleGenerator = () => {
@@ -14,18 +17,18 @@ const PeopleGenerator = () => {
     const [ message, setMessage ] = useState( '' )
     const [ severity, setSeverity ] = useState<AlertColor | undefined>( 'success' )
 
-    const [ type, setType ]: any = useState( 1 );
+    const [ type, setType ] = useState( 1 );
     const [ lastname, setLastname ] = useState( '' );
     const [ firstname, setFirstname ] = useState( '' );
     const [ picture, setPicture ] = useState( '' );
     const [ , setFile ] = useState( null );
     const [ address, setAddress ] = useState( '' );
-    const [ tokenUri, setTokenUri ] = useState( '' );
+    const [ people, setPeople ] = useState<People>();
 
     const updateFirstname = ( e: React.ChangeEvent<HTMLInputElement> ) => setFirstname( e.target.value )
     const updateLastname = ( e: React.ChangeEvent<HTMLInputElement> ) => setLastname( e.target.value )
     const updateAddress = ( e: React.ChangeEvent<HTMLInputElement> ) => setAddress( e.target.value )
-    const updateType = ( e: React.ChangeEvent<HTMLSelectElement> ) => setType( e.target.value )
+    const updateType = ( e: React.ChangeEvent<HTMLSelectElement> ) => setType( Number( e.target.value ) )
 
     /**
      * Verification du formulaire avant procédure du mint NFT
@@ -81,18 +84,18 @@ const PeopleGenerator = () => {
 
         // création de l'uri - addresse de l'image uploadé
         if ( ipfsPictureUploadResult ) {
-            const PictureUri = `ipfs://${ ipfsPictureUploadResult.cid }`
-            let tokenUri;
+            const pictureUri = `ipfs://${ ipfsPictureUploadResult.cid }`
+            let tokenURI
             try {
-                tokenUri = await generateNFTMetadataAndUploadToIpfs( PictureUri, newPeopleInfo );
+                tokenURI = await generateNFTMetadataPeopleAndUploadToIpfs( pictureUri, newPeopleInfo );
             } catch ( e ) {
                 setMessage( `IPFS: ${ e }` )
                 setSeverity( 'error' )
                 setOpen( true )
                 setMitting( false );
             }
-            if ( tokenUri ) {
-                await createPeople( tokenUri );
+            if ( tokenURI && tokenURI.length > 0 ) {
+                await createPeople( tokenURI );
             }
             setMitting( false );
         }
@@ -102,12 +105,11 @@ const PeopleGenerator = () => {
      * fonction qui set l'id du token une fois le mint reussi
      * @param tokenURI
      */
-    async function createPeople( tokenURI: string ) {
+    const createPeople = async ( tokenURI: string ) => {
         setMitting( true );
-
         try {
-            await mintPeople( tokenURI, type );
-            setTokenUri( tokenURI );
+            const idToken = await mintPeople( tokenURI, type );
+            await displayMinted( idToken, tokenURI );
 
             setFirstname( '' );
             setLastname( '' );
@@ -115,17 +117,19 @@ const PeopleGenerator = () => {
             setAddress( '' );
             setType( 1 );
             setFile( null );
-            setMessage( `Minting in success` )
-            setSeverity( 'success' )
-            setOpen( true )
+
             setTimeout(
                 function () {
                     setOpen( false )
                 }, 5000 );
 
+            setMessage( 'Minting finished ! :)' )
+            setSeverity( 'success' )
+            setOpen( true )
+            return true;
         } catch ( e ) {
             setMitting( false );
-            setMessage( `Un probleme est surveneu pendant le mint.` )
+            setMessage( `Un probleme est surveneu pendant le mint : ` + e )
             setSeverity( 'error' )
             setOpen( true )
             setTimeout(
@@ -133,15 +137,25 @@ const PeopleGenerator = () => {
                     setOpen( false )
                 }, 5000 );
         }
+    }
 
-        setMessage( 'Minting finished ! :)' )
-        setSeverity( 'success' )
-        setOpen( true )
-        return true;
+    /**
+     * Affiche briévement le résultat du mint
+     * @param idToken
+     * @param tokenURI
+     */
+    const displayMinted = async ( idToken: number, tokenURI: string ) => {
+        setPeople( await getPeopleData( idToken, tokenURI ) );
+
+        setTimeout(
+            function () {
+                setPeople( undefined );
+            }, 5000 );
     }
 
     /**
      * Form events management.
+     * @param event
      */
     const selectedPhoto = ( event: ChangeEvent<HTMLInputElement> ) => {
         const filesUploaded = event.currentTarget.files;
@@ -226,7 +240,16 @@ const PeopleGenerator = () => {
 
             <div>
                 <SnackbarAlert open={ open } setOpen={ setOpen } message={ message } severity={ severity }/>
-                <PeopleDisplay tokenUri={ tokenUri }/>
+            </div>
+            <div style={ { margin: 'auto', width: 200 } }>
+                { people &&
+                    <div>
+                        <h3>Apercu :</h3>
+                        <img src={ people.picture } alt={ `${ people.firstname } ${ people.lastname }` }
+                             style={ { height: '200px' } }/>
+                        <p>{ `${ people.firstname } ${ people.lastname }` }</p>
+                    </div>
+                }
             </div>
         </section>
     )
