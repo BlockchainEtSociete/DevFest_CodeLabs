@@ -23,7 +23,7 @@ contract Movies is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     /// @notice Mint a new movie.
     /// @dev event MovieMinted when movie is minted.
     /// @param _tokenURI The token URI.
-    function mint(string memory _tokenURI, uint _tokenDirector) external onlyOwner{
+    function mint(string calldata _tokenURI, uint _tokenDirector) external onlyOwner{
         uint tokenId = totalSupply() +1;
         _safeMint(owner(), tokenId);
 
@@ -33,7 +33,6 @@ contract Movies is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         directorMovie[tokenId] = _tokenDirector;
 
         emit MovieMinted(tokenId);
-        _approve(owner(), tokenId);
     }
 
     /// @notice Get tokenIdDirector.

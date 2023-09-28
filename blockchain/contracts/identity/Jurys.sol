@@ -27,8 +27,6 @@ contract Jurys is ERC5484 {
         _setTokenURI(tokenId, _tokenURI);
 
         emit JuryMinted(_recipient, tokenId, _tokenURI);
-
-        _approve(owner(), tokenId);
     }
 
     /// @notice Get the jury id
