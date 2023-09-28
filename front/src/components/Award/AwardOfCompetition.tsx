@@ -76,7 +76,7 @@ const AwardOfCompetition = ({ idCompetition, typeCompetition, dateFinCompetition
                     : ''
                 :   dateFinCompetition < today && winner ?
                             typeCompetition === TypeCompetitions.Actor || typeCompetition === TypeCompetitions.Director ?
-                            <p>🎉 Le gagnant est : {winner?.Firstname} {winner?.Lastname} 🎉</p>
+                            <p>🎉 Le gagnant est : {winner?.firstname} {winner?.lastname} 🎉</p>
                             :
                             typeCompetition == TypeCompetitions.Movie ?
                                     <p>🎉 Le gagnant est : {winner?.title} 🎉</p>
@@ -90,9 +90,9 @@ const AwardOfCompetition = ({ idCompetition, typeCompetition, dateFinCompetition
                         <h2 className="header"> The winner is </h2>
                         <div className="content">
                             { typeCompetition === TypeCompetitions.Actor || typeCompetition === TypeCompetitions.Director ?
-                                <p>🎉{winner.Firstname + " " + winner.Lastname}🎉</p>
+                                <p>🎉{winner.firstname + " " + winner.lastname}🎉</p>
                             :  TypeCompetitions.Movie ?
-                                <p>🎉{winner.Title}🎉</p>
+                                <p>🎉{winner.title}🎉</p>
                                 : ''
                             }
                         </div>

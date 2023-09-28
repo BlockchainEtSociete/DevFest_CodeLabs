@@ -2,7 +2,7 @@ import CardCompetitionSelect from "../CardCompetitionSelect";
 import { AlertColor } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Nominee, TypeCompetitions } from "../../../types/Competition";
-import { addNomineesToCompetition, fetchEligibleNomineesByTypeCompetition } from "../../../services/CompetitionService.service";
+import { addNomineesToCompetition, fetchEligibleNomineesByTypeCompetition, stopListenToNewPeopleAndMovieByTypeCompetition, listenToNewPeopleAndMovieByTypeCompetition } from "../../../services/CompetitionService.service";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
@@ -23,7 +23,14 @@ export interface CompetitionNomineesFormProps {
 }
 export const CompetitionNomineesForm = ({ typeCompetition, competitionId, setOpen, setMessage, setSeverity, isLoading, setIsLoading, onNomineesAdded }: CompetitionNomineesFormProps) => {
     const [nominees, setNominees] = useState<NomineeSelection[]>([]);
-    
+
+    useEffect(() => {
+        (async () => {
+            await stopListenToNewPeopleAndMovieByTypeCompetition(typeCompetition)
+            await listenToNewPeopleAndMovieByTypeCompetition(typeCompetition, (nominee) => setNominees([...nominees, {nominee, isSelected: false}]));
+        })();
+    }, [nominees]);
+
     useEffect(() => {
         (async () => {
             setIsLoading(true)
@@ -46,7 +53,7 @@ export const CompetitionNomineesForm = ({ typeCompetition, competitionId, setOpe
     const toggleNomineeSelection = (nomineeTokenId: number) => {
         const indexOfNominee = nominees.findIndex(({ nominee: { tokenId } }) => nomineeTokenId === tokenId);
         nominees[indexOfNominee].isSelected = !nominees[indexOfNominee].isSelected
-        
+
         setNominees([...nominees])
     }
 

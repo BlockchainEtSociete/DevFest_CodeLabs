@@ -4,8 +4,8 @@ import contractsInterface from "../contracts/contracts";
 import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import ipfs from "../components/common/ipfs";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
-import { fetchActors, fetchDirectors, fetchOnePeople } from "./PeopleService.service";
-import { fetchMovies, fetchOneMovie } from "./MovieService.service";
+import { fetchActors, fetchDirectors, fetchOnePeople, listenToNewActor, listenToNewDirector, stopListenToNewActor, stopListenToNewDirector } from "./PeopleService.service";
+import { fetchMovies, fetchOneMovie, listenToNewMovie, stopListenToNewMovie } from "./MovieService.service";
 import {
     Competition,
     Nominee,
@@ -161,39 +161,6 @@ export const listenToNewCompetition = async ( newCompetitionCallback: ( competit
 export const stopListenToNewCompetition = () => {
     const contract = new ethers.Contract( contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, provider );
     contract.removeAllListeners( CompetitionContractEvents.NEW_COMPETITION );
-}
-
-/**
- * Function qui retourne les listes d'ids en fonction des paramettre du filtre
- * @param competitionId
- * @param juryId
- * @param contractAddress
- * @param contractAbi
- * @param setIdsCompetition
- * @param setIdsJurys
- */
-export const fetchIdsByFilter = async ( competitionId: number | null, juryId: number | null, contractAddress: string, contractAbi: any, setIdsCompetition: Function, setIdsJurys: Function ) => {
-    if ( provider ) {
-        const contract = new ethers.Contract( contractAddress, contractAbi, provider );
-        const filter = contract.filters.JuryAddedToCompetition( competitionId, juryId );
-
-        try {
-            const events = await contract.queryFilter( filter, 0 );
-            const idsCompetition: any[] = []
-            const idsJurys: any[] = [];
-
-            for ( const event of events ) {
-                !idsCompetition.includes( ethers.toNumber( ( event as EventLog ).args[0] ) ) ? idsCompetition.push( ethers.toNumber( ( event as EventLog ).args[0] ) ) : '';
-                !idsJurys.includes( ethers.toNumber( ( event as EventLog ).args[1] ) ) ? idsJurys.push( ethers.toNumber( ( event as EventLog ).args[1] ) ) : '';
-            }
-
-            setIdsCompetition( idsCompetition );
-            setIdsJurys( idsJurys );
-        } catch ( err ) {
-            console.log( err );
-            return false;
-        }
-    }
 }
 
 /**
@@ -482,8 +449,7 @@ export const fetchEligibleNomineesByTypeCompetition = async ( typeCompetition: T
         } else {
             // Movie
             const movies = await fetchMovies()
-            for ( const { id, title: Title, picture: Picture } of movies ) {
-                const title = Title;
+            for ( const { id, title, picture: Picture } of movies ) {
                 const pictureUrl = Picture || '';
 
                 nominees.push( { tokenId: id, title, pictureUrl, id: -1 } );
@@ -495,6 +461,52 @@ export const fetchEligibleNomineesByTypeCompetition = async ( typeCompetition: T
         throw msg
     }
     return nominees;
+}
+
+/**
+ * Ecoute les événements nouvel acteur/directeur/film
+ * @param typeCompetition permet de déterminer acteur/directeur/film
+ * @param onNewNominee fonction de callback appelée avec acteur/directeur/film converti en nominé
+ * @returns 
+ */
+export const listenToNewPeopleAndMovieByTypeCompetition = async (typeCompetition: TypeCompetitions, onNewNominee: (nominee: Nominee) => void ) => {
+    if (typeCompetition === TypeCompetitions.Actor) {
+        return listenToNewActor(({ id, firstname: Firstname, lastname: Lastname, picture: Picture }) => {
+            const title = `${ Firstname } ${ Lastname }`;
+            const pictureUrl = Picture || '';
+
+            onNewNominee({ tokenId: id, title, pictureUrl, id: -1 });
+        });
+    } else if (typeCompetition === TypeCompetitions.Director) {
+        return listenToNewDirector(({ id, firstname: Firstname, lastname: Lastname, picture: Picture }) => {
+            const title = `${ Firstname } ${ Lastname }`;
+            const pictureUrl = Picture || '';
+            
+            onNewNominee({ tokenId: id, title, pictureUrl, id: -1 });
+        });
+    } else {
+        return listenToNewMovie(({ id, title, picture: Picture }) => {
+            const pictureUrl = Picture || '';
+            
+            onNewNominee({ tokenId: id, title, pictureUrl, id: -1 });
+        });
+    }
+
+}
+
+/**
+ * Arrête l'écoute
+ * @param typeCompetition 
+ * @returns 
+ */
+export const stopListenToNewPeopleAndMovieByTypeCompetition = async (typeCompetition: TypeCompetitions) => {
+    if (typeCompetition === TypeCompetitions.Actor) {
+        return stopListenToNewActor();
+    } else if (typeCompetition === TypeCompetitions.Director) {
+        return stopListenToNewDirector();
+    } else {
+        return stopListenToNewMovie();
+    }
 }
 
 /**
