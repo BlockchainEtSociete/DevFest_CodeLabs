@@ -117,12 +117,12 @@ const fetchOnePeople = async ( contractAddress: string, contractAbi: InterfaceAb
     }
 }
 
-export const fetchOneActor = (actorTokenId: number): Promise<Actor | undefined> => {
-    return fetchOnePeople(contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, actorTokenId);
+export const fetchOneActor = ( actorTokenId: number ): Promise<Actor | undefined> => {
+    return fetchOnePeople( contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, actorTokenId );
 }
 
-export const fetchOneDirector = (directorIdNominee: number): Promise<Director | undefined> => {
-    return fetchOnePeople(contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, directorIdNominee);
+export const fetchOneDirector = ( directorIdNominee: number ): Promise<Director | undefined> => {
+    return fetchOnePeople( contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, directorIdNominee );
 }
 
 /**

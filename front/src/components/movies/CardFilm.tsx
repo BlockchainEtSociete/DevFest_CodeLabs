@@ -26,4 +26,5 @@ function CardFilm( { title, description, picture, director }: CardFilmProps ) {
         </div>
     )
 }
+
 export default CardFilm;

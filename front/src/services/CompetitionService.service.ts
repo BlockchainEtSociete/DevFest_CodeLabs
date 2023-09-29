@@ -4,7 +4,16 @@ import contractsInterface from "../contracts/contracts";
 import { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import ipfs from "../components/common/ipfs";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
-import { fetchActors, fetchDirectors, fetchOneActor, fetchOneDirector, listenToNewActor, listenToNewDirector, stopListenToNewActor, stopListenToNewDirector } from "./PeopleService.service";
+import {
+    fetchActors,
+    fetchDirectors,
+    fetchOneActor,
+    fetchOneDirector,
+    listenToNewActor,
+    listenToNewDirector,
+    stopListenToNewActor,
+    stopListenToNewDirector
+} from "./PeopleService.service";
 import { fetchMovies, fetchOneMovie, listenToNewMovie, stopListenToNewMovie } from "./MovieService.service";
 import {
     Competition,
@@ -170,23 +179,24 @@ export const stopListenToNewCompetition = () => {
  * @param setLoading setter loading state
  * @param setCompetitions setter competitions state
  */
-export async function fetchCompetitionsOfOneJury( juryId: number, status: VotingCompetitionStatus, setLoading: ( loading: boolean ) => void, setCompetitions: ( competitions: Competition[] ) => void ) {
-    setLoading( true );
-    try {
-        const signer = await provider?.getSigner()
-        const competitionsContract = new ethers.Contract( contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
+export const fetchCompetitionsOfOneJury = async ( juryId: number, status: VotingCompetitionStatus ) => {
+    if ( provider ) {
+        const signer = await provider?.getSigner();
+        const contractCompetition = new ethers.Contract( contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
 
-        const filter = competitionsContract.filters.JuryAddedToCompetition( null, juryId );
-        const eventsOfJury: EventLog[] = await competitionsContract.queryFilter( filter, 0 ) as EventLog[];
+        const filter = contractCompetition.filters.JuryAddedToCompetition( null, juryId );
+        const eventsOfJury: EventLog[] = await contractCompetition.queryFilter( filter, 0 ) as EventLog[];
 
         const competitions: Competition[] = []
+
         for ( const eventJury of eventsOfJury ) {
             const [ competitionId ] = eventJury.args
+
             try {
                 const {
                     competition,
                     votingStatus
-                }: CompetitionAndVotingStatus = await competitionsContract.getUnvotedCompetitionOfJury( competitionId )
+                }: CompetitionAndVotingStatus = await contractCompetition.getUnvotedCompetitionOfJury( competitionId )
 
                 if ( ethers.toNumber( votingStatus ) === status ) {
                     const metadataString = JSON.parse( uint8ArrayToString( await ipfsGetContent( competition.tokenURI ), 'utf8' ) )
@@ -206,18 +216,13 @@ export async function fetchCompetitionsOfOneJury( juryId: number, status: Voting
                         nameAward: ""
                     } );
                 } else {
-                    console.log( `La compétition ${ competitionId } n'est pas encore ouverte` )
+                    console.log( `La compétition ${ competitionId } n'est pas ouverte` )
                 }
             } catch ( err ) {
-                console.log( `Erreur lors de la récupération de la compétition ${ competitionId }`, err )
+                console.log( `Erreur lors de la récupération de la compétition ${ competitionId } : `, err.reason )
             }
         }
-
-        setCompetitions( competitions )
-    } catch ( e ) {
-        console.log( "Erreur lors de la récupération des compétitions", e );
-    } finally {
-        setLoading( false )
+        return competitions;
     }
 }
 
@@ -467,42 +472,42 @@ export const fetchEligibleNomineesByTypeCompetition = async ( typeCompetition: T
  * Ecoute les événements nouvel acteur/directeur/film
  * @param typeCompetition permet de déterminer acteur/directeur/film
  * @param onNewNominee fonction de callback appelée avec acteur/directeur/film converti en nominé
- * @returns 
+ * @returns
  */
-export const listenToNewPeopleAndMovieByTypeCompetition = async (typeCompetition: TypeCompetitions, onNewNominee: (nominee: Nominee) => void ) => {
-    if (typeCompetition === TypeCompetitions.Actor) {
-        return listenToNewActor(({ id, firstname: Firstname, lastname: Lastname, picture: Picture }) => {
+export const listenToNewPeopleAndMovieByTypeCompetition = async ( typeCompetition: TypeCompetitions, onNewNominee: ( nominee: Nominee ) => void ) => {
+    if ( typeCompetition === TypeCompetitions.Actor ) {
+        return listenToNewActor( ( { id, firstname: Firstname, lastname: Lastname, picture: Picture } ) => {
             const title = `${ Firstname } ${ Lastname }`;
             const pictureUrl = Picture || '';
 
-            onNewNominee({ tokenId: id, title, pictureUrl, id: -1 });
-        });
-    } else if (typeCompetition === TypeCompetitions.Director) {
-        return listenToNewDirector(({ id, firstname: Firstname, lastname: Lastname, picture: Picture }) => {
+            onNewNominee( { tokenId: id, title, pictureUrl, id: -1 } );
+        } );
+    } else if ( typeCompetition === TypeCompetitions.Director ) {
+        return listenToNewDirector( ( { id, firstname: Firstname, lastname: Lastname, picture: Picture } ) => {
             const title = `${ Firstname } ${ Lastname }`;
             const pictureUrl = Picture || '';
-            
-            onNewNominee({ tokenId: id, title, pictureUrl, id: -1 });
-        });
+
+            onNewNominee( { tokenId: id, title, pictureUrl, id: -1 } );
+        } );
     } else {
-        return listenToNewMovie(({ id, title, picture: Picture }) => {
+        return listenToNewMovie( ( { id, title, picture: Picture } ) => {
             const pictureUrl = Picture || '';
-            
-            onNewNominee({ tokenId: id, title, pictureUrl, id: -1 });
-        });
+
+            onNewNominee( { tokenId: id, title, pictureUrl, id: -1 } );
+        } );
     }
 
 }
 
 /**
  * Arrête l'écoute
- * @param typeCompetition 
- * @returns 
+ * @param typeCompetition
+ * @returns
  */
-export const stopListenToNewPeopleAndMovieByTypeCompetition = async (typeCompetition: TypeCompetitions) => {
-    if (typeCompetition === TypeCompetitions.Actor) {
+export const stopListenToNewPeopleAndMovieByTypeCompetition = async ( typeCompetition: TypeCompetitions ) => {
+    if ( typeCompetition === TypeCompetitions.Actor ) {
         return stopListenToNewActor();
-    } else if (typeCompetition === TypeCompetitions.Director) {
+    } else if ( typeCompetition === TypeCompetitions.Director ) {
         return stopListenToNewDirector();
     } else {
         return stopListenToNewMovie();

@@ -2,7 +2,12 @@ import CardCompetitionSelect from "../CardCompetitionSelect";
 import { AlertColor } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Nominee, TypeCompetitions } from "../../../types/Competition";
-import { addNomineesToCompetition, fetchEligibleNomineesByTypeCompetition, stopListenToNewPeopleAndMovieByTypeCompetition, listenToNewPeopleAndMovieByTypeCompetition } from "../../../services/CompetitionService.service";
+import {
+    addNomineesToCompetition,
+    fetchEligibleNomineesByTypeCompetition,
+    stopListenToNewPeopleAndMovieByTypeCompetition,
+    listenToNewPeopleAndMovieByTypeCompetition
+} from "../../../services/CompetitionService.service";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
@@ -14,105 +19,112 @@ interface NomineeSelection {
 export interface CompetitionNomineesFormProps {
     typeCompetition: TypeCompetitions,
     competitionId: number,
-    setOpen: (open: boolean) => void,
-    setMessage: (message: string) => void,
-    setSeverity: (severity: AlertColor | undefined) => void,
+    setOpen: ( open: boolean ) => void,
+    setMessage: ( message: string ) => void,
+    setSeverity: ( severity: AlertColor | undefined ) => void,
     isLoading: boolean,
-    setIsLoading: (open: boolean) => void,
+    setIsLoading: ( open: boolean ) => void,
     onNomineesAdded: () => void
 }
-export const CompetitionNomineesForm = ({ typeCompetition, competitionId, setOpen, setMessage, setSeverity, isLoading, setIsLoading, onNomineesAdded }: CompetitionNomineesFormProps) => {
-    const [nominees, setNominees] = useState<NomineeSelection[]>([]);
 
-    useEffect(() => {
-        (async () => {
-            await stopListenToNewPeopleAndMovieByTypeCompetition(typeCompetition)
-            await listenToNewPeopleAndMovieByTypeCompetition(typeCompetition, (nominee) => setNominees([...nominees, {nominee, isSelected: false}]));
-        })();
-    }, [nominees]);
+export const CompetitionNomineesForm = ( { typeCompetition, competitionId, setOpen, setMessage, setSeverity, isLoading, setIsLoading, onNomineesAdded }: CompetitionNomineesFormProps ) => {
+    const [ nominees, setNominees ] = useState<NomineeSelection[]>( [] );
 
-    useEffect(() => {
-        (async () => {
-            setIsLoading(true)
+    useEffect( () => {
+        ( async () => {
+            await stopListenToNewPeopleAndMovieByTypeCompetition( typeCompetition )
+            await listenToNewPeopleAndMovieByTypeCompetition( typeCompetition, ( nominee ) => setNominees( [ ...nominees, {
+                nominee,
+                isSelected: false
+            } ] ) );
+        } )();
+    }, [ nominees ] );
+
+    useEffect( () => {
+        ( async () => {
+            setIsLoading( true )
             try {
-                const nominees: NomineeSelection[] = (await fetchEligibleNomineesByTypeCompetition(typeCompetition)).map((nominee) => {
+                const nominees: NomineeSelection[] = ( await fetchEligibleNomineesByTypeCompetition( typeCompetition ) ).map( ( nominee ) => {
                     return { nominee, isSelected: false }
-                });
-                setNominees(nominees)
+                } );
+                setNominees( nominees )
             } finally {
-                setIsLoading(false)
+                setIsLoading( false )
             }
-        })();
-    }, [typeCompetition, setIsLoading]);
+        } )();
+    }, [ typeCompetition, setIsLoading ] );
 
     /**
      * Permet d'ajouter ou d'enlever un nominé de la liste des nominés sélectionnés
-     * 
+     *
      * @param nomineeTokenId token id du nominé
      */
-    const toggleNomineeSelection = (nomineeTokenId: number) => {
-        const indexOfNominee = nominees.findIndex(({ nominee: { tokenId } }) => nomineeTokenId === tokenId);
+    const toggleNomineeSelection = ( nomineeTokenId: number ) => {
+        const indexOfNominee = nominees.findIndex( ( { nominee: { tokenId } } ) => nomineeTokenId === tokenId );
         nominees[indexOfNominee].isSelected = !nominees[indexOfNominee].isSelected
 
-        setNominees([...nominees])
+        setNominees( [ ...nominees ] )
     }
 
     /**
      * Action d'ajout des nominés à une compétition
      */
     const onClickAddNomineesToCompetition = async () => {
-        const nomineesTokenIds = nominees.filter(({ isSelected }) => isSelected).map(({ nominee: { tokenId } }) => tokenId)
-        if (nomineesTokenIds.length === 0) {
-            setMessage(`Au moins 1 nominé doit être sélectionné`)
-            setSeverity('error')
-            setOpen(true)
+        const nomineesTokenIds = nominees.filter( ( { isSelected } ) => isSelected ).map( ( { nominee: { tokenId } } ) => tokenId )
+        if ( nomineesTokenIds.length === 0 ) {
+            setMessage( `Au moins 1 nominé doit être sélectionné` )
+            setSeverity( 'error' )
+            setOpen( true )
             return;
         }
 
         try {
-            setIsLoading(true)
-            await addNomineesToCompetition(competitionId, nomineesTokenIds);
+            setIsLoading( true )
+            await addNomineesToCompetition( competitionId, nomineesTokenIds );
             onNomineesAdded();
 
-            setMessage("Minting success");
-            setSeverity("success");
-            setOpen(true);
+            setMessage( "Minting success" );
+            setSeverity( "success" );
+            setOpen( true );
             setTimeout(
                 function () {
-                    setOpen(false)
-                }, 5000);
-        } catch (e) {
+                    setOpen( false )
+                }, 5000 );
+        } catch ( e ) {
             const msg = "Erreur lors de l'ajout d'un nominé";
-            console.log(msg, e);
-            setMessage(msg);
-            setSeverity("error");
-            setOpen(true);
+            console.log( msg, e );
+            setMessage( msg );
+            setSeverity( "error" );
+            setOpen( true );
             setTimeout(
                 function () {
-                    setOpen(false)
-                }, 5000);
+                    setOpen( false )
+                }, 5000 );
         } finally {
-            setIsLoading(false)
+            setIsLoading( false )
         }
     }
 
     return (
         <div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={ { display: 'flex', flexWrap: 'wrap', justifyContent: 'center' } }>
                 {
-                    nominees.map(({ nominee: { tokenId, pictureUrl, title }, isSelected }) => (
-                        <div key={`${tokenId}`} onClick={() => toggleNomineeSelection(tokenId)} style={{ border: '1px solid black', margin: '5px' }}>
-                            {isSelected && <CheckCircleOutlineIcon color="info" />}
-                            {!isSelected && <HelpOutlineIcon color="warning" />}
+                    nominees.map( ( { nominee: { tokenId, pictureUrl, title }, isSelected } ) => (
+                        <div key={ `${ tokenId }` } onClick={ () => toggleNomineeSelection( tokenId ) }
+                             style={ { border: '1px solid black', margin: '5px' } }>
+                            { isSelected && <CheckCircleOutlineIcon color="info"/> }
+                            { !isSelected && <HelpOutlineIcon color="warning"/> }
                             <CardCompetitionSelect
-                                info={title || ''}
-                                picture={pictureUrl || ''}
+                                info={ title || '' }
+                                picture={ pictureUrl || '' }
                             />
                         </div>
-                    ))
+                    ) )
                 }
             </div>
-            <button onClick={onClickAddNomineesToCompetition} disabled={isLoading}>Ajout des nominées de la compétition</button>
+            <button onClick={ onClickAddNomineesToCompetition } disabled={ isLoading }>Ajout des nominées de la
+                compétition
+            </button>
         </div>
     )
 }

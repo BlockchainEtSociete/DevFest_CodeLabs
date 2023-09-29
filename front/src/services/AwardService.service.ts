@@ -92,7 +92,7 @@ const getWinner = async ( tokenIdNominee: number, typeCompetition: TypeCompetiti
 
     if ( typeCompetition === TypeCompetitions.Actor ) {
         const actor = await fetchOneActor( tokenIdNominee );
-        if (actor) {
+        if ( actor ) {
             const { firstname, lastname } = actor;
             const title = `${ firstname } ${ lastname }`;
             winner = { title };
@@ -100,7 +100,7 @@ const getWinner = async ( tokenIdNominee: number, typeCompetition: TypeCompetiti
     } else if ( typeCompetition === TypeCompetitions.Director ) {
         //director
         const director = await fetchOneDirector( tokenIdNominee );
-        if (director) {
+        if ( director ) {
             const { firstname, lastname } = director;
             const title = `${ firstname } ${ lastname }`;
             winner = { title };
@@ -108,7 +108,7 @@ const getWinner = async ( tokenIdNominee: number, typeCompetition: TypeCompetiti
     } else {
         //movie
         const movie = await fetchOneMovie( tokenIdNominee );
-        if (movie) {
+        if ( movie ) {
             const { title } = movie;
             winner = { title };
         }
