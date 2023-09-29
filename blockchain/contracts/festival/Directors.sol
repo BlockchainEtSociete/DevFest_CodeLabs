@@ -20,9 +20,11 @@ contract Directors is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     /// @notice Mint a new director.
     /// @dev event DirectorMinted when director is minted.
     /// @param _tokenURI The token URI.
-    function mint(string calldata _tokenURI) external onlyOwner{
+    function mint(address _recipient, string calldata _tokenURI) external onlyOwner{
+        require(balanceOf(_recipient) == 0, "A director can only have 1 token");
+
         uint tokenId = totalSupply() +1;
-        _safeMint(owner(), tokenId);
+        _safeMint(_recipient, tokenId);
 
         require(_exists(tokenId), "Director: token generation failed");
         _setTokenURI(tokenId, _tokenURI);

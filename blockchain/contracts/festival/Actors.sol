@@ -20,9 +20,11 @@ contract Actors is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     /// @notice Mint a new actor.
     /// @dev event ActorMinted when actor is minted.
     /// @param _tokenURI The token URI.
-    function mint(string calldata _tokenURI) external onlyOwner{
+    function mint(address _recipient, string calldata _tokenURI) external onlyOwner{
+        require(balanceOf(_recipient) == 0, "An actor can only have 1 token");
+
         uint tokenId = totalSupply() +1;
-        _safeMint(owner(), tokenId);
+        _safeMint(_recipient, tokenId);
 
         require(_exists(tokenId), "Actor: token generation failed");
         _setTokenURI(tokenId, _tokenURI);

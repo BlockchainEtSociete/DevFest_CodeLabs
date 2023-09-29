@@ -23,9 +23,9 @@ contract Movies is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     /// @notice Mint a new movie.
     /// @dev event MovieMinted when movie is minted.
     /// @param _tokenURI The token URI.
-    function mint(string calldata _tokenURI, uint _tokenDirector) external onlyOwner{
+    function mint(address _recipient, string calldata _tokenURI, uint _tokenDirector) external onlyOwner {
         uint tokenId = totalSupply() +1;
-        _safeMint(owner(), tokenId);
+        _safeMint(_recipient, tokenId);
 
         require(_exists(tokenId), "Movie: token generation failed");
         _setTokenURI(tokenId, _tokenURI);

@@ -50,6 +50,27 @@ export const getPeopleData = async ( tokenId: number, tokenUri: string ): Promis
     };
 }
 
+export const getDirectorAddress = async ( tokenId: number ): Promise<string> => {
+    let contract = DIRECTOR_CONTRACT;
+    let directorAddress;
+    try {
+        // vérification que la transaction c'est bien passé
+        directorAddress = await contract.ownerOf(tokenId);
+    } catch ( e ) {
+        const error = JSON.parse( JSON.stringify( e ) );
+        console.log( "Transaction", error );
+        throw `Transaction : ${ error.reason }`;
+    }
+
+    if ( directorAddress ) {
+
+        return directorAddress
+    } else {
+        console.log( "director address", directorAddress )
+        throw "Une erreur c'est produit durant la transaction"
+    }
+};
+
 /**
  * Fonction de récupération des données des acteurs et réalisateurs minté par event
  * @param peopleType
@@ -209,7 +230,7 @@ export const generateNFTMetadataPeopleAndUploadToIpfs = async ( pictureUri: stri
  * @param tokenUri
  * @param typePeople
  */
-export const mintPeople = async ( tokenUri: string, typePeople: number ): Promise<number> => {
+export const mintPeople = async ( recipient: string, tokenUri: string, typePeople: number ): Promise<number> => {
     const signer = await provider?.getSigner();
     let contract;
 
@@ -223,7 +244,7 @@ export const mintPeople = async ( tokenUri: string, typePeople: number ): Promis
     let receipt;
     try {
         // vérification que la transaction c'est bien passé
-        const transaction = await contract.mint( tokenUri );
+        const transaction = await contract.mint( recipient, tokenUri );
         receipt = await transaction.wait();
     } catch ( e ) {
         const error = JSON.parse( JSON.stringify( e ) );
