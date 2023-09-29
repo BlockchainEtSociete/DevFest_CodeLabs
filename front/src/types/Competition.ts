@@ -1,13 +1,15 @@
 export enum TypeCompetitions {
     Actor,
     Director,
-    Movie
+    Movie,
+    None
 }
 
 export enum VotingCompetitionStatus {
     Pending,
     InProgress,
-    Ended
+    Ended,
+    Unknown
 }
 
 export interface Nominee {
@@ -29,6 +31,11 @@ export interface Competition {
     endTime: number;
     nominees: Nominee[];
     winnerCompetition: number;
+    nameAward: string;
+}
+
+export interface WinnerOfCompetition {
+    title: string;
 }
 
 export interface CompetitionAndVotingStatus {

@@ -1,4 +1,4 @@
-import {ChangeEvent} from "react";
+import { ChangeEvent } from "react";
 
 /**
  * Choix de la photo
@@ -6,10 +6,10 @@ import {ChangeEvent} from "react";
  * @param setFile
  * @param setPicture
  */
-export function selectedPhotoToken(event: ChangeEvent<HTMLInputElement>, setFile: Function, setPicture: Function) {
+export function selectedPhotoToken( event: ChangeEvent<HTMLInputElement>, setFile: Function, setPicture: Function ) {
     const filesUploaded = event.currentTarget.files;
-    if (filesUploaded && filesUploaded.length > 0) {
-        setPictureBase64(filesUploaded[0], setFile, setPicture);
+    if ( filesUploaded && filesUploaded.length > 0 ) {
+        setPictureBase64( filesUploaded[0], setFile, setPicture );
     }
 };
 
@@ -19,15 +19,15 @@ export function selectedPhotoToken(event: ChangeEvent<HTMLInputElement>, setFile
  * @param setFile
  * @param setPicture
  */
-const setPictureBase64 = (file: any, setFile: Function, setPicture: Function) => {
-    setFile(file);
+const setPictureBase64 = ( file: any, setFile: Function, setPicture: Function ) => {
+    setFile( file );
     let reader = new FileReader();
-    reader.readAsDataURL(file);
+    reader.readAsDataURL( file );
     reader.onload = function () {
-        setPicture(reader.result as string);
+        setPicture( reader.result as string );
     };
-    reader.onerror = function (error) {
-        console.log('Error: ', error);
+    reader.onerror = function ( error ) {
+        console.log( 'Error: ', error );
     };
 };
 
@@ -36,12 +36,12 @@ const setPictureBase64 = (file: any, setFile: Function, setPicture: Function) =>
  * @param src
  * @param name
  */
-export async function dataUrlToFile(src: string, name: string){
-    return (fetch(src)
-        .then(function (res) {
+export async function dataUrlToFile( src: string, name: string ) {
+    return ( fetch( src )
+        .then( function ( res ) {
             return res.arrayBuffer();
-        }))
-        .then(function (buf) {
-            return new File([buf], name, {type: 'image/*'});
-        })
+        } ) )
+        .then( function ( buf ) {
+            return new File( [ buf ], name, { type: 'image/*' } );
+        } )
 };

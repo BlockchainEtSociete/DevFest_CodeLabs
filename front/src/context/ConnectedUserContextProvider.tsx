@@ -4,7 +4,7 @@ import { reducer, Actions, initialState } from "./ConnectedUserContextState";
 import { provider } from "../provider/providers.ts";
 import { computeAccessRights } from "../services/AccessRights.service.ts";
 
-export default ({children}: {children:ReactNode}) => {
+const ConnectedUserContextProvider = ({children}: {children:ReactNode}) => {
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const initUser = useCallback(async () => {
@@ -13,7 +13,7 @@ export default ({children}: {children:ReactNode}) => {
             if (signer) {
                 dispatch({type: Actions.UPDATE_USER, data: signer})
                 const {accessRights, juryId} = await computeAccessRights(signer.address)
-                dispatch({type: Actions.UPDATE_RIGHTS, data: {accessRights, juryId}})
+                dispatch({type: Actions.UPDATE_RIGHTS, data: {accessRights, juryId : juryId || -1}})
             }
         } else {
             dispatch({type: Actions.DISCARD_USER})
@@ -39,3 +39,5 @@ export default ({children}: {children:ReactNode}) => {
         </ConnectedUserContext.Provider>
     )
 }
+
+export default ConnectedUserContextProvider;
