@@ -147,7 +147,6 @@ const MovieGenerator = () => {
         setMitting( true );
 
         try {
-            console.log('minting movie to ' + directorAddress);
             const idToken = await mintMovie( directorAddress, tokenURI, tokenIdDirector );
             await displayMinted( idToken, tokenURI );
 
