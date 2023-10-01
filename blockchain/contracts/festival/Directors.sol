@@ -1,20 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "../token/ERC5484.sol";
 
 /// @title Management of Director
 /// @author Colas Vincent
 /// @notice Smart contract to generate digital directors for the festival.
-contract Directors is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
+contract Directors is ERC5484 {
 
     /// @notice Event when token generated
     event DirectorMinted(uint tokenId, string tokenUri);
 
-    constructor(string memory name, string memory symbol) ERC721(name, symbol){
+    constructor(string memory name, string memory symbol) ERC5484(name, symbol){
     }
 
     /// @notice Mint a new director.
@@ -31,26 +28,4 @@ contract Directors is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
         emit DirectorMinted(tokenId, _tokenURI);
     }
-
-    // The following functions are overrides required by Solidity.
-
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) internal override(ERC721, ERC721Enumerable)
-    {
-        super._beforeTokenTransfer(from, to, tokenId, batchSize);
-    }
-
-    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
-        super._burn(tokenId);
-    }
-
-    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory)
-    {
-        return super.tokenURI(tokenId);
-    }
-
-    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721Enumerable, ERC721URIStorage) returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
-    }
-
 }
