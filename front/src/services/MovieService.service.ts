@@ -5,6 +5,7 @@ import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 import contractsInterface from "../contracts/contracts";
 import { Movie } from "../types/Movie";
 import { MovieMetadata } from "../types/Metadata";
+import { decodeError } from "../utils/error";
 
 const MOVIE_CONTRACT = new ethers.Contract( contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, provider );
 const EVENT_MOVIE_MINTED = 'MovieMinted';
@@ -166,9 +167,9 @@ export const mintMovie = async ( directorAddress: string, tokenUri: string, toke
         const transaction = await contract.mint( directorAddress, tokenUri, tokenIdDirector );
         receipt = await transaction.wait();
     } catch ( e ) {
-        const error = JSON.parse( JSON.stringify( e ) );
+        const { error } = decodeError(e);
         console.log( "Transaction", error );
-        throw `Transaction : ${ error.reason }`;
+        throw `${ error }`;
     }
 
     if ( receipt && receipt.status == 1 ) {
