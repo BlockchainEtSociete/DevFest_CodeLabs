@@ -151,10 +151,11 @@ export const generateNFTMetadataMovieAndUploadToIpfs = async ( pictureUri: strin
 
 /**
  * Fonction qui va appeler le smart contract pour minter le film
+ * @param directorAddress
  * @param tokenUri
  * @param tokenIdDirector
  */
-export const mintMovie = async ( tokenUri: string, tokenIdDirector: number ) => {
+export const mintMovie = async ( directorAddress: string, tokenUri: string, tokenIdDirector: number ) => {
     const signer = await provider?.getSigner();
 
     // création de l'appel du mint
@@ -162,7 +163,7 @@ export const mintMovie = async ( tokenUri: string, tokenIdDirector: number ) => 
 
     let receipt;
     try {
-        const transaction = await contract.mint( tokenUri, tokenIdDirector );
+        const transaction = await contract.mint( directorAddress, tokenUri, tokenIdDirector );
         receipt = await transaction.wait();
     } catch ( e ) {
         const error = JSON.parse( JSON.stringify( e ) );

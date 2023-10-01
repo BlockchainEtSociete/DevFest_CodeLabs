@@ -95,7 +95,7 @@ const PeopleGenerator = () => {
                 setMitting( false );
             }
             if ( tokenURI && tokenURI.length > 0 ) {
-                await createPeople( tokenURI );
+                await createPeople( address, tokenURI );
             }
             setMitting( false );
         }
@@ -105,10 +105,10 @@ const PeopleGenerator = () => {
      * fonction qui set l'id du token une fois le mint reussi
      * @param tokenURI
      */
-    const createPeople = async ( tokenURI: string ) => {
+    const createPeople = async ( recipient: string, tokenURI: string ) => {
         setMitting( true );
         try {
-            const idToken = await mintPeople( tokenURI, type );
+            const idToken = await mintPeople( recipient, tokenURI, type );
             await displayMinted( idToken, tokenURI );
 
             setFirstname( '' );

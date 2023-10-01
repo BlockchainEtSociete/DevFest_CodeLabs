@@ -1,7 +1,12 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import ipfs from "../common/ipfs";
 import { Director } from "../../types/People";
-import { fetchDirectors, listenToNewDirector, stopListenToNewDirector } from "../../services/PeopleService.service";
+import {
+    fetchDirectors,
+    getDirectorAddress,
+    listenToNewDirector,
+    stopListenToNewDirector
+} from "../../services/PeopleService.service";
 import SnackbarAlert from "../common/SnackbarAlert";
 import { AlertColor } from "@mui/material";
 import { Movie } from "../../types/Movie";
@@ -114,6 +119,8 @@ const MovieGenerator = () => {
             setMitting( false );
         } );
 
+        const directorAddress = await getDirectorAddress(tokenIdDirector);
+
         // création de l'uri - addresse de l'image uploadé
         if ( ipfsPictureUploadResult ) {
             const pictureUri = `ipfs://${ ipfsPictureUploadResult.cid }`
@@ -127,7 +134,7 @@ const MovieGenerator = () => {
                 setMitting( false );
             }
             if ( tokenURI ) {
-                await createMovie( tokenURI );
+                await createMovie( directorAddress, tokenURI );
             }
             setMitting( false );
         }
@@ -136,11 +143,11 @@ const MovieGenerator = () => {
     /**
      * Fonction qui appel le smart contract afin de minter le token uri dans la blockchain
      */
-    const createMovie = async ( tokenURI: string ) => {
+    const createMovie = async ( directorAddress: string, tokenURI: string ) => {
         setMitting( true );
 
         try {
-            const idToken = await mintMovie( tokenURI, tokenIdDirector );
+            const idToken = await mintMovie( directorAddress, tokenURI, tokenIdDirector );
             await displayMinted( idToken, tokenURI );
 
             setTitle( '' );
