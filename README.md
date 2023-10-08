@@ -56,10 +56,22 @@ $ git clone https://github.com/BlockchainEtSociete/DevFest_CodeLabs.git
 - [Node.js](https://nodejs.org/fr/download)
 - [Ganache](https://trufflesuite.com/ganache/)
 ```json
-Config:
+Config :
 Hostname : 127.0.0.1
 Port: 8545
 Network id : 5777
+```
+- [Metamask](https://metamask.io/)
+```json
+Importer le portefeuille Ganache :
+  - Copier le mnemonic de ganache et coller dans la 1ere case de la phrase de récupération.
+Créer un reseau local : 
+  - Cliquez sur le bouton “Ajouter un réseau”
+  - Ajouter manuellement un réseau.
+    - Nom du réseau : Ganache Local
+    - Nouvelle URL de RPC : http://localhost:8545
+    - ID de chaîne : 1337
+    - Symbole de la devise : ETH
 ```
 - [IPFS Desktop](https://docs.ipfs.tech/install/ipfs-desktop/)
 une petite config sera peu etre necessaire :
@@ -107,11 +119,14 @@ une petite config sera peu etre necessaire :
 $ cd front
 $ npm install
 ```
-Modifier le fichier .env.dist par .env avec vos configurations :
+Modifier le fichier .env.dist par .env avec vos configurations ou par defaut :
 ```bash
-REACT_APP_IPFS_SCHEME="YOUR_SCHEME"
-REACT_APP_IPFS_HOST="YOUR_HOST"
-REACT_APP_IPFS_PORT="YOUR_PORT"
+VITE_IPFS_API_SCHEME="http"
+VITE_IPFS_API_HOST="localhost"
+VITE_IPFS_API_PORT="5001"
+VITE_IPFS_GATEWAY_SCHEME="http"
+VITE_IPFS_GATEWAY_HOST="localhost"
+VITE_IPFS_GATEWAY_PORT="8081"
 ```
 Pour lancer l'app:
 ```bash 
@@ -119,13 +134,13 @@ $ npm run dev
 ```
 
 <a name="hardhat"></a>
-### Hardhat
+### Blockchain
 
 Modifier le fichier .env.dist par .env avec vos configurations :
 ```bash
-MNEMONIC="YOUR_MNEMONIC"
-INFURA_ID="AN_INFURA_ID"
-ALCHEMY_ID="AN_ALCHEMY_ID"
+MNEMONIC="YOUR_MNEMONIC_GANACHE"
+INFURA_ID="PAS_UTILISE"
+ALCHEMY_ID="PAS_UTILISE"
 ```
 
 #### Démarrage
@@ -144,11 +159,16 @@ $ npm run deploy:ganache
 
 #### Résolution de problèmes
 
-Si vous rencontrez des problèmes à la compilation ou au déploiement, vous pouvez nettoyer les fichiers de build avec la commande suivante:
+Si vous rencontrez des problèmes à la compilation ou au déploiement, vous pouvez utiliser les commandes suivantes:
 
 ###### Nettoyage des artéfacts et du cache de build
 ```bash
 $ npm run clean
+```
+
+#### Deploy et reset smart contrat with Ganache (si besoin)
+```bash
+$ npm run deploy:ganache:reset
 ```
 
 #### Execution des tests
@@ -159,7 +179,7 @@ $ npm run test
 <a name="wallets-api"></a>
 ### Wallets API
 
-API de récupération des wallets pour la fin du Codelab
+API de récupération des wallets pour la fin du Codelab (si ont a le temps)
 
 #### Installation / lancement
 ```bash
