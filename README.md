@@ -128,24 +128,30 @@ INFURA_ID="AN_INFURA_ID"
 ALCHEMY_ID="AN_ALCHEMY_ID"
 ```
 
-#### Compile smart contrat
+#### Démarrage
+
+###### Compilation des smart contrats
 ```bash
 $ cd hardhat
 $ npm install
 $ npm run build
 ```
 
-#### Deploy smart contrat with Ganache
+###### Deploiement des smart contrats sur Ganache
 ```bash
 $ npm run deploy:ganache
 ```
 
-#### clean hardhat
+#### Résolution de problèmes
+
+Si vous rencontrez des problèmes à la compilation ou au déploiement, vous pouvez nettoyer les fichiers de build avec la commande suivante:
+
+###### Nettoyage des artéfacts et du cache de build
 ```bash
-$ npx hardhat clean
+$ npm run clean
 ```
 
-### Run tests
+#### Execution des tests
 ```bash
 $ npm run test
 ```
