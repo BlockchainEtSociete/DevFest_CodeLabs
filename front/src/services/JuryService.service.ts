@@ -6,6 +6,7 @@ import { ethers, EventLog } from "ethers";
 import { Jury } from "../types/Jury";
 import { JuryMetadata } from "../types/Metadata";
 import { JuryInfos } from "../components/jurys/JuryImageGenerator";
+import { decodeError } from "../utils/error";
 
 const juryContract = new ethers.Contract( contractsInterface.contracts.Jurys.address, contractsInterface.contracts.Jurys.abi, provider );
 
@@ -141,9 +142,9 @@ export const mintJury = async ( address: any, tokenURI: string ) => {
         const transaction = await contract.mint( address, tokenURI );
         receipt = await transaction.wait();
     } catch ( e ) {
-        const error = JSON.parse( JSON.stringify( e ) );
+        const { error } = decodeError(e);
         console.log( "Transaction", error );
-        throw `Transaction : ${ error.reason }`;
+        throw `${ error }`;
     }
 
     if ( receipt && receipt.status == 1 ) {

@@ -5,6 +5,7 @@ import ipfs, { ipfsGetContent, ipfsGetUrl } from "../components/common/ipfs";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 import { Actor, Director, People } from "../types/People";
 import { PeopleMetadata } from "../types/Metadata";
+import { decodeError } from "../utils/error";
 
 const ACTOR_CONTRACT = new ethers.Contract( contractsInterface.contracts.Actors.address, contractsInterface.contracts.Actors.abi, provider );
 const DIRECTOR_CONTRACT = new ethers.Contract( contractsInterface.contracts.Directors.address, contractsInterface.contracts.Directors.abi, provider );
@@ -247,9 +248,9 @@ export const mintPeople = async ( recipient: string, tokenUri: string, typePeopl
         const transaction = await contract.mint( recipient, tokenUri );
         receipt = await transaction.wait();
     } catch ( e ) {
-        const error = JSON.parse( JSON.stringify( e ) );
+        const  { error }  = decodeError(e);
         console.log( "Transaction", error );
-        throw `Transaction : ${ error.reason }`;
+        throw `${ error }`;
     }
 
     if ( receipt && receipt.status == 1 ) {
