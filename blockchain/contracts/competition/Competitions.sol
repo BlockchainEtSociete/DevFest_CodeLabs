@@ -219,9 +219,12 @@ contract Competitions is Ownable {
     /// @notice search en send award the winner of competition
     /// @param _competitionId the id competition
     function designateWinner(uint _competitionId) external onlyExistingCompetition(_competitionId) onlyOwner {
-        CompetitionVotingSession memory competition = getCompetition(_competitionId);
+        // TODO récupérer la compétition via getCompetition
+
         require(competition.endTime < block.timestamp, "Voting competition isn't closed yet");
-        require(competition.winnerCompetition > 0, "No one has voted for this competition");
+
+        // TODO ajouter un require pour vérifier qu'il y a eu au moins un vote
+
         address addressNominee;
 
         uint tokenIdNominee = competition.nominees[competition.winnerCompetition -1].tokenId;
@@ -231,11 +234,11 @@ contract Competitions is Ownable {
         } else if(competition.typeCompetitions == TypeCompetitions.Director){
             addressNominee = directorsContract.ownerOf(tokenIdNominee);
         } else {
-            addressNominee = directorsContract.ownerOf(moviesContract.getIdTokenDirector(tokenIdNominee));
+            // TODO récupérer l'adresse du nominé, mais attention c'est le réalisateur qui chope l'award (meilleur film)
         }
 
-        uint awardId = awardContract.mint(addressNominee, competition.tokenURI);
+        // TODO appeler le mint du contrat Award avec les bons paramètres
 
-        emit WinnerDesignated(_competitionId, tokenIdNominee, awardId, competition.typeCompetitions);
+        // TODO émettre l'événement WinnerDesignated (cf. doc en haut de ce fichier)
     }
 }

@@ -13,16 +13,14 @@ import { TypeCompetitions, WinnerOfCompetition } from "../types/Competition";
  */
 export const designateWinner = async ( competitionId: number ): Promise<WinnerOfCompetition | undefined> => {
     if ( provider ) {
-        const signer = await provider?.getSigner();
+        // TODO récupérer le signer à partir de l'objet provider (cf. import ci dessus)
 
         // création de l'appel du mint
         const contract = new ethers.Contract( contractsInterface.contracts.Competitions.address, contractsInterface.contracts.Competitions.abi, signer );
 
         try {
-            const transaction: ContractTransactionResponse = await contract.designateWinner( competitionId );
-
-            // vérification que la transaction S'est bien passé
-            const receipt = await transaction.wait();
+            // TODO appeler la fonction designateWinner du contrat Compétition (variable ci dessus)
+            // TODO attendre la fin de la transaction et récupérer le résultat
 
             if ( receipt && receipt.status == 1 ) {
 
