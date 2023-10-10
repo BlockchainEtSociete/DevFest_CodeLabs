@@ -20,12 +20,12 @@ contract Actors is ERC5484 {
     function mint(address _recipient, string calldata _tokenURI) external onlyOwner {
         require(balanceOf(_recipient) == 0, "An actor can only have 1 token");
 
-        uint tokenId = totalSupply() +1;
-        _safeMint(_recipient, tokenId);
+        // TODO: Calculate tokenId
+        // TODO: Implement mint
 
         require(_exists(tokenId), "Actor: token generation failed");
-        _setTokenURI(tokenId, _tokenURI);
+        // TODO: set tokenURI
 
-        emit ActorMinted(tokenId, _tokenURI);
+        // TODO: emit ActorMinted event
     }
 }
