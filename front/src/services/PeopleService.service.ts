@@ -83,8 +83,10 @@ export const fetchPeoples = async ( peopleType: PeopleType ): Promise<People[]> 
     // initialisation du contract
     // création du filtre en fonction du type
     if ( peopleType === PeopleType.Actor ) {
-        contract = ACTOR_CONTRACT;
-        filter = contract.filters[EVENT_ACTOR_MINTED];
+        // TODO choisir le bon contrat
+
+        // TODO créer le filter avec le bon event
+
     } else if ( peopleType === PeopleType.Director ) {
         contract = DIRECTOR_CONTRACT
         filter = contract.filters[EVENT_DIRECTOR_MINTED];
@@ -92,8 +94,8 @@ export const fetchPeoples = async ( peopleType: PeopleType ): Promise<People[]> 
         throw "PeopleType non géré"
     }
 
-    // récupération des evenements en fonction du filtre
-    const events = await contract?.queryFilter( filter, 0 ) as EventLog[];
+    // TODO récupérer les event grace au filter juste au dessus (cf. MovieService)
+
     const peoples: People[] = [];
 
     try {
