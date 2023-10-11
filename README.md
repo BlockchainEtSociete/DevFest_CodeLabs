@@ -118,10 +118,7 @@ une petite config sera peu être nécéssaire :
 
 <a name="front"></a>
 ### Front
-```bash 
-$ cd front
-$ npm install
-```
+#### Démarrage
 Modifier le fichier .env.dist par .env avec vos configurations ou par défaut :
 ```bash
 VITE_IPFS_API_SCHEME="http"
@@ -131,7 +128,12 @@ VITE_IPFS_GATEWAY_SCHEME="http"
 VITE_IPFS_GATEWAY_HOST="localhost"
 VITE_IPFS_GATEWAY_PORT="8081"
 ```
-Pour lancer l'app:
+###### Installation des packages
+```bash 
+$ cd front
+$ npm install
+```
+###### lancement de l'application :
 ```bash 
 $ npm run dev
 ```
@@ -167,12 +169,12 @@ Si vous rencontrez des problèmes à la compilation ou au déploiement, vous pou
 $ npm run clean
 ```
 
-#### Deploy et reset smart contrat with Ganache (si besoin)
+###### Deploy et reset smart contrat with Ganache (si besoin)
 ```bash
 $ npm run deploy:ganache:reset
 ```
 
-#### Execution des tests
+###### Execution des tests
 ```bash
 $ npm run test
 ```

@@ -3,15 +3,16 @@
   "license": "GNU V2",
   "version": "1.0.0",
   "scripts": {
-    "build": "npx hardhat compile",
-    "documentation": "npx hardhat dodoc",
-    "deploy:ganache": "npx hardhat --network ganache deploy --export ../front/src/contracts/contracts.ts",
-    "deploy:ganache:reset": "npx hardhat --network ganache deploy --export ../front/src/contracts/contracts.ts --reset",
+    "build": "hardhat compile",
+    "documentation": "hardhat dodoc",
+    "deploy:ganache": "hardhat --network ganache deploy --export ../front/src/contracts/contracts.ts",
+    "deploy:ganache:reset": "hardhat --network ganache deploy --export ../front/src/contracts/contracts.ts --reset",
     "ganache": "eval $(grep \"^MNEMONIC\" .env) && ganache -m \"$MNEMONIC\" -k petersburg -l 20000000000 -g 6721975 -i 1337",
-    "dev": "npx hardhat node --network hardhat",
-    "deploy:hardhat": "npx hardhat --network localhost deploy --export ../front/src/contracts/contracts.ts",
-    "deploy:hardhat:reset": "npx hardhat --network localhost deploy --export ../front/src/contracts/contracts.ts --reset",
-    "test": "npx hardhat test --network hardhat"
+    "dev": "hardhat node --network hardhat",
+    "deploy:hardhat": "hardhat --network localhost deploy --export ../front/src/contracts/contracts.ts",
+    "deploy:hardhat:reset": "hardhat --network localhost deploy --export ../front/src/contracts/contracts.ts --reset",
+    "clean": "hardhat clean",
+    "test": "hardhat test --network hardhat",
     "coverage": "hardhat coverage --network hardhat"
   },
   "devDependencies": {
