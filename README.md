@@ -59,20 +59,20 @@ $ git clone https://github.com/BlockchainEtSociete/DevFest_CodeLabs.git
 Aller sur l'engrenage puis server !
 Configuration :
   - Hostname : 127.0.0.1
-  - Port: 8545
+  - Port: 7545
   - Network id : 5777
 
 cliquez sur le bouton : SAVE AND RESTART
 ```
 - [Metamask](https://metamask.io/)
 ```json
-Importer le portefeuille Ganache :
+Importer un portefeuille existant :
   - Copier le mnemonic de ganache et coller dans la 1ere case de la phrase de récupération.
-Créer un reseau local : 
+Créer un réseau local : 
   - Cliquez sur le bouton "Ajouter un réseau"
   - "Ajouter manuellement un réseau"
     - Nom du réseau : Ganache Local
-    - Nouvelle URL de RPC : http://localhost:8545
+    - Nouvelle URL de RPC : http://localhost:7545
     - ID de chaîne : 1337
     - Symbole de la devise : ETH
 ```
@@ -178,6 +178,12 @@ $ npm run deploy:ganache:reset
 ```bash
 $ npm run test
 ```
+
+-----
+
+<span style="color:red">Fin de la procédure d'installation !</span>
+
+-----
 
 <a name="wallets-api"></a>
 ### Wallets API
