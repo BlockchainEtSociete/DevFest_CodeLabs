@@ -132,7 +132,7 @@ const MovieGenerator = () => {
                 setMitting( false );
             }
             if ( tokenURI ) {
-                await createMovie( tokenIdDirector, tokenURI );
+                await createMovie( tokenURI );
             }
             setMitting( false );
         }
@@ -141,7 +141,7 @@ const MovieGenerator = () => {
     /**
      * Fonction qui appel le smart contract afin de minter le token uri dans la blockchain
      */
-    const createMovie = async ( directorTokenId: number, tokenURI: string ) => {
+    const createMovie = async ( tokenURI: string ) => {
         setMitting( true );
 
         try {
