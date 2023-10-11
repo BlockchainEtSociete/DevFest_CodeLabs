@@ -8,7 +8,7 @@
   - [Installation](#installation)
     - [Outils](#outils)
     - [Front](#front)
-    - [Hardhat](#hardhat)
+    - [Blockchain](#blockchain)
     - [Wallets API](#wallets-api)
 
 <a name="presentation"></a>
@@ -53,28 +53,31 @@ $ git clone https://github.com/BlockchainEtSociete/DevFest_CodeLabs.git
 
 <a name="outils"></a>
 ### Outils
-- [Node.js](https://nodejs.org/fr/download)
+- [Node.js 18](https://nodejs.org/fr/download)
 - [Ganache](https://trufflesuite.com/ganache/)
 ```json
-Config :
-Hostname : 127.0.0.1
-Port: 8545
-Network id : 5777
+Aller sur l'engrenage puis server !
+Configuration :
+  - Hostname : 127.0.0.1
+  - Port: 8545
+  - Network id : 5777
+
+cliquez sur le bouton : SAVE AND RESTART
 ```
 - [Metamask](https://metamask.io/)
 ```json
 Importer le portefeuille Ganache :
   - Copier le mnemonic de ganache et coller dans la 1ere case de la phrase de récupération.
 Créer un reseau local : 
-  - Cliquez sur le bouton “Ajouter un réseau”
-  - Ajouter manuellement un réseau.
+  - Cliquez sur le bouton "Ajouter un réseau"
+  - "Ajouter manuellement un réseau"
     - Nom du réseau : Ganache Local
     - Nouvelle URL de RPC : http://localhost:8545
     - ID de chaîne : 1337
     - Symbole de la devise : ETH
 ```
 - [IPFS Desktop](https://docs.ipfs.tech/install/ipfs-desktop/)
-une petite config sera peu etre necessaire :
+une petite config sera peu être nécéssaire :
 ```json
 {
   "API": {
@@ -119,7 +122,7 @@ une petite config sera peu etre necessaire :
 $ cd front
 $ npm install
 ```
-Modifier le fichier .env.dist par .env avec vos configurations ou par defaut :
+Modifier le fichier .env.dist par .env avec vos configurations ou par défaut :
 ```bash
 VITE_IPFS_API_SCHEME="http"
 VITE_IPFS_API_HOST="localhost"
@@ -133,21 +136,19 @@ Pour lancer l'app:
 $ npm run dev
 ```
 
-<a name="hardhat"></a>
+<a name="blockchain"></a>
 ### Blockchain
 
 Modifier le fichier .env.dist par .env avec vos configurations :
 ```bash
 MNEMONIC="YOUR_MNEMONIC_GANACHE"
-INFURA_ID="PAS_UTILISE"
-ALCHEMY_ID="PAS_UTILISE"
 ```
 
 #### Démarrage
 
 ###### Compilation des smart contrats
 ```bash
-$ cd hardhat
+$ cd blockchain
 $ npm install
 $ npm run build
 ```

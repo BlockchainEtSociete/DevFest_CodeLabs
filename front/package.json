@@ -1,5 +1,5 @@
 {
-  "name": "front",
+  "name": "devfest festival front",
   "private": true,
   "version": "1.0.0",
   "license": "GNU V2",
@@ -41,5 +41,8 @@
       "react-app",
       "react-app/jest"
     ]
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
