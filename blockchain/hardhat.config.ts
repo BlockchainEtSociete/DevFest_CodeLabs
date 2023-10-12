@@ -19,44 +19,20 @@ const config: HardhatUserConfig = {
   solidity: "0.8.18",
   defaultNetwork: 'ganache',
   networks: {
-    hardhat: {
-      chainId: 1337,
-      accounts: {
-        count: 10,
-      },
-    },
     ganache: {
       accounts: {
         count: 10,
         mnemonic: `${process.env.MNEMONIC}`,
       },
       chainId: 1337,
-      url: `http://127.0.0.1:8545`,
+      url: `http://127.0.0.1:7545`,
     },
-    goerli: {
+    hardhat: {
+      chainId: 1337,
       accounts: {
         count: 10,
-        mnemonic: `${process.env.MNEMONIC}`,
       },
-      chainId: 5,
-      url: `https://goerli.infura.io/v3/${process.env.INFURA_ID}`
     },
-    sepolia: {
-      accounts: {
-        count: 10,
-        mnemonic: `${process.env.MNEMONIC}`,
-      },
-      chainId: 11155111,
-      url: `https://sepolia.infura.io/v3/${process.env.INFURA_ID}`
-    },
-    mumbai: {
-      accounts: {
-        count: 10,
-        mnemonic: `${process.env.MNEMONIC}`,
-      },
-      chainId: 80001,
-      url: `https://polygon-mumbai.g.alchemy.com/v2/${process.env.ALCHEMY_ID}`
-    }
   },
   namedAccounts: {
     deployer: 0,

@@ -8,7 +8,7 @@
   - [Installation](#installation)
     - [Outils](#outils)
     - [Front](#front)
-    - [Hardhat](#hardhat)
+    - [Blockchain](#blockchain)
     - [Wallets API](#wallets-api)
 
 <a name="presentation"></a>
@@ -53,16 +53,31 @@ $ git clone https://github.com/BlockchainEtSociete/DevFest_CodeLabs.git
 
 <a name="outils"></a>
 ### Outils
-- [Node.js](https://nodejs.org/fr/download)
+- [Node.js 18](https://nodejs.org/fr/download)
 - [Ganache](https://trufflesuite.com/ganache/)
 ```json
-Config:
-Hostname : 127.0.0.1
-Port: 8545
-Network id : 5777
+Aller sur l'engrenage puis server !
+Configuration :
+  - Hostname : 127.0.0.1
+  - Port: 7545
+  - Network id : 5777
+
+cliquez sur le bouton : SAVE AND RESTART
+```
+- [Metamask](https://metamask.io/)
+```json
+Importer un portefeuille existant :
+  - Copier le mnemonic de ganache et coller dans la 1ere case de la phrase de récupération.
+Créer un réseau local : 
+  - Cliquez sur le bouton "Ajouter un réseau"
+  - "Ajouter manuellement un réseau"
+    - Nom du réseau : Ganache Local
+    - Nouvelle URL de RPC : http://localhost:7545
+    - ID de chaîne : 1337
+    - Symbole de la devise : ETH
 ```
 - [IPFS Desktop](https://docs.ipfs.tech/install/ipfs-desktop/)
-une petite config sera peu etre necessaire :
+une petite config sera peu être nécéssaire :
 ```json
 {
   "API": {
@@ -103,36 +118,39 @@ une petite config sera peu etre necessaire :
 
 <a name="front"></a>
 ### Front
+#### Démarrage
+Modifier le fichier .env.dist par .env avec vos configurations ou par défaut :
+```bash
+VITE_IPFS_API_SCHEME="http"
+VITE_IPFS_API_HOST="localhost"
+VITE_IPFS_API_PORT="5001"
+VITE_IPFS_GATEWAY_SCHEME="http"
+VITE_IPFS_GATEWAY_HOST="localhost"
+VITE_IPFS_GATEWAY_PORT="8081"
+```
+###### Installation des packages
 ```bash 
 $ cd front
 $ npm install
 ```
-Modifier le fichier .env.dist par .env avec vos configurations :
-```bash
-REACT_APP_IPFS_SCHEME="YOUR_SCHEME"
-REACT_APP_IPFS_HOST="YOUR_HOST"
-REACT_APP_IPFS_PORT="YOUR_PORT"
-```
-Pour lancer l'app:
+###### lancement de l'application :
 ```bash 
 $ npm run dev
 ```
 
-<a name="hardhat"></a>
-### Hardhat
+<a name="blockchain"></a>
+### Blockchain
 
 Modifier le fichier .env.dist par .env avec vos configurations :
 ```bash
-MNEMONIC="YOUR_MNEMONIC"
-INFURA_ID="AN_INFURA_ID"
-ALCHEMY_ID="AN_ALCHEMY_ID"
+MNEMONIC="YOUR_MNEMONIC_GANACHE"
 ```
 
 #### Démarrage
 
 ###### Compilation des smart contrats
 ```bash
-$ cd hardhat
+$ cd blockchain
 $ npm install
 $ npm run build
 ```
@@ -144,22 +162,33 @@ $ npm run deploy:ganache
 
 #### Résolution de problèmes
 
-Si vous rencontrez des problèmes à la compilation ou au déploiement, vous pouvez nettoyer les fichiers de build avec la commande suivante:
+Si vous rencontrez des problèmes à la compilation ou au déploiement, vous pouvez utiliser les commandes suivantes:
 
 ###### Nettoyage des artéfacts et du cache de build
 ```bash
 $ npm run clean
 ```
 
-#### Execution des tests
+###### Deploy et reset smart contrat with Ganache (si besoin)
+```bash
+$ npm run deploy:ganache:reset
+```
+
+###### Execution des tests
 ```bash
 $ npm run test
 ```
 
+-----
+
+<span style="color:red">Fin de la procédure d'installation !</span>
+
+-----
+
 <a name="wallets-api"></a>
 ### Wallets API
 
-API de récupération des wallets pour la fin du Codelab
+API de récupération des wallets pour la fin du Codelab (si ont a le temps)
 
 #### Installation / lancement
 ```bash

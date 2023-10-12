@@ -1,23 +1,17 @@
 {
-  "name": "devfestfestival",
+  "name": "devfest festival blockchain",
   "license": "GNU V2",
   "version": "1.0.0",
   "scripts": {
     "build": "hardhat compile",
     "documentation": "hardhat dodoc",
-    "dev": "hardhat node --network hardhat",
-    "clean": "hardhat clean",
-    "ganache": "eval $(grep \"^MNEMONIC\" .env) && ganache -m \"$MNEMONIC\" -k petersburg -l 20000000000 -g 6721975 -i 1337",
-    "deploy:hardhat": "hardhat --network localhost deploy --export ../front/src/contracts/contracts.ts",
-    "deploy:hardhat:reset": "hardhat --network localhost deploy --export ../front/src/contracts/contracts.ts --reset",
     "deploy:ganache": "hardhat --network ganache deploy --export ../front/src/contracts/contracts.ts",
     "deploy:ganache:reset": "hardhat --network ganache deploy --export ../front/src/contracts/contracts.ts --reset",
-    "deploy:goerli": "hardhat --network goerli deploy --export ../front/src/contracts/contracts.ts",
-    "deploy:goerli:reset": "hardhat --network goerli deploy --export ../front/src/contracts/contracts.ts --reset",
-    "deploy:sepolia": "hardhat --network sepolia deploy --export ../front/src/contracts/contracts.ts",
-    "deploy:sepolia:reset": "hardhat --network sepolia deploy --export ../front/src/contracts/contracts.ts --reset",
-    "deploy:mumbai": "hardhat --network mumbai deploy --export ../front/src/contracts/contracts.ts",
-    "deploy:mumbai:reset": "hardhat --network mumbai deploy --export ../front/src/contracts/contracts.ts --reset",
+    "ganache": "eval $(grep \"^MNEMONIC\" .env) && ganache -m \"$MNEMONIC\" -k petersburg -l 20000000000 -g 6721975 -i 1337",
+    "dev": "hardhat node --network hardhat",
+    "deploy:hardhat": "hardhat --network localhost deploy --export ../front/src/contracts/contracts.ts",
+    "deploy:hardhat:reset": "hardhat --network localhost deploy --export ../front/src/contracts/contracts.ts --reset",
+    "clean": "hardhat clean",
     "test": "hardhat test --network hardhat",
     "coverage": "hardhat coverage --network hardhat"
   },
@@ -44,5 +38,8 @@
     "ts-node": "^10.9.1",
     "typechain": "^8.1.1",
     "typescript": "^4.9.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
