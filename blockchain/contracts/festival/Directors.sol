@@ -11,13 +11,13 @@ contract Directors is ERC5484 {
     /// @notice Event when token generated
     event DirectorMinted(uint tokenId, string tokenUri);
 
-    constructor(string memory name, string memory symbol) ERC5484(name, symbol){
+    constructor(string memory name, string memory symbol) ERC5484(name, symbol) {
     }
 
     /// @notice Mint a new director.
     /// @dev event DirectorMinted when director is minted.
     /// @param _tokenURI The token URI.
-    function mint(address _recipient, string calldata _tokenURI) external onlyOwner{
+    function mint(address _recipient, string calldata _tokenURI) external onlyOwner {
         require(balanceOf(_recipient) == 0, "A director can only have 1 token");
 
         uint tokenId = totalSupply() +1;

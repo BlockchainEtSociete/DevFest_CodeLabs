@@ -119,8 +119,6 @@ const MovieGenerator = () => {
             setMitting( false );
         } );
 
-        const directorAddress = await getDirectorAddress(tokenIdDirector);
-
         // création de l'uri - addresse de l'image uploadé
         if ( ipfsPictureUploadResult ) {
             const pictureUri = `ipfs://${ ipfsPictureUploadResult.cid }`
@@ -134,7 +132,7 @@ const MovieGenerator = () => {
                 setMitting( false );
             }
             if ( tokenURI ) {
-                await createMovie( directorAddress, tokenURI );
+                await createMovie( tokenURI );
             }
             setMitting( false );
         }
@@ -143,11 +141,11 @@ const MovieGenerator = () => {
     /**
      * Fonction qui appel le smart contract afin de minter le token uri dans la blockchain
      */
-    const createMovie = async ( directorAddress: string, tokenURI: string ) => {
+    const createMovie = async ( tokenURI: string ) => {
         setMitting( true );
 
         try {
-            const idToken = await mintMovie( directorAddress, tokenURI, tokenIdDirector );
+            const idToken = await mintMovie( tokenURI, tokenIdDirector );
             await displayMinted( idToken, tokenURI );
 
             setTitle( '' );

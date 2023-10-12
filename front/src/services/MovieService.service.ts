@@ -6,6 +6,7 @@ import contractsInterface from "../contracts/contracts";
 import { Movie } from "../types/Movie";
 import { MovieMetadata } from "../types/Metadata";
 import { decodeError } from "../utils/error";
+import { getDirectorAddress } from "./PeopleService.service.ts";
 
 const MOVIE_CONTRACT = new ethers.Contract( contractsInterface.contracts.Movies.address, contractsInterface.contracts.Movies.abi, provider );
 const EVENT_MOVIE_MINTED = 'MovieMinted';
@@ -152,11 +153,10 @@ export const generateNFTMetadataMovieAndUploadToIpfs = async ( pictureUri: strin
 
 /**
  * Fonction qui va appeler le smart contract pour minter le film
- * @param directorAddress
  * @param tokenUri
  * @param tokenIdDirector
  */
-export const mintMovie = async ( directorAddress: string, tokenUri: string, tokenIdDirector: number ) => {
+export const mintMovie = async ( tokenUri: string, tokenIdDirector: number ) => {
     const signer = await provider?.getSigner();
 
     // création de l'appel du mint
@@ -164,6 +164,7 @@ export const mintMovie = async ( directorAddress: string, tokenUri: string, toke
 
     let receipt;
     try {
+        const directorAddress = await getDirectorAddress(tokenIdDirector);
         const transaction = await contract.mint( directorAddress, tokenUri, tokenIdDirector );
         receipt = await transaction.wait();
     } catch ( e ) {

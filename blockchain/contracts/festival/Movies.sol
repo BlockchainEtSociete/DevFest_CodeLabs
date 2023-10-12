@@ -14,7 +14,7 @@ contract Movies is ERC5484 {
     /// @notice Event when token generated
     event MovieMinted(uint tokenId, string tokenUri);
 
-    constructor(string memory name, string memory symbol) ERC5484(name, symbol){
+    constructor(string memory name, string memory symbol) ERC5484(name, symbol) {
     }
 
     /// @notice Mint a new movie.
